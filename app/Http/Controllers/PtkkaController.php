@@ -21,7 +21,42 @@ class PtkkaController extends Controller
         $asets = Aset::where('opd_id', $opdId)
             ->with(['ptkkaTerakhir.jawabans'])
             ->get();
+        foreach ($asets as $aset) {
+            $session = $aset->ptkkaTerakhir;
 
+            if ($session) {
+                // Ambil semua rekomendasi_standard dari fungsi standar yang relevan dengan session
+                $fungsiStandars = FungsiStandar::with('indikators.rekomendasis')
+                    ->where('kategori_id', $session->standar_kategori_id)
+                    ->get();
+
+                $jumlahRekomendasi = 0;
+
+                foreach ($fungsiStandars as $fungsi) {
+                    foreach ($fungsi->indikators as $indikator) {
+                        $jumlahRekomendasi += $indikator->rekomendasis->count();
+                    }
+                }
+
+                $jumlahJawaban = $jumlahRekomendasi;
+                $skorMaksimal = $jumlahJawaban * 2;
+                $totalSkor = $session->jawabans->sum('jawaban');
+
+                $persentase = $skorMaksimal > 0 ? round(($totalSkor / $skorMaksimal) * 100, 2) : 0;
+
+                if ($persentase >= 66.7) {
+                    $kategoriKepatuhan = 'TINGGI';
+                } elseif ($persentase >= 33.4) {
+                    $kategoriKepatuhan = 'SEDANG';
+                } else {
+                    $kategoriKepatuhan = 'RENDAH';
+                }
+
+                // Tambahkan properti ke session agar bisa dipakai langsung di view
+                $session->persentase = $persentase;
+                $session->kategori_kepatuhan = $kategoriKepatuhan;
+            }
+        }
         return view('opd.ptkka.index', compact('asets'));
     }
     public function riwayat(Aset $aset)
@@ -32,6 +67,46 @@ class PtkkaController extends Controller
         }
 
         $riwayat = $aset->ptkkaSessions()->withCount(['jawabans'])->latest()->get();
+        // Data tambahan untuk setiap sesi
+        foreach ($riwayat as $session) {
+            // Ambil semua fungsi standar terkait kategori dari session
+            $fungsiStandars = FungsiStandar::with('indikators.rekomendasis')
+                ->where('kategori_id', $session->standar_kategori_id)
+                ->get();
+
+            $jumlahRekomendasi = 0;
+
+            foreach ($fungsiStandars as $fungsi) {
+                foreach ($fungsi->indikators as $indikator) {
+                    $jumlahRekomendasi += $indikator->rekomendasis->count();
+                }
+            }
+
+            $jumlahJawaban = $jumlahRekomendasi;
+            $skorMaksimal = $jumlahJawaban * 2;
+            $totalSkor = $session->jawabans->sum('jawaban');
+
+            $persentase = $skorMaksimal > 0 ? ($totalSkor / $skorMaksimal) * 100 : 0;
+
+            $kategoriKepatuhan = 'TIDAK TERDEFINISI';
+            if ($persentase >= 66.7) {
+                $kategoriKepatuhan = 'TINGGI';
+            } elseif ($persentase >= 33.4) {
+                $kategoriKepatuhan = 'SEDANG';
+            } else {
+                $kategoriKepatuhan = 'RENDAH';
+            }
+
+            // Tambahkan properti ke objek session (tidak perlu simpan ke DB)
+            $session->jumlah_jawaban = $jumlahJawaban;
+            $session->skor_maksimal = $skorMaksimal;
+            $session->total_skor = $totalSkor;
+            $session->persentase = round($persentase, 2);
+            $session->kategori_kepatuhan = $kategoriKepatuhan;
+        }
+
+
+
 
         return view('opd.ptkka.riwayat', compact('aset', 'riwayat'));
     }
@@ -296,11 +371,19 @@ class PtkkaController extends Controller
         $jumlahJawaban = $jawabans->count();
         $skorMaksimal = $jumlahJawaban * 2;
         $totalSkor = $jawabans->sum('jawaban');
+        // Hitung jumlah rekomendasi yang relevan
+        $jumlahJawaban = 0;
+        foreach ($fungsiStandars as $fungsi) {
+            foreach ($fungsi->indikators as $indikator) {
+                $jumlahJawaban += $indikator->rekomendasis->count();
+            }
+        }
 
+        $skorMaksimal = $jumlahJawaban * 2;
+        $totalSkor = $jawabans->sum('jawaban');
         $kategoriKepatuhan = 'TIDAK TERDEFINISI';
         if ($skorMaksimal > 0) {
-            $persentase = ($totalSkor / $skorMaksimal) * 100;
-
+            $persentase = round(($totalSkor / $skorMaksimal) * 100, 2);
             if ($persentase >= 66.7) {
                 $kategoriKepatuhan = 'TINGGI';
             } elseif ($persentase >= 33.4) {

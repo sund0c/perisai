@@ -45,10 +45,18 @@
                             </td>
                             <td>{{ $aset->nama_aset }}</td>
                             <td>
-                                @if ($session)
-                                    Skor: {{ $skor }}
+                                @if ($aset->ptkkaTerakhir)
+                                    <div
+                                        class="badge badge-{{ $aset->ptkkaTerakhir->kategori_kepatuhan === 'TINGGI'
+                                            ? 'success'
+                                            : ($aset->ptkkaTerakhir->kategori_kepatuhan === 'SEDANG'
+                                                ? 'warning'
+                                                : 'danger') }} p-2">
+                                        {{ $aset->ptkkaTerakhir->kategori_kepatuhan }}
+                                        {{ $aset->ptkkaTerakhir->persentase }}%
+                                    </div>
                                 @else
-                                    <span class="text-danger">BELUM PERNAH</span>
+                                    <span class="text-muted">Belum Pernah</span>
                                 @endif
                             </td>
                         </tr>

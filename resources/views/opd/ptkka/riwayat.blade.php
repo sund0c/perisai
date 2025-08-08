@@ -61,7 +61,7 @@
                         <th>UID</th>
                         <th>Tanggal Mulai</th>
                         <th>Status</th>
-                        <th>Total Skor</th>
+                        <th>Kepatuhan</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
@@ -82,6 +82,16 @@
                                 2 => 'WEB',
                                 3 => 'MOBILE',
                             ];
+                        @endphp
+                        @php
+                            $badgeClass = 'secondary';
+                            if ($session->kategori_kepatuhan === 'TINGGI') {
+                                $badgeClass = 'success';
+                            } elseif ($session->kategori_kepatuhan === 'SEDANG') {
+                                $badgeClass = 'warning';
+                            } elseif ($session->kategori_kepatuhan === 'RENDAH') {
+                                $badgeClass = 'danger';
+                            }
                         @endphp
 
                         <tr>
@@ -108,7 +118,11 @@
                                 </div>
                             </td>
 
-                            <td>{{ $totalSkor }}</td>
+                            <td>
+                                <div class="badge badge-{{ $badgeClass }} p-2">
+                                    {{ $session->kategori_kepatuhan }} {{ $session->persentase }}%
+                                </div>
+                            </td>
                             <td>
                                 @if ($session->status === 0 || $session->status === 3)
                                     <a href="{{ route('ptkka.detail', $session->id) }}" class="btn btn-warning btn-sm"
