@@ -1,0 +1,289 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\PtkkaStatusLog;
+use Illuminate\Support\Str;
+use App\Models\Aset;
+use App\Models\PtkkaSession;
+use Illuminate\Http\Request;
+use App\Models\FungsiStandar;
+use App\Models\StandarIndikator;
+use App\Models\PtkkaJawaban;
+
+class PtkkaController extends Controller
+{
+    public function indexPtkka()
+    {
+        $opdId = auth()->user()->opd_id;
+
+        $asets = Aset::where('opd_id', $opdId)
+            ->with(['ptkkaTerakhir.jawabans'])
+            ->get();
+
+        return view('opd.ptkka.index', compact('asets'));
+    }
+    public function riwayat(Aset $aset)
+    {
+        // batasi hanya ke OPD yang sedang login
+        if ($aset->opd_id !== auth()->user()->opd_id) {
+            abort(403);
+        }
+
+        $riwayat = $aset->ptkkaSessions()->withCount(['jawabans'])->latest()->get();
+
+        return view('opd.ptkka.riwayat', compact('aset', 'riwayat'));
+    }
+
+
+    public function store(Aset $aset, Request $request)
+    {
+        if ($aset->opd_id !== auth()->user()->opd_id) {
+            abort(403);
+        }
+
+        $masihAktif = $aset->ptkkaSessions()->whereIn('status', [0, 1, 2, 3])->exists();
+
+
+        if ($masihAktif) {
+            return back()->with('error', 'Anda masih punya PTKKA yang masih berlangsung untuk aset ini.');
+        }
+
+        $kategoriId = $request->standar_kategori_id;
+
+        if (!in_array($kategoriId, [2, 3])) {
+            return back()->with('error', 'Kategori standar tidak valid.');
+        }
+
+        $session = PtkkaSession::create([
+            'user_id' => auth()->id(),
+            'aset_id' => $aset->id,
+            'standar_kategori_id' => $kategoriId,
+            'status' => 0,
+            'uid' => Str::uuid(),
+        ]);
+
+        PtkkaStatusLog::create([
+            'ptkka_session_id' => $session->id,
+            'from_status' => null,
+            'to_status' => 0,
+            'user_id' => auth()->id(),
+            'catatan' => 'Membuat sesi PTKKA',
+            'changed_at' => now(),
+        ]);
+
+        return redirect()->route('ptkka.riwayat', $aset->id)->with('success', 'Form PTKKA berhasil dibuat.');
+    }
+
+
+    public function destroy(PtkkaSession $session)
+    {
+        // Pastikan hanya OPD pemilik yang bisa hapus
+        if ($session->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        // Hanya bisa hapus saat status masih PENGISIAN (0)
+        if ($session->status !== 0) {
+            return back()->with('error', 'Hanya PTKKA yang berstatus Pengisian yang dapat dihapus.');
+        }
+
+        $session->delete(); // akan menghapus juga status_logs karena onDelete('cascade')
+
+        return back()->with('success', 'Pengajuan PTKKA berhasil dihapus.');
+    }
+
+
+    public function ajukan(PtkkaSession $session)
+    {
+        if ($session->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        if ($session->status !== 0) {
+            return back()->with('error', 'Status tidak dapat diajukan lagi.');
+        }
+
+        // Simpan log status sebelum update
+        PtkkaStatusLog::create([
+            'ptkka_session_id' => $session->id,
+            'from_status' => 0,
+            'to_status' => 1,
+            'user_id' => auth()->id(),
+            'catatan' => 'Pengajuan awal oleh OPD',
+            'changed_at' => now(),
+        ]);
+
+        // Update status jadi Pengajuan
+        $session->update(['status' => 1]);
+
+        return back()->with('success', 'PTKKA berhasil diajukan ke Diskominfos.');
+    }
+
+    public function showDetail($id)
+    {
+        // Ambil session berdasarkan ID
+        $session = PtkkaSession::with('kategori')->findOrFail($id);
+
+        // Ambil ID kategori yang digunakan untuk memfilter fungsi
+        $kategoriId = $session->standar_kategori_id;
+
+        // Ambil semua fungsi standar berdasarkan kategori, lengkap dengan indikator & rekomendasi
+        // $fungsiStandars = FungsiStandar::with(['indikators.rekomendasi'])
+        //     ->where('kategori_id', $kategoriId)
+        //     ->orderBy('urutan')
+        //     ->get();
+        // $fungsiStandars = FungsiStandar::with(['indikators.rekomendasis'])
+        //     ->where('kategori_id', $session->standar_kategori_id)
+        //     ->orderBy('urutan')
+        //     ->get();
+        $fungsiStandars = FungsiStandar::with([
+            'indikators.rekomendasis.jawabans'
+        ])
+            ->where('kategori_id', $session->standar_kategori_id)
+            ->orderBy('urutan')
+            ->get();
+
+
+        // Ambil semua jawaban yang sudah pernah diisi user
+        $jawabans = PtkkaJawaban::where('ptkka_session_id', $session->id)
+            ->get()
+            ->keyBy('standar_indikator_id'); // agar mudah diakses di view
+        return view('opd.ptkka.detail', compact('session', 'fungsiStandars', 'jawabans'));
+    }
+
+    public function simpan(Request $request, $id)
+    {
+        $session = PtkkaSession::findOrFail($id);
+
+        $jawabans = $request->input('jawaban', []);
+        $penjelasanOpd = $request->input('penjelasanopd', []);
+        $linkBukti = $request->input('linkbuktidukung', []);
+
+        foreach ($jawabans as $rekomendasiId => $jawabanNilai) {
+            $penjelasan = $penjelasanOpd[$rekomendasiId] ?? null;
+            $link = $linkBukti[$rekomendasiId] ?? null;
+
+            // Validasi: jika penjelasan atau link kosong
+            if (empty($penjelasan) || empty($link)) {
+                return back()->with('error', 'Semua jawaban harus disertai penjelasan dan link bukti dukung.');
+            }
+
+            \App\Models\PtkkaJawaban::updateOrCreate(
+                [
+                    'ptkka_session_id' => $session->id,
+                    'rekomendasi_standard_id' => $rekomendasiId,
+                ],
+                [
+                    'jawaban' => $jawabanNilai,
+                    'penjelasanopd' => $penjelasan,
+                    'linkbuktidukung' => $link,
+                ]
+            );
+        }
+
+        return redirect()->back()->with('success', 'Jawaban berhasil disimpan.');
+    }
+
+    public function simpanPerFungsi(Request $request, $sessionId, $fungsiId)
+    {
+        $session = PtkkaSession::findOrFail($sessionId);
+
+        $jawabans = $request->input('jawaban', []);
+        $penjelasanOpd = $request->input('penjelasanopd', []);
+        $linkBukti = $request->input('linkbuktidukung', []);
+
+        foreach ($jawabans as $rekomendasiId => $jawabanNilai) {
+            $penjelasan = $penjelasanOpd[$rekomendasiId] ?? null;
+            $link = $linkBukti[$rekomendasiId] ?? null;
+
+            if (empty($penjelasan) || empty($link)) {
+                return back()->with('error', 'Semua jawaban harus disertai Penjelasan dan Link Bukti Dukung.');
+            }
+
+            \App\Models\PtkkaJawaban::updateOrCreate(
+                [
+                    'ptkka_session_id' => $session->id,
+                    'rekomendasi_standard_id' => $rekomendasiId,
+                ],
+                [
+                    'jawaban' => $jawabanNilai,
+                    'penjelasanopd' => $penjelasan,
+                    'linkbuktidukung' => $link,
+                ]
+            );
+        }
+
+        return back()->with('success', 'Self-Asssessment PTKKA Berhasil Diupdate');
+    }
+
+    public function ajukanVerifikasi(Request $request, $sessionId)
+    {
+        $session = PtkkaSession::findOrFail($sessionId);
+
+        // Ambil semua rekomendasi dari fungsi standar session ini
+        $fungsiStandars = FungsiStandar::with('indikators.rekomendasis')->where('kategori_id', $session->standar_kategori_id)->get();
+
+        $incomplete = [];
+
+        foreach ($fungsiStandars as $fungsi) {
+            foreach ($fungsi->indikators as $indikator) {
+                foreach ($indikator->rekomendasis as $rek) {
+                    $jawaban = PtkkaJawaban::where('ptkka_session_id', $session->id)
+                        ->where('rekomendasi_standard_id', $rek->id)
+                        ->first();
+
+                    if (!$jawaban || empty($jawaban->penjelasanopd) || empty($jawaban->linkbuktidukung)) {
+                        $incomplete[] = $rek->id;
+                    }
+                }
+            }
+        }
+
+        if (count($incomplete) > 0) {
+            return back()->with('error', 'Masih ada isian yang belum lengkap. Silakan lengkapi semua jawaban sebelum mengajukan verifikasi.');
+        }
+
+        // Ubah status session
+        $oldStatus = $session->status;
+        $session->status = 1; // 1 = Pengajuan
+        $session->save();
+
+        // Tambahkan ke status log
+        \App\Models\PtkkaStatusLog::create([
+            'ptkka_session_id' => $session->id,
+            'from_status' => $oldStatus,
+            'to_status' => 1,
+            'user_id' => auth()->id(),
+            'catatan' => 'Mengajukan verifikasi oleh OPD',
+            'changed_at' => now(),
+        ]);
+
+        return redirect()->route('ptkka.riwayat', $session->aset_id)
+            ->with('success', 'Pengajuan verifikasi berhasil dikirim. Hubungi Dinas Kominfos Prov Bali untuk jadwal Verifikasi.');
+    }
+
+
+    public function simpanJawaban(Request $request)
+    {
+        $data = $request->validate([
+            'ptkka_session_id' => 'required|exists:ptkka_sessions,id',
+            'standar_indikator_id' => 'required|exists:standar_indikator,id',
+            'jawaban' => 'required|in:0,1,2',
+            'rekomendasi' => 'nullable|string',
+        ]);
+
+        PtkkaJawaban::updateOrCreate(
+            [
+                'ptkka_session_id' => $data['ptkka_session_id'],
+                'standar_indikator_id' => $data['standar_indikator_id'],
+            ],
+            [
+                'jawaban' => $data['jawaban'],
+                'rekomendasi' => $data['rekomendasi'],
+            ]
+        );
+
+        return back()->with('success', 'Jawaban berhasil disimpan.');
+    }
+}

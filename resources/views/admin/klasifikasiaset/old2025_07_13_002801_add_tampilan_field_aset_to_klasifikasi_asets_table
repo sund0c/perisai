@@ -1,0 +1,20 @@
+<?php
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration {
+    public function up()
+    {
+        Schema::table('klasifikasi_asets', function (Blueprint $table) {
+            $table->json('tampilan_field_aset')->nullable()->after('klasifikasiaset');
+        });
+    }
+
+    public function down()
+    {
+        Schema::table('klasifikasi_asets', function (Blueprint $table) {
+            $table->dropColumn('tampilan_field_aset');
+        });
+    }
+};
