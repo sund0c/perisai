@@ -45,4 +45,14 @@ class PtkkaSession extends Model
     {
         return $this->hasOne(\App\Models\PtkkaStatusLog::class)->latestOfMany('changed_at');
     }
+    public function indikators()
+    {
+        return $this->belongsToMany(StandarIndikator::class, 'rekomendasi_standards')
+            ->withPivot(['jawaban', 'penjelasan', 'link'])
+            ->withTimestamps();
+    }
+    public function opd()
+    {
+        return $this->hasOneThrough(Opd::class, Aset::class, 'id', 'id', 'aset_id', 'opd_id');
+    }
 }

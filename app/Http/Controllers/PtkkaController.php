@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use App\Models\FungsiStandar;
 use App\Models\StandarIndikator;
 use App\Models\PtkkaJawaban;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class PtkkaController extends Controller
 {
@@ -122,21 +123,8 @@ class PtkkaController extends Controller
 
     public function showDetail($id)
     {
-        // Ambil session berdasarkan ID
         $session = PtkkaSession::with('kategori')->findOrFail($id);
-
-        // Ambil ID kategori yang digunakan untuk memfilter fungsi
         $kategoriId = $session->standar_kategori_id;
-
-        // Ambil semua fungsi standar berdasarkan kategori, lengkap dengan indikator & rekomendasi
-        // $fungsiStandars = FungsiStandar::with(['indikators.rekomendasi'])
-        //     ->where('kategori_id', $kategoriId)
-        //     ->orderBy('urutan')
-        //     ->get();
-        // $fungsiStandars = FungsiStandar::with(['indikators.rekomendasis'])
-        //     ->where('kategori_id', $session->standar_kategori_id)
-        //     ->orderBy('urutan')
-        //     ->get();
         $fungsiStandars = FungsiStandar::with([
             'indikators.rekomendasis.jawabans'
         ])
@@ -145,7 +133,6 @@ class PtkkaController extends Controller
             ->get();
 
 
-        // Ambil semua jawaban yang sudah pernah diisi user
         $jawabans = PtkkaJawaban::where('ptkka_session_id', $session->id)
             ->get()
             ->keyBy('standar_indikator_id'); // agar mudah diakses di view
@@ -285,5 +272,75 @@ class PtkkaController extends Controller
         );
 
         return back()->with('success', 'Jawaban berhasil disimpan.');
+    }
+
+    public function exportPDF($id)
+    {
+        // $session = PtkkaSession::with('kategori', 'aset')->findOrFail($id);
+        $session = PtkkaSession::with(['kategori', 'aset.opd'])->findOrFail($id);
+
+
+        $fungsiStandars = FungsiStandar::with([
+            'indikators.rekomendasis' // ini aman kalau rekomendasis tidak punya relasi aneh
+        ])
+            ->where('kategori_id', $session->standar_kategori_id)
+            ->orderBy('urutan')
+            ->get();
+
+
+
+        $jawabans = PtkkaJawaban::where('ptkka_session_id', $session->id)
+            ->get()
+            ->keyBy('rekomendasi_standard_id');
+
+        $jumlahJawaban = $jawabans->count();
+        $skorMaksimal = $jumlahJawaban * 2;
+        $totalSkor = $jawabans->sum('jawaban');
+
+        $kategoriKepatuhan = 'TIDAK TERDEFINISI';
+        if ($skorMaksimal > 0) {
+            $persentase = ($totalSkor / $skorMaksimal) * 100;
+
+            if ($persentase >= 66.7) {
+                $kategoriKepatuhan = 'TINGGI';
+            } elseif ($persentase >= 33.4) {
+                $kategoriKepatuhan = 'SEDANG';
+            } else {
+                $kategoriKepatuhan = 'RENDAH';
+            }
+        }
+
+        // Load PDF View
+        $pdf = PDF::loadView('opd.ptkka.export_pdf', compact(
+            'session',
+            'fungsiStandars',
+            'jawabans',
+            'jumlahJawaban',
+            'skorMaksimal',
+            'totalSkor',
+            'kategoriKepatuhan',
+            'persentase'
+        ))
+            ->setPaper([0, 0, 595.28, 841.89], 'portrait'); // A4 in points
+
+        // Call render first to make sure page count is available
+        $dompdf = $pdf->getDomPDF();
+        $dompdf->render();
+
+        // Footer and page script
+        $canvas = $dompdf->getCanvas();
+        $fontMetrics = $dompdf->getFontMetrics();
+        $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
+            $text = "PERISAI :: Halaman $pageNumber dari $pageCount";
+            $font = $fontMetrics->getFont('Helvetica', 'normal');
+            $size = 9;
+            $width = $canvas->get_width();
+            $textWidth = $fontMetrics->getTextWidth($text, $font, $size);
+            $x = ($width - $textWidth) / 2;
+            $y = 820; // posisi bawah halaman A4
+            $canvas->text($x, $y, $text, $font, $size);
+        });
+
+        return $pdf->download('ptkka-' . $session->uid . '.pdf');
     }
 }

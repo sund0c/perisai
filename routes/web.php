@@ -116,6 +116,7 @@ Route::middleware(['auth', RoleMiddleware::class . ':opd'])->group(function () {
         Route::post('/{id}/simpan', [PtkkaController::class, 'simpan'])->name('ptkka.simpan');
         Route::post('/{session}/fungsi/{fungsi}/simpan', [PtkkaController::class, 'simpanPerFungsi'])->name('ptkka.simpanPerFungsi');
         Route::post('/{session}/ajukan-verifikasi', [PtkkaController::class, 'ajukanVerifikasi'])->name('ptkka.ajukanverifikasi');
+        Route::get('/export/pdf/{id}', [PtkkaController::class, 'exportPDF'])->name('ptkka.exportPDF');
     });
 
 

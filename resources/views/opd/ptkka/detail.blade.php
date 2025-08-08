@@ -71,15 +71,18 @@
         <div class="card-body">
             {{-- Tombol Kembali dan Simpan --}}
             <div class="d-flex mb-3" style="gap: 10px;">
-                <a href="{{ route('ptkka.riwayat', $session->aset_id) }}" class="btn btn-secondary">
+                <a href="{{ route('ptkka.riwayat', $session->aset_id) }}" class="btn btn-secondary mb-3">
                     <i class="fas fa-arrow-left"></i> Kembali
                 </a>
                 <form action="{{ route('ptkka.ajukanverifikasi', $session->id) }}" method="POST">
                     @csrf
                     <button onclick="return confirm('Yakin ingin mengajukan verifikasi?')" type="submit"
-                        class="btn btn-primary">Ajukan Verifikasi
+                        class="btn btn-primary mb-3">Ajukan Verifikasi
                     </button>
                 </form>
+                <a href="{{ route('ptkka.exportPDF', $session->id) }}" target="_blank" class="btn btn-danger mb-3">
+                    <i class="fas fa-file-pdf"></i> Export PDF
+                </a>
             </div>
 
             {{-- Form --}}
