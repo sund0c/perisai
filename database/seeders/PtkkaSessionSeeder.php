@@ -23,6 +23,16 @@ class PtkkaSessionSeeder extends Seeder
             'updated_at' => '2025-08-07 18:21:40',
         ]);
 
+        DB::table('ptkka_sessions')->insert([
+            'id' => 2,
+            'uid' => '19824003-7e0d-4a6a-a0cc-c8e87c9a3216',
+            'user_id' => 2,
+            'aset_id' => 2,
+            'standar_kategori_id' => 2,
+            'status' => 0,
+            'created_at' => '2025-08-08 10:01:40',
+            'updated_at' => '2025-08-08 10:01:40',
+        ]);
         // ========== PTKKA JAWABANS ==========
         $createdAt = Carbon::parse('2025-08-07 06:37:22');
         $updatedAt = Carbon::parse('2025-08-07 06:37:22');
@@ -37,6 +47,18 @@ class PtkkaSessionSeeder extends Seeder
                 'penjelasanopd' => 'contoh penjelasan OPD',
                 'catatanadmin' => null,
                 'linkbuktidukung' => 'https://google.com',
+                'created_at' => $createdAt,
+                'updated_at' => $updatedAt,
+            ];
+        }
+        for ($i = 1; $i <= 110; $i++) {
+            $jawabanData[] = [
+                'ptkka_session_id' => 2,
+                'rekomendasi_standard_id' => $i,
+                'jawaban' => 1,
+                'penjelasanopd' => 'cek cek ricek',
+                'catatanadmin' => null,
+                'linkbuktidukung' => 'https://yahoo.com',
                 'created_at' => $createdAt,
                 'updated_at' => $updatedAt,
             ];

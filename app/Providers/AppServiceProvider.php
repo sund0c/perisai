@@ -24,17 +24,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-    Gate::define('is-opd', fn ($user) => $user->role === 'opd');
-    Gate::define('is-admin', fn ($user) => $user->role === 'admin');
-    Gate::define('is-super', fn ($user) => $user->role === 'super');
-    // Bagikan tahun aktif ke semua view
-    // $tahunAktifGlobal = Periode::where('status', 'open')->value('tahun');
-    // View::share('tahunAktifGlobal', $tahunAktifGlobal);
-     if (Schema::hasTable('periodes')) {
-        $tahunAktifGlobal = Periode::where('status', 'open')->first();
-        View::share('tahunAktifGlobal', $tahunAktifGlobal->tahun);
-        View::share('kunci', $tahunAktifGlobal->kunci);
-    }
-
+        \Carbon\Carbon::setLocale('id');
+        Gate::define('is-opd', fn($user) => $user->role === 'opd');
+        Gate::define('is-admin', fn($user) => $user->role === 'admin');
+        Gate::define('is-bidang', fn($user) => $user->role === 'bidang');
+        if (Schema::hasTable('periodes')) {
+            $tahunAktifGlobal = Periode::where('status', 'open')->first();
+            View::share('tahunAktifGlobal', $tahunAktifGlobal->tahun);
+            View::share('kunci', $tahunAktifGlobal->kunci);
+        }
     }
 }

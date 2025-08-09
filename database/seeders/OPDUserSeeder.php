@@ -19,7 +19,7 @@ class OPDUserSeeder extends Seeder
         $inspektorat = Opd::create(['namaopd' => 'INSPEKTORAT']);
 
         User::create([
-            'name' => 'Nama PIC Inspektorat',
+            'name' => 'Nama user di Inspektorat',
             'email' => 'inspektorat@baliprov.go.id',
             'password' => Hash::make('Password123@'),
             'role' => 'opd',
@@ -27,7 +27,7 @@ class OPDUserSeeder extends Seeder
         ]);
 
         User::create([
-            'name' => 'Nama PIC Diskominfos',
+            'name' => 'Nama user di Diskominfos',
             'email' => 'diskominfos@baliprov.go.id',
             'password' => Hash::make('Password123@'),
             'role' => 'opd',
@@ -35,8 +35,16 @@ class OPDUserSeeder extends Seeder
         ]);
 
         User::create([
-            'name' => 'Nama ADMIN Sistem',
-            'email' => 'admindiskominfos@baliprov.go.id',
+            'name' => 'Nama staf Bidang 4',
+            'email' => 'persandian@baliprov.go.id',
+            'password' => Hash::make('Password123@'),
+            'role' => 'bidang',
+            'opd_id' => $diskominfos->id,
+        ]);
+
+        User::create([
+            'name' => 'Nama admin Sistem',
+            'email' => 'admin@baliprov.go.id',
             'password' => Hash::make('Password123@'),
             'role' => 'admin',
             'opd_id' => $diskominfos->id,

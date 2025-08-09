@@ -314,6 +314,25 @@ return [
             'icon' => 'fas fa-fw fa-tachometer-alt',
         ],
 
+        // Hanya untuk role BIDANG
+        [
+            'text' => 'Aset',
+            'route' => 'bidang.aset.index',
+            'icon' => 'fas fa-fw fa-box',
+            'can'  => 'is-bidang',
+        ],
+        [
+            'text' => 'Kategori SE',
+            'route'  => 'bidang.kategorise.index',
+            'icon' => 'fas fa-fw fa-box',
+            'can'  => 'is-bidang',
+        ],
+        [
+            'text' => 'PTKKA',
+            'url'  => 'bidang/ptkka',
+            'icon' => 'fas fa-clipboard-check',
+            'can'  => 'is-bidang',
+        ],
         // Hanya untuk role OPD
         [
             'text' => 'Aset',

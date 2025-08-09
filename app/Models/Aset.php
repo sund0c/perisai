@@ -69,11 +69,33 @@ class Aset extends Model
 
     public function ptkkaSessions()
     {
-        return $this->hasMany(PtkkaSession::class);
+        return $this->hasMany(\App\Models\PtkkaSession::class);
     }
 
+    // latest status=1
+    public function ptkkaPengajuan()
+    {
+        return $this->hasOne(\App\Models\PtkkaSession::class)
+            ->where('status', 1)
+            ->latestOfMany('updated_at')
+            ->select('ptkka_sessions.*');
+    }
+
+    // latest status in {0,2,3}
     public function ptkkaTerakhir()
     {
-        return $this->hasOne(PtkkaSession::class)->latestOfMany();
+        return $this->hasOne(\App\Models\PtkkaSession::class)
+            ->whereIn('status', [0, 2, 3])
+            ->latestOfMany('updated_at')
+            ->select('ptkka_sessions.*');
+    }
+
+    // latest status=4
+    public function ptkkaTerakhirRampung()
+    {
+        return $this->hasOne(\App\Models\PtkkaSession::class)
+            ->where('status', 4)
+            ->latestOfMany('updated_at')
+            ->select('ptkka_sessions.*');
     }
 }

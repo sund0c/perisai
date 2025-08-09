@@ -27,6 +27,19 @@ class PtkkaJawabanSeeder extends Seeder
             ];
         }
 
+        for ($i = 1; $i <= 110; $i++) {
+            $data[] = [
+                'ptkka_session_id' => 2,
+                'rekomendasi_standard_id' => $i,
+                'jawaban' => 1,
+                'penjelasanopd' => 'loremipsuim',
+                'catatanadmin' => null,
+                'linkbuktidukung' => 'https://yahoo.com',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+
         DB::table('ptkka_jawabans')->insert($data);
     }
 }
