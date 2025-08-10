@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('kategori_ses', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('aset_id')->constrained()->onDelete('cascade'); // hanya untuk aset perangkat lunak
+            $table->foreignId('aset_id')->constrained()->restrictOnDelete(); // hanya untuk aset perangkat lunak
+
             /**
              * Format jawaban:
              * {

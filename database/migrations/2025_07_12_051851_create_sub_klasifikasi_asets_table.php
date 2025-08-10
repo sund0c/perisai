@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('sub_klasifikasi_asets', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('klasifikasi_aset_id')->constrained()->onDelete('cascade');
+            $table->foreignId('klasifikasi_aset_id')->constrained()->restrictOnDelete();
             $table->string('subklasifikasiaset');
             $table->text('penjelasan')->nullable();
             $table->timestamps();

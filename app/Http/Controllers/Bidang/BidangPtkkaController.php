@@ -36,8 +36,8 @@ class BidangPtkkaController extends Controller
             $maks  = (int) ($jawabans->count() * 2);    // max = 2 per indikator
             $persen = $maks > 0 ? (int) floor(($total / $maks) * 100) : 0;
 
-            if ($persen >= 80) $kat = 'TINGGI';
-            elseif ($persen >= 50) $kat = 'SEDANG';
+            if ($persen >= 66.7) $kat = 'TINGGI';
+            elseif ($persen >= 33.4) $kat = 'SEDANG';
             else                    $kat = 'RENDAH';
 
             $session->persentase = $persen;
@@ -248,8 +248,9 @@ class BidangPtkkaController extends Controller
                 $maks  = (int) ($s->jawabans->count() * 2);
                 $persen = $maks > 0 ? (int) floor(($total / $maks) * 100) : 0;
 
-                if ($persen >= 80) $kat = 'TINGGI';
-                elseif ($persen >= 50) $kat = 'SEDANG';
+
+                if ($persen >= 66.7) $kat = 'TINGGI';
+                elseif ($persen >= 33.4) $kat = 'SEDANG';
                 else                    $kat = 'RENDAH';
 
                 $s->persentase = $persen;
@@ -309,8 +310,9 @@ class BidangPtkkaController extends Controller
                     $maks   = (int) ($s->jawabans->count() * 2);
                     $persen = $maks > 0 ? (int) floor(($total / $maks) * 100) : 0;
 
-                    if ($persen >= 80) $kat = 'TINGGI';
-                    elseif ($persen >= 50) $kat = 'SEDANG';
+
+                    if ($persen >= 66.7) $kat = 'TINGGI';
+                    elseif ($persen >= 33.4) $kat = 'SEDANG';
                     else                    $kat = 'RENDAH';
 
                     $s->persentase = $persen;
@@ -373,8 +375,9 @@ class BidangPtkkaController extends Controller
                 $skorMax  = $jumlah * 2;
                 $skor     = (int) $jawabans->sum('jawaban');
                 $persen   = $skorMax > 0 ? round(($skor / $skorMax) * 100) : 0;
-                if ($persen >= 80) $kat = 'TINGGI';
-                elseif ($persen >= 50) $kat = 'SEDANG';
+
+                if ($persen >= 66.7) $kat = 'TINGGI';
+                elseif ($persen >= 33.4) $kat = 'SEDANG';
                 else                    $kat = 'RENDAH';
 
 

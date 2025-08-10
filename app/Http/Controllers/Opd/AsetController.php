@@ -1,6 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Opd;
+
+use App\Http\Controllers\Controller;
 
 use App\Models\Aset;
 use App\Models\RangeAset;
@@ -15,17 +17,6 @@ class AsetController extends Controller
 {
     public function index()
     {
-        // $periodeAktifId = Periode::where('status', 'open')->value('id'); // pastikan selalu ada
-        // $opdId = auth()->user()->opd_id;
-
-        // $klasifikasis = KlasifikasiAset::withCount(['asets as jumlah_aset' => function ($query) use ($opdId, $periodeAktifId) {
-        //     $query->where('opd_id', $opdId)
-        //         ->where('periode_id', $periodeAktifId);
-        // }])->get();
-
-        // $namaOpd = auth()->user()->opd->namaopd ?? '-';
-
-        // return view('opd.aset.index', compact('klasifikasis', 'namaOpd'));
         $periodeAktifId = Periode::where('status', 'open')->value('id');
         $opdId = auth()->user()->opd_id;
 
@@ -349,45 +340,31 @@ class AsetController extends Controller
     public function destroy($id)
     {
         $aset = Aset::findOrFail($id);
-
-        // Simpan id klasifikasi untuk redirect setelah hapus
         $klasifikasiId = $aset->klasifikasiaset_id;
 
-        // Hapus aset
-        $aset->delete();
+        try {
+            $aset->delete();
+            $status = 'success';
+            $pesan = 'Penghapusan Aset Berhasil';
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Biasanya error 1451 untuk foreign key constraint
+            $status = 'error';
+            $pesan = 'Penghapusan Aset Gagal karena data sudah terpakai';
+        } catch (\Throwable $e) {
+            // Penanganan error lain
+            $status = 'error';
+            $pesan = 'Penghapusan Aset Gagal karena data sudah terpakai';
+        }
 
         return redirect()
             ->route('opd.aset.show_by_klasifikasi', $klasifikasiId)
-            ->with('success', 'Aset berhasil dihapus.');
+            ->with($status, $pesan);
     }
 
 
     public function exportRekapPdf()
     {
-        // $periodeAktifId = Periode::where('status', 'open')->value('id'); // pastikan selalu ada
-        // $opdId = auth()->user()->opd_id;
 
-        // $klasifikasis = KlasifikasiAset::withCount(['asets as jumlah_aset' => function ($query) use ($opdId, $periodeAktifId) {
-        //     $query->where('opd_id', $opdId)
-        //         ->where('periode_id', $periodeAktifId);
-        // }])->get();
-
-        // $namaOpd = auth()->user()->opd->namaopd ?? '-';
-
-        // $pdf = PDF::loadView('opd.aset.export_rekap_pdf', compact('klasifikasis', 'namaOpd'))
-        //     ->setPaper('A4', 'potrait');
-        // $pdf->getDomPDF()->getCanvas()->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
-        //     $text = "PERISAI  :: Page $pageNumber of $pageCount";
-        //     $font = $fontMetrics->getFont('Helvetica', 'normal');
-        //     $size = 9;
-        //     $width = $canvas->get_width();
-        //     $height = $canvas->get_height();
-        //     $textWidth = $fontMetrics->getTextWidth($text, $font, $size);
-        //     $x = ($width - $textWidth) / 2; // Center horizontally
-        //     $y = $height - 30; // 30 px from bottom
-        //     $canvas->text($x, $y, $text, $font, $size);
-        // });
-        // return $pdf->download('rekap_aset_' . date('Ymd_His') . '.pdf');
         $periodeAktifId = Periode::where('status', 'open')->value('id');
         $opdId = auth()->user()->opd_id;
 

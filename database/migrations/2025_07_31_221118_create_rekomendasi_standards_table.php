@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('rekomendasi_standards', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('standar_indikator_id')->constrained('standar_indikator')->onDelete('cascade');
+            $table->foreignId('standar_indikator_id')->constrained('standar_indikator')->restrictOnDelete();
             $table->text('rekomendasi');
             $table->text('buktidukung')->nullable();
             $table->timestamps();

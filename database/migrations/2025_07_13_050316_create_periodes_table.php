@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('periodes', function (Blueprint $table) {
             $table->id();
-            $table->year('tahun')->unique(); // Tahun anggaran, misal: 2025
-            $table->enum('status', ['open', 'closed'])->default('closed'); // Status periode
-            $table->enum('kunci', ['open', 'locked'])->default('locked'); // kunci periode            
+            $table->year('tahun')->unique()->default('2025'); // Tahun anggaran, misal: 2025
+            $table->enum('status', ['open', 'closed'])->default('open'); // Status periode
+            $table->enum('kunci', ['open', 'locked'])->default('open'); // kunci periode
             $table->timestamps();
         });
     }

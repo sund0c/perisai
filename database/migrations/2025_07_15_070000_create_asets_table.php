@@ -12,21 +12,21 @@ class CreateAsetsTable extends Migration
             $table->id();
 
             // Tahun Anggaran Aktif
-            $table->foreignId('periode_id')->constrained('periodes')->onDelete('cascade');
+            $table->foreignId('periode_id')->constrained('periodes')->restrictOnDelete();
 
             // Informasi Aset
             $table->string('kode_aset')->unique();
             $table->string('nama_aset');
             $table->string('keterangan')->nullable();
-            $table->foreignId('klasifikasiaset_id')->constrained('klasifikasi_asets')->onDelete('cascade');
-            $table->foreignId('subklasifikasiaset_id')->constrained('sub_klasifikasi_asets')->onDelete('cascade');
+            $table->foreignId('klasifikasiaset_id')->constrained('klasifikasi_asets')->restrictOnDelete();
+            $table->foreignId('subklasifikasiaset_id')->constrained('sub_klasifikasi_asets')->restrictOnDelete();
             $table->string('spesifikasi_aset')->nullable();
 
             // Identifikasi Keberadaan
             $table->string('lokasi')->nullable();
-            
+
             $table->enum('format_penyimpanan', ['Fisik', 'Dokumen Elektronik', 'Fisik dan Dokumen Elektronik'])->nullable();
-            $table->foreignId('opd_id')->constrained('opds')->onDelete('cascade');
+            $table->foreignId('opd_id')->constrained('opds')->restrictOnDelete();
             $table->string('masa_berlaku')->nullable();
             $table->string('penyedia_aset')->nullable();
             $table->enum('status_aktif', ['Aktif', 'Tidak Aktif'])->nullable();

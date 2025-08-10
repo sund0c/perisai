@@ -88,7 +88,7 @@
 
 <body>
     <h1>
-        <center>RAHASIA</center>
+        <center>**DOKUMEN RAHASIA**</center>
     </h1><BR>
     <h2>Hasil Penilaian Kategori SE - Tahun {{ $tahunAktifGlobal ?? '-' }}</h2>
     <h3>Pemilik Aset : {{ strtoupper($aset->opd->namaopd) }}</h3>

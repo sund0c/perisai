@@ -45,9 +45,11 @@
                         <tr>
                             <td>{{ $klasifikasi->id }}</td>
                             <td>
-                                <a href="{{ route('subklasifikasiaset.index', $klasifikasi->id) }}">
+                                {{-- <a href="{{ route('subklasifikasiaset.index', $klasifikasi->id) }}">
                                     [{{ $klasifikasi->kodeklas }}] {{ $klasifikasi->klasifikasiaset }}
-                                </a>
+                                </a> --}}
+
+                                [{{ $klasifikasi->kodeklas }}] {{ $klasifikasi->klasifikasiaset }}
                             </td>
                             <td>
                                 <div class="d-flex" style="gap: 5px;">

@@ -14,7 +14,7 @@ return new class extends Migration
 
             $table->unsignedTinyInteger('from_status')->nullable();
             $table->unsignedTinyInteger('to_status');
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')->constrained()->restrictOnDelete();
             $table->text('catatan')->nullable();
             $table->timestamp('changed_at')->useCurrent();
         });

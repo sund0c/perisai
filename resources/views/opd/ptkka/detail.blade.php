@@ -71,22 +71,24 @@
         <div class="card-body">
             {{-- Tombol Kembali dan Simpan --}}
             <div class="d-flex mb-3" style="gap: 10px;">
-                <a href="{{ route('ptkka.riwayat', $session->aset_id) }}" class="btn btn-secondary mb-3">
+                <a href="{{ route('opd.ptkka.riwayat', $session->aset_id) }}" class="btn btn-secondary mb-3">
                     <i class="fas fa-arrow-left"></i> Kembali
                 </a>
-                <form action="{{ route('ptkka.ajukanverifikasi', $session->id) }}" method="POST">
-                    @csrf
-                    <button onclick="return confirm('Yakin ingin mengajukan verifikasi?')" type="submit"
-                        class="btn btn-primary mb-3">Ajukan Verifikasi
-                    </button>
-                </form>
-                <a href="{{ route('ptkka.exportPDF', $session->id) }}" target="_blank" class="btn btn-danger mb-3">
+                @if ($session->status === 0)
+                    <form action="{{ route('opd.ptkka.ajukanverifikasi', $session->id) }}" method="POST">
+                        @csrf
+                        <button onclick="return confirm('Yakin ingin mengajukan verifikasi?')" type="submit"
+                            class="btn btn-primary mb-3">Ajukan Verifikasi
+                        </button>
+                    </form>
+                @endif
+                <a href="{{ route('opd.ptkka.exportPDF', $session->id) }}" target="_blank" class="btn btn-danger mb-3">
                     <i class="fas fa-file-pdf"></i> Export PDF
                 </a>
             </div>
 
             {{-- Form --}}
-            <form action="{{ route('ptkka.simpan', $session->id) }}" method="POST" id="form-ptkka">
+            <form action="{{ route('opd.ptkka.simpan', $session->id) }}" method="POST" id="form-ptkka">
                 @csrf
                 <div class="row">
                     {{-- Sidebar Tab --}}
@@ -114,7 +116,7 @@
                                     aria-labelledby="v-tab-{{ $fungsi->id }}">
 
                                     {{-- Form untuk setiap tab --}}
-                                    <form action="{{ route('ptkka.simpanPerFungsi', [$session->id, $fungsi->id]) }}"
+                                    <form action="{{ route('opd.ptkka.simpanPerFungsi', [$session->id, $fungsi->id]) }}"
                                         method="POST">
                                         @csrf
 
@@ -177,6 +179,13 @@
                                                                         value="{{ optional($jawaban)->linkbuktidukung }}"
                                                                         required>
                                                                 </div>
+
+                                                                @if ($session->status === 3)
+                                                                    <div class="form-group">
+                                                                        <label><strong>Catatan Admin</strong></label>
+                                                                        <textarea disabled name="catatanadmin[{{ $rek->id }}]" class="form-control" rows="2" required>{{ optional($jawaban)->catatanadmin }}</textarea>
+                                                                    </div>
+                                                                @endif
                                                             </div>
                                                         @empty
                                                             <div class="text-muted">Belum ada rekomendasi</div>

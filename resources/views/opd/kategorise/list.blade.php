@@ -10,7 +10,7 @@
     <div class="card">
         <div class="card-body table-responsive">
             <div class="d-flex mb-3" style="gap: 10px;">
-                <a href="{{ route('kategorise.index') }}" class="btn btn-secondary mb-3 me-2">
+                <a href="{{ route('opd.kategorise.index') }}" class="btn btn-secondary mb-3 me-2">
                     ← Kembali
                 </a>
                 <a href="{{ route('opd.kategorise.export_rekap_kategori', ['kategori' => $kategori]) }}"
@@ -63,10 +63,10 @@
                             </td>
 
                             <td>
-                                <a href="{{ route('kategorise.exportPdf', $aset->id) }}" class="btn btn-sm btn-primary">
+                                <a href="{{ route('opd.kategorise.exportPdf', $aset->id) }}" class="btn btn-sm btn-primary">
                                     <i class="fas fa-file-pdf"></i>
                                 </a>
-                                <a href="{{ route('kategorise.edit', $aset->id) }}" class="btn btn-sm btn-warning">
+                                <a href="{{ route('opd.kategorise.edit', $aset->id) }}" class="btn btn-sm btn-warning">
                                     <i class="fas fa-edit"></i>
                                 </a>
                             </td>

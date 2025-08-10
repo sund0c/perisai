@@ -11,7 +11,7 @@ class KategoriSeSeeder extends Seeder
     public function run(): void
     {
         // Ambil ID aset perangkat lunak (kamu bisa filter by klasifikasi kalau mau)
-        $asetIds = DB::table('asets')->take(2)->pluck('id');
+        $asetIds = DB::table('asets')->take(4)->pluck('id');
 
         foreach ($asetIds as $asetId) {
             $jawaban = [];

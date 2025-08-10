@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('ptkka_jawabans', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('ptkka_session_id')->constrained('ptkka_sessions')->onDelete('cascade');
-            $table->foreignId('rekomendasi_standard_id')->constrained()->onDelete('cascade');
+            $table->foreignId('ptkka_session_id')->constrained('ptkka_sessions')->restrictOnDelete();
+            $table->foreignId('rekomendasi_standard_id')->constrained()->restrictOnDelete();
             $table->tinyInteger('jawaban')->comment('0 = Tidak Diterapkan, 1 = Sebagian, 2 = Seluruhnya');
             $table->text('penjelasanopd')->nullable();
             $table->text('catatanadmin')->nullable();

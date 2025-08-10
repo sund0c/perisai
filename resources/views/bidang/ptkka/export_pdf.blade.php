@@ -77,7 +77,9 @@
         $tanggalPengajuan = $session->created_at ? Carbon::parse($session->created_at)->translatedFormat('d F Y') : '-';
         $tanggalVerif = $session->updated_at ? Carbon::parse($session->updated_at)->translatedFormat('d F Y') : '-';
     @endphp
-
+    <h1>
+        <center>**DOKUMEN RAHASIA**</center>
+    </h1><BR>
     <h2 style="margin: 0;">{{ $session->aset->nama_aset ?? 'N/A' }} :: {{ $namaOpd }}</h2>
     <p style="margin: 0;">UID: {{ $session->uid }} @if (isset($kategoriLabel[$session->standar_kategori_id]))
             &nbsp;&middot;&nbsp;<span class="text-uppercase">[ Standar:
@@ -172,7 +174,14 @@
         @endforeach
     @endforeach
 
-
+    <BR><BR><BR>
+    <h4>Catatan</h4>
+    <ol>
+        <li>Dokumen Hasil Penilaian Tingkat Kepatuhan Keamanan Aplikasi (PTKKA) ini adalah bersifat <b>RAHASIA</b>.</li>
+        <li>Simpan dokumen ini dengan baik sebagai bukti pelaksaan PTKKA.</li>
+        <li>Segera musnahkan jika dokumen ini sudah selesai digunakan.</li>
+        <li>PTKKA dilakukan minimal 1 kali dan setahun </li>
+    </ol>
 
     {{-- Footer --}}
     {{-- <div class="footer">

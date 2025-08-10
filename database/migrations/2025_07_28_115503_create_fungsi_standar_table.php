@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('fungsi_standar', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('kategori_id')->constrained('standar_kategori')->onDelete('cascade');
+            $table->foreignId('kategori_id')->constrained('standar_kategori')->restrictOnDelete();
             $table->string('nama');
             $table->integer('urutan')->default(0);
             $table->timestamps();

@@ -39,7 +39,7 @@
                         @endphp
                         <tr>
                             <td>
-                                <a href="{{ route('ptkka.riwayat', $aset->id) }}" class="text-primary font-weight-bold">
+                                <a href="{{ route('opd.ptkka.riwayat', $aset->id) }}" class="text-primary font-weight-bold">
                                     {{ $aset->kode_aset }}
                                 </a>
                             </td>

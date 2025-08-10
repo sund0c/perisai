@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('standar_indikator', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('fungsi_standar_id')->constrained('fungsi_standar')->onDelete('cascade');
+            $table->foreignId('fungsi_standar_id')->constrained('fungsi_standar')->restrictOnDelete();
             $table->text('indikator');
             $table->text('tujuan')->nullable();
             $table->integer('urutan')->default(0);

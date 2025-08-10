@@ -89,7 +89,7 @@
 
 <body>
     <h1>
-        <center>RAHASIA</center>
+        <center>**DOKUMEN RAHASIA**</center>
     </h1><BR>
     <h2>Informasi Aset - Tahun {{ $tahunAktifGlobal ?? '-' }}</h2>
     <h3>Pemilik Aset : {{ strtoupper($namaOpd) }}</h3>
@@ -123,7 +123,7 @@
     <ol>
         <li>Dokumen informasi Aset ini adalah bersifat <b>RAHASIA</b>.</li>
         <li>Musnahkan jika dokumen ini sudah selesai digunakan.</li>
-        <li>Semua informasi tentang aset ini dapat berubah sesuai dengan review dan pemutahiran data MANA-KAMI <b>yang
+        <li>Semua informasi tentang aset ini dapat berubah sesuai dengan review dan pemutahiran data PERISAI <b>yang
                 dilakukan sekali setahun oleh Pemilik Aset.</b> </li>
     </ol>
 

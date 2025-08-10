@@ -1,6 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Opd;
+
+use App\Http\Controllers\Controller;
 
 use App\Models\Aset;
 use App\Models\KategoriSe;
@@ -103,21 +105,6 @@ class KategoriSeController extends Controller
     }
 
 
-    public function oldindex()
-    {
-        $namaOpd = auth()->user()->opd->namaopd ?? '-';
-        $data = Aset::whereHas('klasifikasi', function ($query) {
-            $query->where('klasifikasiaset', 'PERANGKAT LUNAK');
-        })
-            ->whereHas('opd', function ($q) {
-                $q->where('id', auth()->user()->opd_id);
-            })
-            ->with(['subklasifikasiaset', 'kategoriSe'])
-            ->get();
-
-        return view('opd.kategorise.index', compact('data', 'namaOpd'));
-    }
-
     public function edit($asetId)
     {
         $aset = Aset::findOrFail($asetId);
@@ -143,9 +130,9 @@ class KategoriSeController extends Controller
             ->get();
 
         // Hitung kategori
-        $tinggi = $asetPL->where('kategoriSe.skor_total', '>=', 16)->count();
-        $sedang = $asetPL->whereBetween('kategoriSe.skor_total', [8, 15])->count();
-        $rendah = $asetPL->where('kategoriSe.skor_total', '<', 8)->filter(function ($a) {
+        $tinggi = $asetPL->where('opd.kategorise.skor_total', '>=', 16)->count();
+        $sedang = $asetPL->whereBetween('opd.kategorise.skor_total', [8, 15])->count();
+        $rendah = $asetPL->where('opd.kategorise.skor_total', '<', 8)->filter(function ($a) {
             return $a->kategoriSe !== null;
         })->count();
         $belum = $asetPL->whereNull('kategoriSe')->count();
@@ -201,7 +188,7 @@ class KategoriSeController extends Controller
             ]
         );
 
-        return redirect()->route('kategorise.index')->with('success', 'Penilaian berhasil disimpan.');
+        return redirect()->route('opd.kategorise.index')->with('success', 'Penilaian berhasil disimpan.');
     }
 
     public function exportRekapKategoriPdf($kategori)

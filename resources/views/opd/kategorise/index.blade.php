@@ -21,6 +21,7 @@
                 <div class="card-body">
                     <div class="d-flex mb-3" style="gap: 10px;">
                         <a href="{{ route('opd.kategorise.export_rekap') }}" class="btn btn-danger btn-sm">
+
                             <i class="fas fa-file-pdf"></i> Export PDF
                         </a>
                     </div>
@@ -35,7 +36,7 @@
                             <tr>
                                 <td class="bg-danger text-white" style="text-align: left">TINGGI</td>
                                 <td>
-                                    <a href="{{ route('kategorise.show', ['kategori' => 'tinggi']) }}">
+                                    <a href="{{ route('opd.kategorise.show', ['kategori' => 'tinggi']) }}">
                                         {{ $tinggi }}
                                     </a>
                                 </td>
@@ -43,7 +44,7 @@
                             <tr>
                                 <td class="bg-warning" style="text-align: left">SEDANG</td>
                                 <td>
-                                    <a href="{{ route('kategorise.show', ['kategori' => 'sedang']) }}">
+                                    <a href="{{ route('opd.kategorise.show', ['kategori' => 'sedang']) }}">
                                         {{ $sedang }}
                                     </a>
                                 </td>
@@ -51,7 +52,7 @@
                             <tr>
                                 <td class="bg-success text-white" style="text-align: left">RENDAH</td>
                                 <td>
-                                    <a href="{{ route('kategorise.show', ['kategori' => 'rendah']) }}">
+                                    <a href="{{ route('opd.kategorise.show', ['kategori' => 'rendah']) }}">
                                         {{ $rendah }}
                                     </a>
                                 </td>
@@ -59,7 +60,7 @@
                             <tr>
                                 <td class="bg-secondary text-white" style="text-align: left">Belum Dinilai</td>
                                 <td>
-                                    <a href="{{ route('kategorise.show', ['kategori' => 'belum']) }}">
+                                    <a href="{{ route('opd.kategorise.show', ['kategori' => 'belum']) }}">
                                         {{ $belum }}
                                     </a>
                                 </td>

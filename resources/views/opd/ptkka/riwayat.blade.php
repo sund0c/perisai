@@ -38,10 +38,10 @@
     @endif
     <div class="card">
         <div class="card-body">
-            <a href="{{ route('ptkka.index') }}" class="btn btn-secondary mb-3 me-2">
+            <a href="{{ route('opd.ptkka.index') }}" class="btn btn-secondary mb-3 me-2">
                 <i class="fas fa-arrow-left"></i> Kembali
             </a>
-            <form action="{{ route('ptkka.store', $aset->id) }}" method="POST" class="d-inline">
+            <form action="{{ route('opd.ptkka.store', $aset->id) }}" method="POST" class="d-inline">
                 @csrf
                 <button type="button" class="btn btn-primary mb-3"" data-toggle="modal"
                     data-target="#modalKategori{{ $aset->id }}">
@@ -125,14 +125,14 @@
                             </td>
                             <td>
                                 @if ($session->status === 0 || $session->status === 3)
-                                    <a href="{{ route('ptkka.detail', $session->id) }}" class="btn btn-warning btn-sm"
+                                    <a href="{{ route('opd.ptkka.detail', $session->id) }}" class="btn btn-warning btn-sm"
                                         title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
                                 @endif
 
                                 @if ($session->status === 0)
-                                    <form action="{{ route('ptkka.destroy', $session->id) }}" method="POST"
+                                    <form action="{{ route('opd.ptkka.destroy', $session->id) }}" method="POST"
                                         class="d-inline" onsubmit="return confirm('Yakin ingin menghapus sesi PTKKA ini?')">
                                         @csrf @method('DELETE')
                                         <button class="btn btn-danger btn-sm" title="Hapus">
@@ -142,8 +142,8 @@
                                 @endif
 
                                 @if ($session->status === 4)
-                                    <a href="{{ route('ptkka.pdf', $session->id) }}" class="btn btn-primary btn-sm"
-                                        title="Unduh PDF">
+                                    <a href="{{ route('bidang.ptkka.exportPDF', $session->id) }}"
+                                        class="btn btn-primary btn-sm" title="Unduh PDF">
                                         <i class="fas fa-file-pdf"></i>
                                     </a>
                                 @endif
@@ -162,7 +162,7 @@
             <div class="modal fade" id="modalKategori{{ $aset->id }}" tabindex="-1" role="dialog"
                 aria-labelledby="modalKategoriLabel" aria-hidden="true">
                 <div class="modal-dialog" role="document">
-                    <form method="POST" action="{{ route('ptkka.store', $aset->id) }}">
+                    <form method="POST" action="{{ route('opd.ptkka.store', $aset->id) }}">
                         @csrf
                         <div class="modal-content">
                             <div class="modal-header">

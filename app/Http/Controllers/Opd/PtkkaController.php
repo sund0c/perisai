@@ -1,6 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Opd;
+
+use App\Http\Controllers\Controller;
 
 use App\Models\PtkkaStatusLog;
 use Illuminate\Support\Str;
@@ -10,39 +12,147 @@ use Illuminate\Http\Request;
 use App\Models\FungsiStandar;
 use App\Models\StandarIndikator;
 use App\Models\PtkkaJawaban;
+use App\Models\Periode;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class PtkkaController extends Controller
 {
+    // public function indexPtkka()
+    // {
+    //     // Header info (opsional)
+    //     $periodeAktif = Periode::where('status', 'open')->first();
+    //     $tahunAktifGlobal = $periodeAktif->tahun ?? '-';
+    //     $kunci = $periodeAktif ? 'unlocked' : 'locked';
+
+    //     // Helper hitung persentase & kategori
+    //     $computeKategori = function ($session) {
+    //         if (!$session) return;
+    //         $jawabans = $session->jawabans ?? collect();
+    //         if ($jawabans->isEmpty()) return;
+
+    //         $total = (int) $jawabans->sum('jawaban');   // 0/1/2
+    //         $maks  = (int) ($jawabans->count() * 2);    // max = 2 per indikator
+    //         $persen = $maks > 0 ? (int) floor(($total / $maks) * 100) : 0;
+
+    //         if ($persen >= 80) $kat = 'TINGGI';
+    //         elseif ($persen >= 50) $kat = 'SEDANG';
+    //         else                    $kat = 'RENDAH';
+
+    //         $session->persentase = $persen;
+    //         $session->kategori_kepatuhan = $kat;
+    //         $session->ptkka_sessions_id = $session->id; // agar cocok dengan blade
+
+    //     };
+
+
+
+    //     // -----------------------
+    //     // KANAN: Rampung (status = 4) — tampilkan SEMUA aset
+    //     // -----------------------
+    //     $opdId = auth()->user()->opd_id;
+
+    //     $asetsRampung = Aset::query()
+    //         ->where('opd_id', $opdId) // ← hanya aset milik OPD user
+    //         // opsional: hanya aset yang punya sesi rampung (status=4)
+    //         ->whereHas('ptkkaSessions', function ($q) {
+    //             $q->whereHas('latestStatusLog', fn($l) => $l->where('status', 4));
+    //         })
+    //         ->with([
+    //             'opd:id,namaopd',
+    //             'ptkkaSessions' => function ($q) {
+    //                 $q->with(['latestStatusLog', 'jawabans'])
+    //                     ->whereHas('latestStatusLog', fn($l) => $l->where('status', 4))
+    //                     ->latest('updated_at');
+    //             },
+    //         ])
+    //         ->orderBy('opd_id')->orderBy('nama_aset')
+    //         ->get()
+    //         ->map(function ($aset) use ($computeKategori) {
+    //             // bisa null jika aset belum pernah status=4
+    //             $aset->ptkkaTerakhirRampung = $aset->ptkkaSessions->first();
+
+    //             if ($aset->ptkkaTerakhirRampung) {
+    //                 $computeKategori($aset->ptkkaTerakhirRampung);
+    //                 $aset->kategori_id_terakhir = $aset->ptkkaTerakhirRampung->standar_kategori_id;
+    //             } else {
+    //                 $aset->kategori_id_terakhir = null;
+    //             }
+
+    //             $aset->kategori_label_terakhir =
+    //                 $aset->kategori_id_terakhir === 3 ? 'MOBILE' : ($aset->kategori_id_terakhir === 2 ? 'WEB' : '-');
+
+    //             return $aset;
+    //         });
+    //     $badgeByKat = [
+    //         'TINGGI' => 'success',
+    //         'SEDANG' => 'warning',
+    //         'RENDAH' => 'danger',
+    //     ];
+
+    //     return view('opd.ptkka.index', compact(
+    //         'tahunAktifGlobal',
+    //         'kunci',
+    //         'asetsRampung',
+    //         'badgeByKat'
+    //     ));
+    // }
+
     public function indexPtkka()
     {
         $opdId = auth()->user()->opd_id;
 
+        // Ambil aset milik OPD + hanya sesi PTKKA terakhir yang STATUS=4 (Rampung)
         $asets = Aset::where('opd_id', $opdId)
-            ->with(['ptkkaTerakhir.jawabans'])
+            ->with([
+                // relasi ini diasumsikan sudah ada:
+                // ptkkaTerakhirRampung => sesi terakhir yang punya latestStatusLog status=4
+                'ptkkaTerakhirRampung.jawabans:id,ptkka_session_id,jawaban',
+            ])
+            ->orderBy('nama_aset')
             ->get();
+
+        // Kumpulkan kategori yang dipakai oleh sesi rampung untuk precompute skor maksimal
+        $kategoriIds = $asets
+            ->pluck('ptkkaTerakhirRampung.standar_kategori_id')
+            ->filter()
+            ->unique()
+            ->values();
+
+        // Hitung jumlah rekomendasi per kategori sekali saja (hemat query)
+        $rekomCountByKategori = [];
+        if ($kategoriIds->isNotEmpty()) {
+            $fungsiGroup = \App\Models\FungsiStandar::with([
+                'indikators' => function ($q) {
+                    $q->withCount('rekomendasis');
+                }
+            ])
+                ->whereIn('kategori_id', $kategoriIds)
+                ->get()
+                ->groupBy('kategori_id');
+
+            foreach ($fungsiGroup as $kategoriId => $fungsiList) {
+                $rekomCountByKategori[$kategoriId] = $fungsiList
+                    ->flatMap->indikators
+                    ->sum('rekomendasis_count');
+            }
+        }
+
         foreach ($asets as $aset) {
+            // Samakan nama properti agar view lama yang pakai "ptkkaTerakhir" tetap jalan
+            $aset->ptkkaTerakhir = $aset->ptkkaTerakhirRampung;
             $session = $aset->ptkkaTerakhir;
 
             if ($session) {
-                // Ambil semua rekomendasi_standard dari fungsi standar yang relevan dengan session
-                $fungsiStandars = FungsiStandar::with('indikators.rekomendasis')
-                    ->where('kategori_id', $session->standar_kategori_id)
-                    ->get();
+                $kategoriId = $session->standar_kategori_id;
 
-                $jumlahRekomendasi = 0;
+                // jumlah rekomendasi untuk kategori sesi ini
+                $jumlahRekomendasi = (int) ($rekomCountByKategori[$kategoriId] ?? 0);
+                $skorMaksimal      = $jumlahRekomendasi * 2;
+                $totalSkor         = (int) $session->jawabans->sum('jawaban');
 
-                foreach ($fungsiStandars as $fungsi) {
-                    foreach ($fungsi->indikators as $indikator) {
-                        $jumlahRekomendasi += $indikator->rekomendasis->count();
-                    }
-                }
-
-                $jumlahJawaban = $jumlahRekomendasi;
-                $skorMaksimal = $jumlahJawaban * 2;
-                $totalSkor = $session->jawabans->sum('jawaban');
-
-                $persentase = $skorMaksimal > 0 ? round(($totalSkor / $skorMaksimal) * 100, 2) : 0;
+                $persentase = $skorMaksimal > 0
+                    ? round(($totalSkor / $skorMaksimal) * 100, 2)
+                    : 0.0;
 
                 if ($persentase >= 66.7) {
                     $kategoriKepatuhan = 'TINGGI';
@@ -52,13 +162,68 @@ class PtkkaController extends Controller
                     $kategoriKepatuhan = 'RENDAH';
                 }
 
-                // Tambahkan properti ke session agar bisa dipakai langsung di view
+                // properti untuk dipakai di view
                 $session->persentase = $persentase;
                 $session->kategori_kepatuhan = $kategoriKepatuhan;
+                $aset->ptkka_status = 'RAMPUNG';
+            } else {
+                // Tidak punya sesi STATUS=4 → tandai BELUM PERNAH
+                $aset->ptkka_status = 'BELUM PERNAH';
+                // opsional: nilai default supaya view aman
+                $aset->ptkka_persentase = 0;
+                $aset->ptkka_kategori_kepatuhan = '-';
             }
         }
+
         return view('opd.ptkka.index', compact('asets'));
     }
+
+    // public function indexPtkkax()
+    // {
+    //     $opdId = auth()->user()->opd_id;
+
+    //     $asets = Aset::where('opd_id', $opdId)
+    //         ->with(['ptkkaTerakhir.jawabans'])
+    //         ->get();
+    //     foreach ($asets as $aset) {
+    //         $session = $aset->ptkkaTerakhir;
+
+    //         if ($session) {
+    //             // Ambil semua rekomendasi_standard dari fungsi standar yang relevan dengan session
+    //             $fungsiStandars = FungsiStandar::with('indikators.rekomendasis')
+    //                 ->where('kategori_id', $session->standar_kategori_id)
+    //                 ->get();
+
+    //             $jumlahRekomendasi = 0;
+
+    //             foreach ($fungsiStandars as $fungsi) {
+    //                 foreach ($fungsi->indikators as $indikator) {
+    //                     $jumlahRekomendasi += $indikator->rekomendasis->count();
+    //                 }
+    //             }
+
+    //             $jumlahJawaban = $jumlahRekomendasi;
+    //             $skorMaksimal = $jumlahJawaban * 2;
+    //             $totalSkor = $session->jawabans->sum('jawaban');
+
+    //             $persentase = $skorMaksimal > 0 ? round(($totalSkor / $skorMaksimal) * 100, 2) : 0;
+
+    //             if ($persentase >= 66.7) {
+    //                 $kategoriKepatuhan = 'TINGGI';
+    //             } elseif ($persentase >= 33.4) {
+    //                 $kategoriKepatuhan = 'SEDANG';
+    //             } else {
+    //                 $kategoriKepatuhan = 'RENDAH';
+    //             }
+
+    //             // Tambahkan properti ke session agar bisa dipakai langsung di view
+    //             $session->persentase = $persentase;
+    //             $session->kategori_kepatuhan = $kategoriKepatuhan;
+    //         }
+    //     }
+    //     return view('opd.ptkka.index', compact('asets'));
+    // }
+
     public function riwayat(Aset $aset)
     {
         // batasi hanya ke OPD yang sedang login
@@ -148,7 +313,7 @@ class PtkkaController extends Controller
             'changed_at' => now(),
         ]);
 
-        return redirect()->route('ptkka.riwayat', $aset->id)->with('success', 'Form PTKKA berhasil dibuat.');
+        return redirect()->route('opd.ptkka.riwayat', $aset->id)->with('success', 'Form PTKKA berhasil dibuat.');
     }
 
 
@@ -164,10 +329,24 @@ class PtkkaController extends Controller
             return back()->with('error', 'Hanya PTKKA yang berstatus Pengisian yang dapat dihapus.');
         }
 
-        $session->delete(); // akan menghapus juga status_logs karena onDelete('cascade')
 
-        return back()->with('success', 'Pengajuan PTKKA berhasil dihapus.');
+        try {
+            $session->delete();
+            $status = 'success';
+            $pesan = 'Pengajuan PTKKA berhasil dihapus.';
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Biasanya error 1451 untuk foreign key constraint
+            $status = 'error';
+            $pesan = 'Penghapusan Gagal karena data sudah terpakai';
+        } catch (\Throwable $e) {
+            // Penanganan error lain
+            $status = 'error';
+            $pesan = 'Penghapusan Gagal karena data sudah terpakai';
+        }
+
+        return back()->with($status, $pesan);
     }
+
 
 
     public function ajukan(PtkkaSession $session)
@@ -321,7 +500,7 @@ class PtkkaController extends Controller
             'changed_at' => now(),
         ]);
 
-        return redirect()->route('ptkka.riwayat', $session->aset_id)
+        return redirect()->route('opd.ptkka.riwayat', $session->aset_id)
             ->with('success', 'Pengajuan verifikasi berhasil dikirim. Hubungi Dinas Kominfos Prov Bali untuk jadwal Verifikasi.');
     }
 

@@ -7,7 +7,7 @@
 @endsection
 
 @section('content')
-    <form action="{{ route('kategorise.update', $aset->id) }}" method="POST">
+    <form action="{{ route('opd.kategorise.update', $aset->id) }}" method="POST">
         @csrf
         @method('PUT')
 
@@ -55,7 +55,7 @@
             <button type="submit" class="btn btn-primary">
                 <i class="fas fa-save"></i> Simpan Penilaian
             </button>
-            <a href="{{ route('kategorise.index') }}" class="btn btn-secondary">
+            <a href="{{ route('opd.kategorise.index') }}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left"></i> Kembali
             </a>
         </div>

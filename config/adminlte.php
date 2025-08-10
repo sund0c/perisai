@@ -336,19 +336,19 @@ return [
         // Hanya untuk role OPD
         [
             'text' => 'Aset',
-            'url'  => 'aset',
+            'route' => 'opd.aset.index',
             'icon' => 'fas fa-fw fa-box',
             'can'  => 'is-opd',
         ],
         [
             'text' => 'Kategori SE',
-            'url'  => 'kategorise',
+            'route' => 'opd.kategorise.index',
             'icon' => 'fas fa-fw fa-box',
             'can'  => 'is-opd',
         ],
         [
             'text' => 'PTKKA',
-            'url'  => 'ptkka',
+            'route' => 'opd.ptkka.index',
             'icon' => 'fas fa-clipboard-check',
             'can'  => 'is-opd',
         ],
@@ -402,6 +402,12 @@ return [
             'url'  => 'periodes',
             'icon' => 'fas fa-calendar-check',
             'can'  => 'is-admin',
+        ],
+        [
+            'text' => 'Tahun Aktif',
+            'url'  => 'periodes',
+            'icon' => 'fas fa-calendar-check',
+            'can'  => 'is-bidang',
         ],
 
 
