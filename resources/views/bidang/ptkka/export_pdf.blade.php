@@ -5,6 +5,16 @@
     <meta charset="UTF-8">
     <title>Export PDF</title>
     <style>
+        h3 {
+            margin: 0;
+            padding: 0;
+            line-height: 0;
+        }
+
+        h2 {
+            margin-bottom: 5px;
+        }
+
         @page {
             margin: 60px 30px;
         }
@@ -98,7 +108,7 @@
     </p>
 
 
-    <p>Total Skor Kepatuhan
+    <p style="margin: 0;">Total Skor Kepatuhan
         @if ($session->status == 4)
             : {{ $totalSkor }} = <strong>Kategori
                 {{ $kategoriKepatuhan }} ({{ $persentase }}%)</strong>
@@ -111,6 +121,41 @@
     </p>
 
     <hr>
+    <BR>
+    {{-- ==================== RINGKASAN NILAI PER FUNGSI ==================== --}}
+    <h3 style="margin: 0 0 6px 0;">Ringkasan Skor per Aspek</h3>
+    <table width="100%" cellspacing="0" cellpadding="6" border="1"
+        style="border-collapse: collapse; margin-bottom: 12px;">
+        <thead>
+            <tr>
+                <th align="left">ASPEK</th>
+                <th align="center" style="width:15%;">JML REKOM</th>
+                <th align="right" style="width:20%;">TINGKAT KEPATUHAN</th>
+            </tr>
+        </thead>
+        <tbody>
+            @php
+                // Antisipasi jika variabel belum ada
+                $skorPerFungsi = $skorPerFungsi ?? [];
+            @endphp
+
+            @forelse ($skorPerFungsi as $row)
+                <tr>
+                    <td>{{ chr(65 + $loop->index) }}. {{ $row['fungsi_nama'] }}</td>
+                    <td align="center">{{ $row['jumlah_rekomendasi'] }}</td>
+                    <td align="right">{{ $row['skor_total'] }} ({{ number_format($row['persentase'], 2) }}%)
+                        : {{ $row['kategori'] }}</td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="3" align="center">Belum ada data fungsi/indikator pada kategori ini.</td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
+    {{-- ================== /RINGKASAN NILAI PER FUNGSI ================== --}}
+    <hr></br></br>
+    <h3 style="margin: 0 0 6px 0;">Detil Skor per Aspek</h3>
 
     @foreach ($fungsiStandars as $fungsi)
         <h2>{{ chr(64 + $loop->iteration) }}. {{ $fungsi->nama }}</h2>
@@ -183,15 +228,7 @@
         <li>PTKKA dilakukan minimal 1 kali dan setahun </li>
     </ol>
 
-    {{-- Footer --}}
-    {{-- <div class="footer">
-        PERISAI :: Halaman
-        <script type="text/php">
-            if (isset($page)) {
-                echo $page;
-            }
-        </script>
-    </div> --}}
+
 
 
 

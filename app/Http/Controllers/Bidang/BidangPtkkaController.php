@@ -718,7 +718,7 @@ class BidangPtkkaController extends Controller
         return back()->with('success', 'Jawaban berhasil disimpan.');
     }
 
-    public function exportPDF($id)
+    public function exportPDFX($id)
     {
         // $session = PtkkaSession::with('kategori', 'aset')->findOrFail($id);
         $session = PtkkaSession::with(['kategori', 'aset.opd'])->findOrFail($id);
@@ -794,5 +794,133 @@ class BidangPtkkaController extends Controller
         });
 
         return $pdf->download('ptkka-' . $session->uid . '.pdf');
+    }
+
+    public function exportPDF($id)
+    {
+        // Ambil session + relasi yang dibutuhkan
+        $session = PtkkaSession::with(['kategori', 'aset.opd'])->findOrFail($id);
+
+        // Ambil seluruh fungsi sesuai kategori + indikator + rekomendasi
+        $fungsiStandars = FungsiStandar::with([
+            'indikators.rekomendasis'
+        ])
+            ->where('kategori_id', $session->standar_kategori_id)
+            ->orderBy('urutan')
+            ->get();
+
+        // Ambil semua jawaban untuk session ini, keyBy rekomendasi_standard_id
+        $jawabans = PtkkaJawaban::where('ptkka_session_id', $session->id)
+            ->get()
+            ->keyBy('rekomendasi_standard_id');
+
+        /**
+         * ======== Hitung total keseluruhan ========
+         * jumlahJawaban = total rekomendasi yang relevan (di semua fungsi)
+         * skorMaksimal  = jumlahJawaban * 2
+         * totalSkor     = sum nilai jawaban
+         */
+        $jumlahJawaban = 0;
+        $totalSkor = 0;
+
+        foreach ($fungsiStandars as $fungsi) {
+            foreach ($fungsi->indikators as $indikator) {
+                foreach ($indikator->rekomendasis as $rek) {
+                    $jumlahJawaban++;
+                    $totalSkor += (int) ($jawabans[$rek->id]->jawaban ?? 0);
+                }
+            }
+        }
+
+        $skorMaksimal = $jumlahJawaban * 2;
+
+        // Kategori keseluruhan
+        $persentase = 0; // default agar aman dikirim ke view
+        $kategoriKepatuhan = 'TIDAK TERDEFINISI';
+        if ($skorMaksimal > 0) {
+            $persentase = round(($totalSkor / $skorMaksimal) * 100, 2);
+            if ($persentase >= 66.7) {
+                $kategoriKepatuhan = 'TINGGI';
+            } elseif ($persentase >= 33.4) {
+                $kategoriKepatuhan = 'SEDANG';
+            } else {
+                $kategoriKepatuhan = 'RENDAH';
+            }
+        }
+
+        /**
+         * ======== Hitung skor per fungsi ========
+         * $skorPerFungsi: array berisi ringkasan per FungsiStandar
+         */
+        $skorPerFungsi = [];
+        foreach ($fungsiStandars as $fungsi) {
+            $jmlRek = 0;
+            $skorTotalFungsi = 0;
+
+            foreach ($fungsi->indikators as $indikator) {
+                foreach ($indikator->rekomendasis as $rek) {
+                    $jmlRek++;
+                    $skorTotalFungsi += (int) ($jawabans[$rek->id]->jawaban ?? 0);
+                }
+            }
+
+            $skorMaksFungsi = $jmlRek * 2;
+            $persenFungsi = $skorMaksFungsi > 0 ? round(($skorTotalFungsi / $skorMaksFungsi) * 100, 2) : 0;
+
+            $kategoriFungsi = 'TIDAK TERDEFINISI';
+            if ($skorMaksFungsi > 0) {
+                if ($persenFungsi >= 66.7) {
+                    $kategoriFungsi = 'TINGGI';
+                } elseif ($persenFungsi >= 33.4) {
+                    $kategoriFungsi = 'SEDANG';
+                } else {
+                    $kategoriFungsi = 'RENDAH';
+                }
+            }
+
+            $skorPerFungsi[] = [
+                'fungsi_id'            => $fungsi->id,
+                'fungsi_nama'          => $fungsi->nama ?? ('Fungsi #' . $fungsi->id),
+                'jumlah_rekomendasi'   => $jmlRek,
+                'skor_maks'            => $skorMaksFungsi,
+                'skor_total'           => $skorTotalFungsi,
+                'persentase'           => $persenFungsi,
+                'kategori'             => $kategoriFungsi,
+            ];
+        }
+
+        // Load PDF View (kirim $skorPerFungsi ke view)
+        $pdf = PDF::loadView('bidang.ptkka.export_pdf', compact(
+            'session',
+            'fungsiStandars',
+            'jawabans',
+            'jumlahJawaban',
+            'skorMaksimal',
+            'totalSkor',
+            'kategoriKepatuhan',
+            'persentase',
+            'skorPerFungsi' // <— tambahan untuk view
+        ))
+            ->setPaper([0, 0, 595.28, 841.89], 'portrait'); // A4 in points
+
+        // Render dulu supaya page count tersedia
+        $dompdf = $pdf->getDomPDF();
+        $dompdf->render();
+
+        // Footer halaman
+        $canvas = $dompdf->getCanvas();
+        $fontMetrics = $dompdf->getFontMetrics();
+        $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
+            $text = "PERISAI :: Halaman $pageNumber dari $pageCount";
+            $font = $fontMetrics->getFont('Helvetica', 'normal');
+            $size = 9;
+            $width = $canvas->get_width();
+            $textWidth = $fontMetrics->getTextWidth($text, $font, $size);
+            $x = ($width - $textWidth) / 2;
+            $y = 820; // posisi bawah halaman A4
+            $canvas->text($x, $y, $text, $font, $size);
+        });
+
+        return $pdf->stream('ptkka-' . $session->uid . '.pdf');
     }
 }
