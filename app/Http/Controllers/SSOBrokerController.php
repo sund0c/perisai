@@ -25,7 +25,7 @@ class SSOBrokerController extends Controller
         $this->ssoDomain     = config('app.sso_domain');
         $this->ssoServerLink = $this->ssoDomain . '/authBroker/';
         $this->protocol      = request()->secure() ? 'https' : 'http';
-        $this->logoutLink    = "{$this->protocol}://{$_SERVER['HTTP_HOST']}/keluar";
+        $this->logoutLink    = "{$this->protocol}://{$_SERVER['HTTP_HOST']}/exit";
         $this->UserService   = $UserService;
     }
 

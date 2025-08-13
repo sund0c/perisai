@@ -1,29 +1,31 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
-use App\Http\Middleware\RoleMiddleware;
 use Illuminate\Support\Facades\Route;
-
-use App\Http\Controllers\OpdController;
-use App\Http\Controllers\KlasifikasiAsetController;
-use App\Http\Controllers\SubKlasifikasiAsetController;
-use App\Http\Controllers\RangeAsetController;
-use App\Http\Controllers\RangeSeController;
-use App\Http\Controllers\PeriodeController;
-
-use App\Http\Controllers\IndikatorKategoriSeController;
-
 use App\Http\Controllers\SkController;
+use App\Http\Controllers\OpdController;
+
+use App\Http\Middleware\RoleMiddleware;
+use App\Http\Controllers\PeriodeController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RangeSeController;
+use App\Http\Controllers\Opd\AsetController;
+use App\Http\Middleware\SSOBrokerMiddleware;
+
+use App\Http\Controllers\Opd\PtkkaController;
+
+use App\Http\Controllers\RangeAsetController;
 
 //BIDANG
-use App\Http\Controllers\Bidang\BidangAsetController;
-use App\Http\Controllers\Bidang\BidangKategoriSeController;
-use App\Http\Controllers\Bidang\BidangPtkkaController;
+use App\Http\Controllers\SSOBrokerController;
+use App\Http\Controllers\Opd\KategoriseController;
+use App\Http\Controllers\KlasifikasiAsetController;
 
 //OPD
-use App\Http\Controllers\Opd\AsetController;
-use App\Http\Controllers\Opd\KategoriseController;
-use App\Http\Controllers\Opd\PtkkaController;
+use App\Http\Controllers\Bidang\BidangAsetController;
+use App\Http\Controllers\Bidang\BidangPtkkaController;
+use App\Http\Controllers\SubKlasifikasiAsetController;
+use App\Http\Controllers\IndikatorKategoriSeController;
+use App\Http\Controllers\Bidang\BidangKategoriSeController;
 
 
 
@@ -34,6 +36,10 @@ Route::get('/', function () {
     return redirect('/login');
 });
 
+// SSO
+Route::get('authenticateToSSO', 'SSOBrokerController@authenticateToSSO');
+Route::get('authData/{authData}', 'SSOBrokerController@authenticateToSSO');
+Route::get('exit/{sessionId}', 'SSOBrokerController@logout')->name('exit');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', function () {
@@ -48,7 +54,7 @@ Route::middleware(['auth'])->group(function () {
 });
 
 
-Route::middleware(['auth', RoleMiddleware::class . ':admin'])->group(function () {
+Route::middleware(['auth', RoleMiddleware::class . ':admin', 'SSOBrokerMiddleware'])->group(function () {
 
     Route::prefix('sk')->group(function () {
         Route::get('/', [SkController::class, 'indexKategori'])->name('sk.index');
@@ -134,7 +140,7 @@ Route::middleware(['auth', RoleMiddleware::class . ':admin'])->group(function ()
 });
 
 
-Route::middleware(['auth', 'role:admin,bidang'])->group(function () {
+Route::middleware(['auth', 'role:admin,bidang', 'SSOBrokerMiddleware'])->group(function () {
     Route::resource('periodes', PeriodeController::class);
     Route::post('periodes/{periode}/activate', [PeriodeController::class, 'activate'])
         ->name('periodes.activate');
@@ -143,7 +149,7 @@ Route::middleware(['auth', 'role:admin,bidang'])->group(function () {
 
 //============= Start of BIDANG ===========================
 
-Route::middleware(['auth', 'role:bidang'])->prefix('bidang/aset')->name('bidang.aset.')->group(function () {
+Route::middleware(['auth', 'role:bidang', 'SSOBrokerMiddleware'])->prefix('bidang/aset')->name('bidang.aset.')->group(function () {
     Route::get('/', [BidangAsetController::class, 'index'])->name('index');
     Route::get('/export/rekap', [BidangAsetController::class, 'exportRekapPdf'])->name('export_rekap');
     Route::get('/klasifikasi/{id}', [BidangAsetController::class, 'showByKlasifikasi'])->name('show_by_klasifikasi');
@@ -151,7 +157,7 @@ Route::middleware(['auth', 'role:bidang'])->prefix('bidang/aset')->name('bidang.
     Route::get('/{id}/pdf', [BidangAsetController::class, 'pdf'])->name('pdf');
 });
 
-Route::middleware(['auth', 'role:bidang'])->prefix('bidang/kategorise')->name('bidang.kategorise.')->group(function () {
+Route::middleware(['auth', 'role:bidang', 'SSOBrokerMiddleware'])->prefix('bidang/kategorise')->name('bidang.kategorise.')->group(function () {
     Route::get('/export/rekap/{kategori}', [BidangKategoriSeController::class, 'exportRekapKategoriPdf'])->name('export_rekap_kategori');
     Route::get('/', [BidangKategoriSeController::class, 'index'])->name('index');
     Route::get('/kategori/{kategori}', [BidangKategoriSeController::class, 'show'])->name('show');
@@ -159,7 +165,7 @@ Route::middleware(['auth', 'role:bidang'])->prefix('bidang/kategorise')->name('b
     Route::get('/export/pdf/{id}', [BidangKategoriSeController::class, 'exportPdf'])->name('exportPdf');
 });
 
-Route::middleware(['auth', 'role:bidang'])->prefix('bidang/ptkka')->name('bidang.ptkka.')->group(function () {
+Route::middleware(['auth', 'role:bidang', 'SSOBrokerMiddleware'])->prefix('bidang/ptkka')->name('bidang.ptkka.')->group(function () {
     Route::get('/', [BidangPtkkaController::class, 'indexPtkkaBidang'])->name('index');
     Route::post('/{session}/ajukan-verifikasi', [BidangPtkkaController::class, 'ajukanVerifikasi'])->name('ajukanverifikasi');
     Route::get('/export/pdfpengajuan', [BidangPtkkaController::class, 'pengajuanPDF'])->name('pengajuanPDF');
@@ -172,7 +178,7 @@ Route::middleware(['auth', 'role:bidang'])->prefix('bidang/ptkka')->name('bidang
     Route::get('/riwayat/{aset}', [BidangPtkkaController::class, 'riwayat'])->name('riwayat');
 });
 
-Route::middleware(['auth', 'role:bidang,opd'])->prefix('bidang/ptkka')->name('bidang.ptkka.')->group(function () {
+Route::middleware(['auth', 'role:bidang,opd', 'SSOBrokerMiddleware'])->prefix('bidang/ptkka')->name('bidang.ptkka.')->group(function () {
     Route::get('/export/pdf/{id}', [BidangPtkkaController::class, 'exportPDF'])->name('exportPDF');
 });
 
@@ -183,7 +189,7 @@ Route::middleware(['auth', 'role:bidang,opd'])->prefix('bidang/ptkka')->name('bi
 
 //============= Start of OPD ===========================
 
-Route::middleware(['auth', 'role:opd'])->prefix('opd/ptkka')->name('opd.ptkka.')->group(function () {
+Route::middleware(['auth', 'role:opd', 'SSOBrokerMiddleware'])->prefix('opd/ptkka')->name('opd.ptkka.')->group(function () {
     //Route::middleware(['auth', RoleMiddleware::class . ':opd'])->group(function () {
 
     //  Route::prefix('ptkka')->group(function () {
@@ -199,7 +205,7 @@ Route::middleware(['auth', 'role:opd'])->prefix('opd/ptkka')->name('opd.ptkka.')
     Route::get('/export/pdf/{id}', [PtkkaController::class, 'exportPDF'])->name('exportPDF');
 });
 
-Route::middleware(['auth', 'role:opd'])->prefix('opd/aset')->name('opd.aset.')->group(function () {
+Route::middleware(['auth', 'role:opd', 'SSOBrokerMiddleware'])->prefix('opd/aset')->name('opd.aset.')->group(function () {
     Route::get('/', [AsetController::class, 'index'])->name('index');
     Route::get('/export/rekap', [AsetController::class, 'exportRekapPdf'])->name('export_rekap');
     Route::get('/export/rekapklas/{id}', [AsetController::class, 'exportRekapKlasPdf'])->name('export_rekap_klas');
@@ -213,7 +219,7 @@ Route::middleware(['auth', 'role:opd'])->prefix('opd/aset')->name('opd.aset.')->
     Route::delete('/{id}', [AsetController::class, 'destroy'])->name('destroy');
 });
 
-Route::middleware(['auth', 'role:opd'])->prefix('opd/kategorise')->name('opd.kategorise.')->group(function () {
+Route::middleware(['auth', 'role:opd', 'SSOBrokerMiddleware'])->prefix('opd/kategorise')->name('opd.kategorise.')->group(function () {
     Route::get('/export/rekap/{kategori}', [KategoriSeController::class, 'exportRekapKategoriPdf'])->name('export_rekap_kategori');
     Route::get('/', [KategoriSeController::class, 'index'])->name('index');
     Route::get('/{aset}/edit', [KategoriSeController::class, 'edit'])->name('edit');
