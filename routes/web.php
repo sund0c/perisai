@@ -37,11 +37,11 @@ Route::get('/', function () {
 });
 
 // SSO
-Route::get('authenticateToSSO', 'SSOBrokerController@authenticateToSSO');
-Route::get('authData/{authData}', 'SSOBrokerController@authenticateToSSO');
-Route::get('exit/{sessionId}', 'SSOBrokerController@logout')->name('exit');
+Route::get('authenticateToSSO', 'App\Http\Controllers\SSOBrokerController@authenticateToSSO');
+Route::get('authData/{authData}', 'App\Http\Controllers\SSOBrokerController@authenticateToSSO');
+Route::get('exit/{sessionId}', 'App\Http\Controllers\SSOBrokerController@logout')->name('exit');
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['SSOBrokerMiddleware'])->group(function () {
     Route::get('/dashboard', function () {
         $role = auth()->user()->role;
         return match ($role) {

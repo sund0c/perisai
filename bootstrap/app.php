@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'role' => RoleMiddleware::class, // sekarang bisa pakai 'role:bidang' di routes
+            'SSOBrokerMiddleware' => \App\Http\Middleware\SSOBrokerMiddleware::class,
         ]);
 
         // (opsional) kalau mau tambahkan global middleware atau group, taruh di sini

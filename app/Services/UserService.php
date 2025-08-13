@@ -1,17 +1,17 @@
 <?php
 namespace App\Services;
-use App\Helpers\PublicHelper;
-use App\Http\Resources\User\DetailUserResource;
-use App\Models\UserDetail;
 use DB;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Log;
 use Carbon\Carbon;
-use App\User;
+use App\Models\User;
+use App\Models\UserDetail;
+use Illuminate\Http\Request;
+use App\Helpers\PublicHelper;
 use App\Models\UserWarehouse;
 use Yajra\DataTables\DataTables;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use App\Http\Resources\User\DetailUserResource;
 
 class UserService
 {
