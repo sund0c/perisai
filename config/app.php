@@ -14,6 +14,8 @@ return [
     */
 
     'name' => env('APP_NAME', 'Laravel'),
+    'sso_domain' => env('SSO_DOMAIN', 'https://sso.baliprov.dev'),
+    'broker_code' => env('BROKER_CODE', '938252'),
 
     /*
     |--------------------------------------------------------------------------
