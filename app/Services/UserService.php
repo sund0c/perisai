@@ -3,6 +3,7 @@ namespace App\Services;
 use DB;
 use Log;
 use Carbon\Carbon;
+use App\Models\Opd;
 use App\Models\User;
 use App\Models\UserDetail;
 use Illuminate\Http\Request;
@@ -68,6 +69,9 @@ class UserService
             $role = $sso_roles->role_code;
         }
         $user = User::where('sso_user_id',$sso_user->id)->first();
+        $authUserData = session('authUserData');
+
+            
         if ($user) {
             User::where('sso_user_id', $sso_user->id)->update([
                 "email" => $sso_user->email,
@@ -75,6 +79,7 @@ class UserService
             ]);
             return true;
         }
+        
         $user = User::where('email', $sso_user->email)->first();
         if ($user) {
             User::where('email', $sso_user->email)->update([
@@ -83,6 +88,16 @@ class UserService
                 "role" => $role,
             ]);
             return true;
+        }
+
+        $exist = Opd::where('namaopd' , $authUserData->roles[0]->unit)->first();
+        if ($exist) {
+            $user->opd_id = $exist->id;
+        } else {
+            $opd = Opd::create([
+                'namaopd' => $authUserData->roles[0]->unit
+            ]);
+            $user->opd_id = $opd->id;
         }
         $user_data = (array)$sso_user;
         $user_data['sso_user_id'] = $sso_user->id;
