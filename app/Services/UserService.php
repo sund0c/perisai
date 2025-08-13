@@ -63,15 +63,10 @@ class UserService
     public function isAlreadyExist($sso_user)
     {
         $sso_roles = session('defaultRole');
-        if($sso_roles->role_code == "super-admin"){
-            $role = "admin";
-        }else{
-            $role = $sso_roles->role_code;
-        }
         $user = User::where('sso_user_id',$sso_user->id)->first();
         $authUserData = session('authUserData');
+        $role = $sso_roles->role_code;
 
-            
         if ($user) {
             User::where('sso_user_id', $sso_user->id)->update([
                 "email" => $sso_user->email,
@@ -92,18 +87,19 @@ class UserService
 
         $exist = Opd::where('namaopd' , $authUserData->roles[0]->unit)->first();
         if ($exist) {
-            $user->opd_id = $exist->id;
+            $opd_id = $exist->id;
         } else {
             $opd = Opd::create([
                 'namaopd' => $authUserData->roles[0]->unit
             ]);
-            $user->opd_id = $opd->id;
+            $opd_id = $opd->id;
         }
         $user_data = (array)$sso_user;
         $user_data['sso_user_id'] = $sso_user->id;
         $user_data['password'] = bcrypt($sso_user->id);
         $user_data['email_verified_at'] = now();
         $user_data['role'] = $role;
+        $user_data['opd_id'] = $opd_id;
         $user = User::create($user_data);
         if (!Auth::check()) {
             Auth::loginUsingId($user->id);
