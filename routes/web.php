@@ -1,5 +1,18 @@
 <?php
 
+// AUTH START
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\ConfirmablePasswordController;
+use App\Http\Controllers\Auth\EmailVerificationNotificationController;
+use App\Http\Controllers\Auth\EmailVerificationPromptController;
+use App\Http\Controllers\Auth\NewPasswordController;
+use App\Http\Controllers\Auth\PasswordController;
+use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Auth\VerifyEmailController;
+// AUTH END
+
+
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SkController;
 use App\Http\Controllers\OpdController;
@@ -17,7 +30,7 @@ use App\Http\Controllers\RangeAsetController;
 
 //BIDANG
 use App\Http\Controllers\SSOBrokerController;
-use App\Http\Controllers\Opd\KategoriseController;
+use App\Http\Controllers\Opd\KategoriSeController;
 use App\Http\Controllers\KlasifikasiAsetController;
 
 //OPD
@@ -27,14 +40,38 @@ use App\Http\Controllers\SubKlasifikasiAsetController;
 use App\Http\Controllers\IndikatorKategoriSeController;
 use App\Http\Controllers\Bidang\BidangKategoriSeController;
 
+// EXAMPLE FOR TEST
+use App\Http\Controllers\ExampleController;
 
-
-
-
-
-Route::get('/', function () {
-    return redirect('/login');
+// Auth Routes Start
+Route::middleware('guest')->group(function () {
+    Route::get('register', [RegisteredUserController::class, 'create'])->name('register');
+    Route::post('register', [RegisteredUserController::class, 'store']);    
+    Route::get('login', [AuthenticatedSessionController::class, 'create'])->name('login');
+    Route::post('login', [AuthenticatedSessionController::class, 'store']);
+    Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
+    Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])->name('password.email');
+    Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])->name('password.reset');
+    Route::post('reset-password', [NewPasswordController::class, 'store'])->name('password.store');
 });
+
+Route::middleware('SSOBrokerMiddleware', 'spatie_role_or_permission:admin|opd|bidang')->group(function () {
+    Route::get('verify-email', EmailVerificationPromptController::class)->name('verification.notice');
+    Route::get('verify-email/{id}/{hash}', VerifyEmailController::class)->middleware(['signed', 'throttle:6,1'])->name('verification.verify');
+    Route::post('email/verification-notification', [EmailVerificationNotificationController::class, 'store'])->middleware('throttle:6,1')->name('verification.send');
+    Route::get('confirm-password', [ConfirmablePasswordController::class, 'show'])->name('password.confirm');
+    Route::post('confirm-password', [ConfirmablePasswordController::class, 'store']);
+    Route::put('password', [PasswordController::class, 'update'])->name('password.update');
+    Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
+});
+
+
+// Auth Routes End
+
+// Sample use spatie. Remove when not needed
+// Route::middleware(['auth', 'spatie_role_or_permission:opd|bidang.aset.manage'])->get('/example', [ExampleController::class, 'index'])->name('example.index');
+Route::get('/example', [ExampleController::class, 'index'])->name('example.index');
+Route::post('/example', [ExampleController::class, 'store'])->name('example.store');
 
 // SSO
 Route::get('authenticateToSSO', 'App\Http\Controllers\SSOBrokerController@authenticateToSSO');
@@ -42,19 +79,29 @@ Route::get('authData/{authData}', 'App\Http\Controllers\SSOBrokerController@auth
 Route::get('exit/{sessionId}', 'App\Http\Controllers\SSOBrokerController@logout')->name('exit');
 
 Route::middleware(['SSOBrokerMiddleware'])->group(function () {
+    Route::get('/', function () {
+        return redirect('/dashboard');
+    });
+
     Route::get('/dashboard', function () {
-        $role = auth()->user()->role;
+        
+        $role = auth()->user()->getRoleNames()->first() ?? 'guest';
+
         return match ($role) {
             'opd' => view('opd.dashboard'),
             'admin' => view('admin.dashboard'),
             'bidang' => view('bidang.dashboard'),
-            default => abort(403),
+            default => abort(403)
         };
     })->name('dashboard');
 });
 
+Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:admin'])->group(function () {
 
-Route::middleware(['auth', RoleMiddleware::class . ':admin', 'SSOBrokerMiddleware'])->group(function () {
+    Route::prefix('opd')->group(function () {
+        Route::get('/', [OpdController::class, 'index'])->name('opd.index');
+        Route::resource('opd', OpdController::class);
+    });
 
     Route::prefix('sk')->group(function () {
         Route::get('/', [SkController::class, 'indexKategori'])->name('sk.index');
@@ -86,12 +133,7 @@ Route::middleware(['auth', RoleMiddleware::class . ':admin', 'SSOBrokerMiddlewar
         Route::put('/rekomendasi/{id}', [SkController::class, 'updateRekomendasi'])->name('sk.rekomendasi.update');
         Route::delete('/rekomendasi/{id}', [SkController::class, 'destroyRekomendasi'])->name('sk.rekomendasi.destroy');
     });
-
-    Route::prefix('opd')->group(function () {
-        Route::get('/', [OpdController::class, 'index'])->name('opd.index');
-        Route::resource('opd', OpdController::class);
-    });
-
+    
     // Route::prefix('klasifikasiaset')->group(function () {
     //     Route::resource('', KlasifikasiAsetController::class);
     //     Route::get('/{id}/sub', [SubKlasifikasiAsetController::class, 'index'])->name('subklasifikasiaset.index');
@@ -129,10 +171,6 @@ Route::middleware(['auth', RoleMiddleware::class . ':admin', 'SSOBrokerMiddlewar
     //     Route::post('/{periode}/activate', [PeriodeController::class, 'activate'])->name('periodes.activate');
     // });
 
-
-
-
-
     Route::prefix('indikatorkategorise')->group(function () {
         Route::resource('/', IndikatorKategoriSeController::class)->names('admin.indikatorkategorise');
         Route::get('/export/pdf', [IndikatorKategoriSeController::class, 'exportPDF'])->name('indikatorkategorise.export.pdf');
@@ -140,16 +178,15 @@ Route::middleware(['auth', RoleMiddleware::class . ':admin', 'SSOBrokerMiddlewar
 });
 
 
-Route::middleware(['auth', 'role:admin,bidang', 'SSOBrokerMiddleware'])->group(function () {
+Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:admin|bidang'])->group(function () {
     Route::resource('periodes', PeriodeController::class);
     Route::post('periodes/{periode}/activate', [PeriodeController::class, 'activate'])
         ->name('periodes.activate');
 });
 
-
 //============= Start of BIDANG ===========================
 
-Route::middleware(['auth', 'role:bidang', 'SSOBrokerMiddleware'])->prefix('bidang/aset')->name('bidang.aset.')->group(function () {
+Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:bidang', ])->prefix('bidang/aset')->name('bidang.aset.')->group(function () {
     Route::get('/', [BidangAsetController::class, 'index'])->name('index');
     Route::get('/export/rekap', [BidangAsetController::class, 'exportRekapPdf'])->name('export_rekap');
     Route::get('/klasifikasi/{id}', [BidangAsetController::class, 'showByKlasifikasi'])->name('show_by_klasifikasi');
@@ -157,7 +194,7 @@ Route::middleware(['auth', 'role:bidang', 'SSOBrokerMiddleware'])->prefix('bidan
     Route::get('/{id}/pdf', [BidangAsetController::class, 'pdf'])->name('pdf');
 });
 
-Route::middleware(['auth', 'role:bidang', 'SSOBrokerMiddleware'])->prefix('bidang/kategorise')->name('bidang.kategorise.')->group(function () {
+Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:bidang'])->prefix('bidang/kategorise')->name('bidang.kategorise.')->group(function () {
     Route::get('/export/rekap/{kategori}', [BidangKategoriSeController::class, 'exportRekapKategoriPdf'])->name('export_rekap_kategori');
     Route::get('/', [BidangKategoriSeController::class, 'index'])->name('index');
     Route::get('/kategori/{kategori}', [BidangKategoriSeController::class, 'show'])->name('show');
@@ -165,7 +202,7 @@ Route::middleware(['auth', 'role:bidang', 'SSOBrokerMiddleware'])->prefix('bidan
     Route::get('/export/pdf/{id}', [BidangKategoriSeController::class, 'exportPdf'])->name('exportPdf');
 });
 
-Route::middleware(['auth', 'role:bidang', 'SSOBrokerMiddleware'])->prefix('bidang/ptkka')->name('bidang.ptkka.')->group(function () {
+Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:bidang'])->prefix('bidang/ptkka')->name('bidang.ptkka.')->group(function () {
     Route::get('/', [BidangPtkkaController::class, 'indexPtkkaBidang'])->name('index');
     Route::post('/{session}/ajukan-verifikasi', [BidangPtkkaController::class, 'ajukanVerifikasi'])->name('ajukanverifikasi');
     Route::get('/export/pdfpengajuan', [BidangPtkkaController::class, 'pengajuanPDF'])->name('pengajuanPDF');
@@ -178,7 +215,7 @@ Route::middleware(['auth', 'role:bidang', 'SSOBrokerMiddleware'])->prefix('bidan
     Route::get('/riwayat/{aset}', [BidangPtkkaController::class, 'riwayat'])->name('riwayat');
 });
 
-Route::middleware(['auth', 'role:bidang,opd', 'SSOBrokerMiddleware'])->prefix('bidang/ptkka')->name('bidang.ptkka.')->group(function () {
+Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd|bidang'])->prefix('bidang/ptkka')->name('bidang.ptkka.')->group(function () {
     Route::get('/export/pdf/{id}', [BidangPtkkaController::class, 'exportPDF'])->name('exportPDF');
 });
 
@@ -189,10 +226,11 @@ Route::middleware(['auth', 'role:bidang,opd', 'SSOBrokerMiddleware'])->prefix('b
 
 //============= Start of OPD ===========================
 
-Route::middleware(['auth', 'role:opd', 'SSOBrokerMiddleware'])->prefix('opd/ptkka')->name('opd.ptkka.')->group(function () {
+Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd'])->prefix('opd/ptkka')->name('opd.ptkka.')->group(function () {
+    
     //Route::middleware(['auth', RoleMiddleware::class . ':opd'])->group(function () {
-
     //  Route::prefix('ptkka')->group(function () {
+
     Route::get('/', [PtkkaController::class, 'indexPtkka'])->name('index');
     Route::get('/riwayat/{aset}', [PtkkaController::class, 'riwayat'])->name('riwayat');
     Route::post('/{aset}/store', [PtkkaController::class, 'store'])->name('store');
@@ -205,7 +243,7 @@ Route::middleware(['auth', 'role:opd', 'SSOBrokerMiddleware'])->prefix('opd/ptkk
     Route::get('/export/pdf/{id}', [PtkkaController::class, 'exportPDF'])->name('exportPDF');
 });
 
-Route::middleware(['auth', 'role:opd', 'SSOBrokerMiddleware'])->prefix('opd/aset')->name('opd.aset.')->group(function () {
+Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd'])->prefix('opd/aset')->name('opd.aset.')->group(function () {
     Route::get('/', [AsetController::class, 'index'])->name('index');
     Route::get('/export/rekap', [AsetController::class, 'exportRekapPdf'])->name('export_rekap');
     Route::get('/export/rekapklas/{id}', [AsetController::class, 'exportRekapKlasPdf'])->name('export_rekap_klas');
@@ -219,7 +257,7 @@ Route::middleware(['auth', 'role:opd', 'SSOBrokerMiddleware'])->prefix('opd/aset
     Route::delete('/{id}', [AsetController::class, 'destroy'])->name('destroy');
 });
 
-Route::middleware(['auth', 'role:opd', 'SSOBrokerMiddleware'])->prefix('opd/kategorise')->name('opd.kategorise.')->group(function () {
+Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd'])->prefix('opd/kategorise')->name('opd.kategorise.')->group(function () {
     Route::get('/export/rekap/{kategori}', [KategoriSeController::class, 'exportRekapKategoriPdf'])->name('export_rekap_kategori');
     Route::get('/', [KategoriSeController::class, 'index'])->name('index');
     Route::get('/{aset}/edit', [KategoriSeController::class, 'edit'])->name('edit');
@@ -231,12 +269,10 @@ Route::middleware(['auth', 'role:opd', 'SSOBrokerMiddleware'])->prefix('opd/kate
 
 //============= End of OPD ===========================
 
-
-
-Route::middleware('auth')->group(function () {
+Route::middleware('SSOBrokerMiddleware', 'spatie_role_or_permission:admin|opd|bidang')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-require __DIR__ . '/auth.php';
+// require __DIR__ . '/auth.php';

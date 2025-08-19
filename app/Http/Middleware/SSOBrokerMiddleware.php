@@ -33,6 +33,9 @@ class SSOBrokerMiddleware
             }
             $UserService = new UserService();
             $sso_session = Session::get('authUserData');
+            if (!$sso_session) {
+                return redirect('authenticateToSSO');
+            }
             if ($UserService->isAlreadyExist($sso_session->user)) {
                 $user = $UserService->whereSsoUserId($sso_session->user->id);
                 Auth::loginUsingId($user->id);

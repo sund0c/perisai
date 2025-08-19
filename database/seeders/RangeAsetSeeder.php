@@ -12,7 +12,7 @@ class RangeAsetSeeder extends Seeder
      */
     public function run(): void
     {
-$data = [
+        $data = [
             [
                 'nilai_akhir_aset' => 'RENDAH',
                 'warna_hexa'       => '#28a745', // hijau

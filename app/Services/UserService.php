@@ -58,8 +58,6 @@ class UserService
         }
     }
 
-
-
     public function isAlreadyExist($sso_user)
     {
         $sso_roles = session('defaultRole');
@@ -72,6 +70,7 @@ class UserService
                 "email" => $sso_user->email,
                 "role" => $role,
             ]);
+            $user->assignRole($role);
             return true;
         }
         
@@ -82,6 +81,7 @@ class UserService
                 "email" => $sso_user->email,
                 "role" => $role,
             ]);
+            $user->assignRole($role);
             return true;
         }
 
@@ -101,6 +101,7 @@ class UserService
         $user_data['role'] = $role;
         $user_data['opd_id'] = $opd_id;
         $user = User::create($user_data);
+        $user->assignRole($role);
         if (!Auth::check()) {
             Auth::loginUsingId($user->id);
         }

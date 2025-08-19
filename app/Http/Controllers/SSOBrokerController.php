@@ -10,10 +10,13 @@
 
 namespace App\Http\Controllers;
 
+use Session;
 use App\JWT\JWT;
 use GuzzleHttp\Client;
 use Illuminate\Http\Request;
 use App\Services\UserService;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 
 class SSOBrokerController extends Controller
 {
@@ -84,9 +87,17 @@ class SSOBrokerController extends Controller
 
     public function logout(Request $request)
     {
-        if ($request->sessionId) \Session::getHandler()->destroy($request->sessionId);
+        $sessionId = $request->sessionId ?? session()->getId();
+     
+        if ($sessionId) Session::getHandler()->destroy($sessionId);                           
         session()->flush();
-        return response()->json(['message' => 'Logged out successfully']);
+        session()->invalidate();
+
+        // TODO: not sure if this is the correct way to handle logout
+        // SSO have its session. 
+        // When logout in this website and SSO still logged in (it's session active), 
+        // it still login in automatically in this website. I want it redirected.
+        return redirect(($this->ssoDomain . '/logout'));
     }
 
     private function abortWithMessage(string $message)

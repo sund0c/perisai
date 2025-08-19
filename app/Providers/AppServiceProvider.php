@@ -25,9 +25,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         \Carbon\Carbon::setLocale('id');
-        Gate::define('is-opd', fn($user) => $user->role === 'opd');
-        Gate::define('is-admin', fn($user) => $user->role === 'admin');
-        Gate::define('is-bidang', fn($user) => $user->role === 'bidang');
+        Gate::define('is-opd', fn($user) => $user->getRoleNames()->first() === 'opd');
+        Gate::define('is-admin', fn($user) => $user->getRoleNames()->first() === 'admin');
+        Gate::define('is-bidang', fn($user) => $user->getRoleNames()->first() === 'bidang');
         if (Schema::hasTable('periodes')) {
             $tahunAktifGlobal = Periode::where('status', 'open')->first();
             View::share('tahunAktifGlobal', $tahunAktifGlobal->tahun);
