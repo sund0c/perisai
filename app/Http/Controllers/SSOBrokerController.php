@@ -88,7 +88,7 @@ class SSOBrokerController extends Controller
     public function logout(Request $request)
     {
         $sessionId = $request->sessionId ?? session()->getId();
-     
+    
         if ($sessionId) Session::getHandler()->destroy($sessionId);                           
         session()->flush();
         session()->invalidate();

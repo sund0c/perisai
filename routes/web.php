@@ -12,7 +12,6 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 // AUTH END
 
-
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SkController;
 use App\Http\Controllers\OpdController;
@@ -25,7 +24,6 @@ use App\Http\Controllers\Opd\AsetController;
 use App\Http\Middleware\SSOBrokerMiddleware;
 
 use App\Http\Controllers\Opd\PtkkaController;
-
 use App\Http\Controllers\RangeAsetController;
 
 //BIDANG
@@ -40,10 +38,11 @@ use App\Http\Controllers\SubKlasifikasiAsetController;
 use App\Http\Controllers\IndikatorKategoriSeController;
 use App\Http\Controllers\Bidang\BidangKategoriSeController;
 
-// EXAMPLE FOR TEST
+// FOR TESTING PURPOSES
 use App\Http\Controllers\ExampleController;
 
 // Auth Routes Start
+
 Route::middleware('guest')->group(function () {
     Route::get('register', [RegisteredUserController::class, 'create'])->name('register');
     Route::post('register', [RegisteredUserController::class, 'store']);    
@@ -62,21 +61,18 @@ Route::middleware('SSOBrokerMiddleware', 'spatie_role_or_permission:admin|opd|bi
     Route::get('confirm-password', [ConfirmablePasswordController::class, 'show'])->name('password.confirm');
     Route::post('confirm-password', [ConfirmablePasswordController::class, 'store']);
     Route::put('password', [PasswordController::class, 'update'])->name('password.update');
+    
+    // Obsolete: moved into GET logout
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 });
 
-
 // Auth Routes End
-
-// Sample use spatie. Remove when not needed
-// Route::middleware(['auth', 'spatie_role_or_permission:opd|bidang.aset.manage'])->get('/example', [ExampleController::class, 'index'])->name('example.index');
-Route::get('/example', [ExampleController::class, 'index'])->name('example.index');
-Route::post('/example', [ExampleController::class, 'store'])->name('example.store');
 
 // SSO
 Route::get('authenticateToSSO', 'App\Http\Controllers\SSOBrokerController@authenticateToSSO');
 Route::get('authData/{authData}', 'App\Http\Controllers\SSOBrokerController@authenticateToSSO');
 Route::get('exit/{sessionId}', 'App\Http\Controllers\SSOBrokerController@logout')->name('exit');
+Route::get('logout', 'App\Http\Controllers\SSOBrokerController@logout')->name('logout.get');
 
 Route::middleware(['SSOBrokerMiddleware'])->group(function () {
     Route::get('/', function () {
@@ -220,7 +216,6 @@ Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd|bidang'
 });
 
 //============= END of BIDANG ===========================
-
 
 
 
