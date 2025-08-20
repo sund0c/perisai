@@ -1,3 +1,16 @@
+## How to Run App
+    - Create/Copy env based on env.example and adjust the config.
+    - (Only if use sqlite) `touch database/database.sqlite`
+    - MIGRATIONS Run `php artisan migrate`
+    - (Only if need fix KategoriSe menu error) In routes/web.php change `KategoriseController` in import to `KategoriSeController`
+    - SEEDERS Run `php artisan db:seed`
+    - Run `npm install`
+    - Run `npm run build`
+    - Run `php artisan serve`   
+
+
+
+
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
 <p align="center">
