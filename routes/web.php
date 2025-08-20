@@ -168,8 +168,11 @@ Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:admin'])->g
     // });
 
     Route::prefix('indikatorkategorise')->group(function () {
-        Route::resource('/', IndikatorKategoriSeController::class)->names('admin.indikatorkategorise');
         Route::get('/export/pdf', [IndikatorKategoriSeController::class, 'exportPDF'])->name('indikatorkategorise.export.pdf');
+    });
+
+    Route::prefix('indikatorkategorise')->name('admin.indikatorkategorise.')->group(function () {
+        Route::resource('/', IndikatorKategoriSeController::class)->parameters(['' => 'indikatorkategorise']);
     });
 });
 

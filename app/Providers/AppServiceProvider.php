@@ -30,8 +30,11 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('is-bidang', fn($user) => $user->getRoleNames()->first() === 'bidang');
         if (Schema::hasTable('periodes')) {
             $tahunAktifGlobal = Periode::where('status', 'open')->first();
-            View::share('tahunAktifGlobal', $tahunAktifGlobal->tahun);
-            View::share('kunci', $tahunAktifGlobal->kunci);
+
+            if ($tahunAktifGlobal) {
+                View::share('tahunAktifGlobal', $tahunAktifGlobal->tahun);
+                View::share('kunci', $tahunAktifGlobal->kunci);
+            }
         }
     }
 }
