@@ -30,7 +30,7 @@ class DatabaseSeeder extends Seeder
             KategoriSeSeeder::class,
             PtkkaSessionSeeder::class,
 
-
+            RolePermissionSeeder::class
         ]);
     }
 }

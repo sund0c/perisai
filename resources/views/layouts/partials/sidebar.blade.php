@@ -1,5 +1,5 @@
 @php
-    $role = auth()->user()->role;
+    $role = auth()->user()->getRoleNames()->first() ?? 'guest';
 @endphp
 
 <aside class="w-64 bg-white border-r shadow-lg">
