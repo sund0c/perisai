@@ -1,5 +1,6 @@
 ## How to Run App
-    - Create/Copy env based on env.example and adjust the config.
+    - Create/Copy env based on env.example and adjust the config
+    - Run composer install → installs all PHP dependencies
     - (Only if use sqlite) `touch database/database.sqlite`
     - MIGRATIONS Run `php artisan migrate`
     - (Only if need fix KategoriSe menu error) In routes/web.php change `KategoriseController` in import to `KategoriSeController`
