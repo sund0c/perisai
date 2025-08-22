@@ -17,6 +17,7 @@ use Illuminate\Http\Request;
 use App\Services\UserService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class SSOBrokerController extends Controller
 {
@@ -54,6 +55,25 @@ class SSOBrokerController extends Controller
             if (!$JWT->decodeJWT()) return $this->abortWithMessage('Invalid JWT data!');
 
             $payload = $JWT->getPayloadJWT();
+
+
+
+            /* utk liat saja */
+
+
+
+            $payloadArr = json_decode(json_encode($payload), true);
+            Log::info('[SSO] Decoded payload', [
+                'keys'    => array_keys($payloadArr),
+                // hati2: kalau mengandung data sensitif, lebih baik komentari baris berikut
+                'payload' => $payloadArr,
+            ]);
+
+
+
+            /* */
+
+
             if (empty($payload->roles)) return redirect()->route('not-authorized')->with('error', 'Anda tidak memiliki akses ke aplikasi ini');
             if (session()->getId() !== $payload->sessionRequest) return $this->abortWithMessage('Invalid browser session!');
 
@@ -88,14 +108,14 @@ class SSOBrokerController extends Controller
     public function logout(Request $request)
     {
         $sessionId = $request->sessionId ?? session()->getId();
-    
-        if ($sessionId) Session::getHandler()->destroy($sessionId);                           
+
+        if ($sessionId) Session::getHandler()->destroy($sessionId);
         session()->flush();
         session()->invalidate();
 
         // TODO: not sure if this is the correct way to handle logout
-        // SSO have its session. 
-        // When logout in this website and SSO still logged in (it's session active), 
+        // SSO have its session.
+        // When logout in this website and SSO still logged in (it's session active),
         // it still login in automatically in this website. I want it redirected.
         return redirect(($this->ssoDomain . '/logout'));
     }

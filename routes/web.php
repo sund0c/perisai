@@ -45,7 +45,7 @@ use App\Http\Controllers\ExampleController;
 
 Route::middleware('guest')->group(function () {
     Route::get('register', [RegisteredUserController::class, 'create'])->name('register');
-    Route::post('register', [RegisteredUserController::class, 'store']);    
+    Route::post('register', [RegisteredUserController::class, 'store']);
     Route::get('login', [AuthenticatedSessionController::class, 'create'])->name('login');
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
@@ -61,7 +61,7 @@ Route::middleware('SSOBrokerMiddleware', 'spatie_role_or_permission:admin|opd|bi
     Route::get('confirm-password', [ConfirmablePasswordController::class, 'show'])->name('password.confirm');
     Route::post('confirm-password', [ConfirmablePasswordController::class, 'store']);
     Route::put('password', [PasswordController::class, 'update'])->name('password.update');
-    
+
     // Obsolete: moved into GET logout
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 });
@@ -80,7 +80,7 @@ Route::middleware(['SSOBrokerMiddleware'])->group(function () {
     });
 
     Route::get('/dashboard', function () {
-        
+
         $role = auth()->user()->getRoleNames()->first() ?? 'guest';
 
         return match ($role) {
@@ -129,7 +129,7 @@ Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:admin'])->g
         Route::put('/rekomendasi/{id}', [SkController::class, 'updateRekomendasi'])->name('sk.rekomendasi.update');
         Route::delete('/rekomendasi/{id}', [SkController::class, 'destroyRekomendasi'])->name('sk.rekomendasi.destroy');
     });
-    
+
     // Route::prefix('klasifikasiaset')->group(function () {
     //     Route::resource('', KlasifikasiAsetController::class);
     //     Route::get('/{id}/sub', [SubKlasifikasiAsetController::class, 'index'])->name('subklasifikasiaset.index');
@@ -185,7 +185,7 @@ Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:admin|bidan
 
 //============= Start of BIDANG ===========================
 
-Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:bidang', ])->prefix('bidang/aset')->name('bidang.aset.')->group(function () {
+Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:bidang',])->prefix('bidang/aset')->name('bidang.aset.')->group(function () {
     Route::get('/', [BidangAsetController::class, 'index'])->name('index');
     Route::get('/export/rekap', [BidangAsetController::class, 'exportRekapPdf'])->name('export_rekap');
     Route::get('/klasifikasi/{id}', [BidangAsetController::class, 'showByKlasifikasi'])->name('show_by_klasifikasi');
@@ -225,7 +225,7 @@ Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd|bidang'
 //============= Start of OPD ===========================
 
 Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd'])->prefix('opd/ptkka')->name('opd.ptkka.')->group(function () {
-    
+
     //Route::middleware(['auth', RoleMiddleware::class . ':opd'])->group(function () {
     //  Route::prefix('ptkka')->group(function () {
 
@@ -263,6 +263,9 @@ Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd'])->pre
     Route::get('/export/pdf/{id}', [KategoriSeController::class, 'exportPdf'])->name('exportPdf');
     Route::get('/kategori/{kategori}', [KategoriSeController::class, 'show'])->name('show');
     Route::get('/export/rekap', [KategoriSeController::class, 'exportRekapPdf'])->name('export_rekap');
+
+    Route::post('/sync-previous', [KategoriSeController::class, 'syncFromPrevious'])
+        ->name('sync_previous');
 });
 
 //============= End of OPD ===========================

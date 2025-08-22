@@ -66,10 +66,17 @@
 </head>
 
 <body>
+    <div style="text-align:center; margin-bottom:20px;">
+        <img src="{{ public_path('images/tlp/tlp_teaser_amber.png') }}" alt="TLP:AMBER+STRICT" width="150">
+        {{-- <p style="font-weight:bold; color:#FFBF00; margin:0;">TLP:AMBER+STRICT</p> --}}
+    </div>
     <h2>Rekap Aset KAMI per Klasifikasi - Tahun {{ $tahunAktifGlobal ?? '-' }}</h2>
     <h3>Pemilik Aset : {{ strtoupper($namaOpd) }}</h3>
     <BR>
-    <h3>Klasifikasi Aset : {{ $klasifikasi->klasifikasiaset }}</h3>
+    <h3 style="line-height:0;margin-bottom: 0">Klasifikasi Aset : {{ $klasifikasi->klasifikasiaset }}</h3>
+    <div style="line-height:1.2; font-size: 0.9em">
+        {{ $subs->pluck('subklasifikasiaset')->implode(', ') ?: '-' }}
+    </div><BR>
     <table>
         <thead>
             <tr>
@@ -91,14 +98,21 @@
     </table><BR><BR><BR>
     <h4>Catatan</h4>
     <ol>
+        <li>Kode TLP (Traffic Light Protocol) dipakai untuk mengklasifikasikan sensitivitas informasi, supaya jelas
+            sejauh mana informasi boleh dibagikan.
+            <b>Kode TLP:AMBER berarti boleh dibagikan untuk komunitas tertentu sesuai kebutuhan.</b>
+        </li>
         <li><b>PERISAI</b> adalah sistem elektronik untuk melakukan <span class="underline">PEngelolaan RISiko Aset
                 Informasi,</span> dikelola oleh
             Bidang
             Persandian Dinas Kominfos Provinsi Bali</li>
-        <li>Yang dimaksud dengan <b>Aset</b> dalam PERISAI adalah <span class="underline">khusus aset yang terkait
+        <li>Yang dimaksud dengan <b>Aset KAMI</b> dalam PERISAI adalah Aset Keamanan Informasi, yaitu <span
+                class="underline">khusus aset yang terkait
                 dengan pelindungan data dan keamanan informasi.</span>
         </li>
-        <li>Periode pemutahiran data PERISAI <b>wajib dilakukan sekali setahun oleh Pemilik Aset.</b> </li>
+        <li><b>Pemutahiran data PERISAI wajib dilakukan minimal sekali setahun oleh Pemilik Aset.</b>
+            Pemutahiran akan
+            dilakukan serentak, menunggu informasi dari Dinas Kominfos Prov Bali. </li>
     </ol>
 </body>
 

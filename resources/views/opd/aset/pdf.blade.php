@@ -88,9 +88,11 @@
 </head>
 
 <body>
-    <h1>
-        <center>**DOKUMEN RAHASIA**</center>
-    </h1><BR>
+    <div style="text-align:center; margin-bottom:20px;">
+        <img src="{{ public_path('images/tlp/tlp_teaser_amber_strict.png') }}" alt="TLP:AMBER+STRICT" width="150">
+        {{-- <p style="font-weight:bold; color:#FFBF00; margin:0;">TLP:AMBER+STRICT</p> --}}
+    </div>
+    <BR>
     <h2>Informasi Aset - Tahun {{ $tahunAktifGlobal ?? '-' }}</h2>
     <h3>Pemilik Aset : {{ strtoupper($namaOpd) }}</h3>
 
@@ -108,23 +110,51 @@
                     $field === 'subklasifikasiaset_id'
                         ? $aset->subklasifikasiaset->subklasifikasiaset ?? '-'
                         : $aset->$field ?? '-';
+                // Daftar field CIAAA
+                $ciaaaFields = ['kerahasiaan', 'integritas', 'ketersediaan', 'keaslian', 'kenirsangkalan'];
             @endphp
             <tr>
-                <td class="label">{{ $label }}</td>
-                <td class="value">{{ $value }}</td>
+                <td class="label">
+                    {{ in_array($field, $ciaaaFields) ? 'Tingkat ' . $label : $label }}
+                </td>
+                <td class="value">
+                    {{ $value }}
+                    @if (in_array($field, $ciaaaFields))
+                        <span class="text-muted"> dari 3</span>
+                    @endif
+                </td>
             </tr>
         @endforeach
         <tr>
             <td class="label">NILAI ASET</td>
             <td class="value"><strong>{{ $aset->nilai_akhir_aset }}</strong></td>
         </tr>
-    </table><BR><BR><BR>
+    </table><BR>
+    <h4>KETERANGAN NILAI ASET</h4>
+    <ol>
+        @foreach ($ranges as $range)
+            <li><b>{{ $range->nilai_akhir_aset }} :</b> {{ $range->deskripsi }}</li>
+        @endforeach
+    </ol><BR>
     <h4>Catatan</h4>
     <ol>
-        <li>Dokumen informasi Aset ini adalah bersifat <b>RAHASIA</b>.</li>
-        <li>Musnahkan jika dokumen ini sudah selesai digunakan.</li>
+        <li>Kode TLP (Traffic Light Protocol) dipakai untuk mengklasifikasikan sensitivitas informasi, supaya jelas
+            sejauh mana informasi boleh dibagikan.
+            <b>Kode TLP:AMBER+STRICT berarti berisi informasi cukup sensitif. Hanya untuk internal organisasi penerima,
+                tidak boleh
+                keluar.</b>
+        </li>
+        <li><b>PERISAI</b> adalah sistem elektronik untuk melakukan <span class="underline">PEngelolaan RISiko Aset
+                Informasi,</span> dikelola oleh
+            Bidang
+            Persandian Dinas Kominfos Provinsi Bali</li>
+        <li>Yang dimaksud dengan <b>Aset KAMI</b> dalam PERISAI adalah Aset Keamanan Informasi, yaitu <span
+                class="underline">khusus aset yang terkait
+                dengan pelindungan data dan keamanan informasi.</span>
+        </li>
         <li>Semua informasi tentang aset ini dapat berubah sesuai dengan review dan pemutahiran data PERISAI <b>yang
-                dilakukan sekali setahun oleh Pemilik Aset.</b> </li>
+                dilakukan minimal sekali setahun oleh Pemilik Aset. Pemutahiran akan dilakukan serempak, menunggu
+                informasi dari Diskominfos Prov Bali.</b> </li>
     </ol>
 
 </body>

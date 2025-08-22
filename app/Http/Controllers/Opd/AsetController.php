@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Opd;
 use App\Http\Controllers\Controller;
 
 use App\Models\Aset;
+
 use App\Models\RangeAset;
 use App\Models\KlasifikasiAset;
 use App\Models\Periode;
@@ -12,6 +13,8 @@ use App\Models\SubKlasifikasiAset;
 use App\Models\KonfigurasiField;
 use Illuminate\Http\Request;
 use PDF;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Database\QueryException;
 
 class AsetController extends Controller
 {
@@ -21,10 +24,25 @@ class AsetController extends Controller
         $opdId = auth()->user()->opd_id;
 
         // Ambil klasifikasi + jumlah aset total per klasifikasi
-        $klasifikasis = KlasifikasiAset::withCount(['asets as jumlah_aset' => function ($query) use ($opdId, $periodeAktifId) {
-            $query->where('opd_id', $opdId)
-                ->where('periode_id', $periodeAktifId);
-        }])->get();
+        // $klasifikasis = KlasifikasiAset::withCount(['asets as jumlah_aset' => function ($query) use ($opdId, $periodeAktifId) {
+        //     $query->where('opd_id', $opdId)
+        //         ->where('periode_id', $periodeAktifId);
+        // }])->get();
+
+
+        $klasifikasis = KlasifikasiAset::select('id', 'klasifikasiaset', 'kodeklas')
+            ->with([
+                'subklasifikasi:id,klasifikasi_aset_id,subklasifikasiaset'
+            ])
+            ->withCount([
+                'asets as jumlah_aset' => function ($q) use ($opdId, $periodeAktifId) {
+                    $q->where('opd_id', $opdId)->where('periode_id', $periodeAktifId);
+                }
+            ])
+            ->orderBy('klasifikasiaset')
+            ->get();
+
+
 
         // Hitung jumlah aset berdasarkan nilai CIAAA (TINGGI, SEDANG, RENDAH)
         foreach ($klasifikasis as $klasifikasi) {
@@ -71,14 +89,26 @@ class AsetController extends Controller
 
         $namaOpd = auth()->user()->opd->namaopd ?? '-';
 
+        $canSync = !Aset::where('opd_id', $opdId)
+            ->where('periode_id', $periodeAktifId)
+            ->exists();
+        $ranges = RangeAset::select('nilai_akhir_aset', 'deskripsi')->orderBy('nilai_atas')->get();
+
         return view('opd.aset.index', compact(
             'klasifikasis',
             'namaOpd',
             'totalTinggi',
             'totalSedang',
             'totalRendah',
+            'canSync',
+            'ranges'
         ));
     }
+
+
+
+
+
 
 
     public function showByKlasifikasi($id)
@@ -87,7 +117,7 @@ class AsetController extends Controller
         $opdId = auth()->user()->opd_id;
 
         $klasifikasi = KlasifikasiAset::findOrFail($id);
-
+        $subs = $klasifikasi->subklasifikasi;
         $asets = Aset::where('klasifikasiaset_id', $id)
             ->where('opd_id', $opdId)
             ->where('periode_id', $periodeAktif)
@@ -113,8 +143,9 @@ class AsetController extends Controller
             $aset->warna_hexa = $range->warna_hexa ?? '#999999'; // default abu-abu
         }
 
+
         $namaOpd = auth()->user()->opd->namaopd ?? '-';
-        return view('opd.aset.show_by_klasifikasi', compact('klasifikasi', 'asets', 'namaOpd'));
+        return view('opd.aset.show_by_klasifikasi', compact('klasifikasi', 'asets', 'namaOpd', 'subs'));
     }
 
     public function create($klasifikasiId)
@@ -157,34 +188,34 @@ class AsetController extends Controller
             $rules['subklasifikasiaset_id'] = 'required|exists:sub_klasifikasi_asets,id';
         }
         if (in_array('spesifikasi_aset', $fields)) {
-            $rules['spesifikasi_aset'] = 'nullable|string|max:255';
+            $rules['spesifikasi_aset'] = 'required|string|max:255';
         }
         if (in_array('lokasi', $fields)) {
-            $rules['lokasi'] = 'nullable|string|max:255';
+            $rules['lokasi'] = 'required|string|max:255';
         }
         if (in_array('keterangan', $fields)) {
             $rules['keterangan'] = 'nullable|string';
         }
         if (in_array('format_penyimpanan', $fields)) {
-            $rules['format_penyimpanan'] = 'nullable|in:Fisik,Dokumen Elektronik,Fisik dan Dokumen Elektronik';
+            $rules['format_penyimpanan'] = 'required|in:Fisik,Dokumen Elektronik,Fisik dan Dokumen Elektronik';
         }
         if (in_array('masa_berlaku', $fields)) {
-            $rules['masa_berlaku'] = 'nullable|string|max:100'; // karena "12 Bulan" bukan format date
+            $rules['masa_berlaku'] = 'required|string|max:100'; // karena "12 Bulan" bukan format date
         }
         if (in_array('penyedia_aset', $fields)) {
-            $rules['penyedia_aset'] = 'nullable|string|max:255';
+            $rules['penyedia_aset'] = 'required|string|max:255';
         }
         if (in_array('status_aktif', $fields)) {
             $rules['status_aktif'] = 'required|in:Aktif,Tidak Aktif';
         }
         if (in_array('kondisi_aset', $fields)) {
-            $rules['kondisi_aset'] = 'nullable|in:Baik,Tidak Layak,Rusak';
+            $rules['kondisi_aset'] = 'required|in:Baik,Tidak Layak,Rusak';
         }
 
         // Validasi CIAAA
         foreach (['kerahasiaan', 'integritas', 'ketersediaan', 'keaslian', 'kenirsangkalan'] as $ci) {
             if (in_array($ci, $fields)) {
-                $rules[$ci] = 'nullable|in:1,2,3';
+                $rules[$ci] = 'required|in:1,2,3';
             }
         }
 
@@ -220,12 +251,24 @@ class AsetController extends Controller
         $nomorUrut = str_pad($jumlahAsetSebelumnya + 1, 4, '0', STR_PAD_LEFT);
         $validated['kode_aset'] = $prefix . '-' . $nomorUrut;
 
-        // Buat record baru
-        Aset::create($validated);
-
-        return redirect()
-            ->route('opd.aset.show_by_klasifikasi', $klasifikasiId)
-            ->with('success', 'Aset berhasil ditambahkan.');
+        try {
+            $aset = Aset::create($validated);
+            return redirect()
+                ->route('opd.aset.show_by_klasifikasi', $klasifikasiId)
+                ->with('success', 'Aset berhasil ditambahkan.');
+        } catch (QueryException $e) {
+            Log::warning('Gagal menyimpan aset (QueryException)', [
+                'mysql_code' => $e->errorInfo[1] ?? null,   // 1062, 1452, dst.
+                'sql_state'  => $e->errorInfo[0] ?? null,
+                'driver_msg' => $e->errorInfo[2] ?? null,
+                'user_id'    => auth()->id(),
+                'route'      => request()->path(),
+            ]);
+            return back()->withInput()->with('error', 'Gagal menyimpan. Silakan periksa kembali isian Anda.');
+        } catch (\Throwable $e) {
+            report($e);
+            return back()->withInput()->with('error', 'Terjadi kesalahan. Silakan coba lagi atau hubungi admin.');
+        }
     }
 
     public function edit($id)
@@ -274,34 +317,34 @@ class AsetController extends Controller
             $rules['subklasifikasiaset_id'] = 'required|exists:sub_klasifikasi_asets,id';
         }
         if (in_array('spesifikasi_aset', $fields)) {
-            $rules['spesifikasi_aset'] = 'nullable|string|max:255';
+            $rules['spesifikasi_aset'] = 'required|string|max:255';
         }
         if (in_array('lokasi', $fields)) {
-            $rules['lokasi'] = 'nullable|string|max:255';
+            $rules['lokasi'] = 'required|string|max:255';
         }
         if (in_array('keterangan', $fields)) {
             $rules['keterangan'] = 'nullable|string';
         }
         if (in_array('format_penyimpanan', $fields)) {
-            $rules['format_penyimpanan'] = 'nullable|in:Fisik,Dokumen Elektronik,Fisik dan Dokumen Elektronik';
+            $rules['format_penyimpanan'] = 'required|in:Fisik,Dokumen Elektronik,Fisik dan Dokumen Elektronik';
         }
         if (in_array('masa_berlaku', $fields)) {
-            $rules['masa_berlaku'] = 'nullable|string|max:100'; // karena "12 Bulan" bukan format date
+            $rules['masa_berlaku'] = 'required|string|max:100'; // karena "12 Bulan" bukan format date
         }
         if (in_array('penyedia_aset', $fields)) {
-            $rules['penyedia_aset'] = 'nullable|string|max:255';
+            $rules['penyedia_aset'] = 'required|string|max:255';
         }
         if (in_array('status_aktif', $fields)) {
             $rules['status_aktif'] = 'required|in:Aktif,Tidak Aktif';
         }
         if (in_array('kondisi_aset', $fields)) {
-            $rules['kondisi_aset'] = 'nullable|in:Baik,Tidak Layak,Rusak';
+            $rules['kondisi_aset'] = 'required|in:Baik,Tidak Layak,Rusak';
         }
 
         // Validasi CIAAA
         foreach (['kerahasiaan', 'integritas', 'ketersediaan', 'keaslian', 'kenirsangkalan'] as $ci) {
             if (in_array($ci, $fields)) {
-                $rules[$ci] = 'nullable|in:1,2,3';
+                $rules[$ci] = 'required|in:1,2,3';
             }
         }
 
@@ -325,16 +368,25 @@ class AsetController extends Controller
         // Lakukan validasi
         $validated = $request->validate($rules);
 
-        // Update data aset hanya pada field yang aktif
-        $aset->update(array_intersect_key($validated, array_flip($fields)));
 
-
-
-        return redirect()
-            ->route('opd.aset.show_by_klasifikasi', $aset->klasifikasiaset_id)
-            ->with('success', 'Aset berhasil diperbarui.');
-        // dd($aset->klasifikasiaset_id);
-
+        try {
+            $aset->update(array_intersect_key($validated, array_flip($fields)));
+            return redirect()
+                ->route('opd.aset.show_by_klasifikasi', $aset->klasifikasiaset_id)
+                ->with('success', 'Aset berhasil diperbaharui.');
+        } catch (QueryException $e) {
+            Log::warning('Gagal memperbaharui aset (QueryException)', [
+                'mysql_code' => $e->errorInfo[1] ?? null,   // 1062, 1452, dst.
+                'sql_state'  => $e->errorInfo[0] ?? null,
+                'driver_msg' => $e->errorInfo[2] ?? null,
+                'user_id'    => auth()->id(),
+                'route'      => request()->path(),
+            ]);
+            return back()->withInput()->with('error', 'Gagal memperbaharui. Silakan periksa kembali isian Anda.');
+        } catch (\Throwable $e) {
+            report($e);
+            return back()->withInput()->with('error', 'Terjadi kesalahan. Silakan coba lagi atau hubungi admin.');
+        }
     }
 
     public function destroy($id)
@@ -344,21 +396,31 @@ class AsetController extends Controller
 
         try {
             $aset->delete();
-            $status = 'success';
-            $pesan = 'Penghapusan Aset Berhasil';
-        } catch (\Illuminate\Database\QueryException $e) {
-            // Biasanya error 1451 untuk foreign key constraint
-            $status = 'error';
-            $pesan = 'Penghapusan Aset Gagal karena data sudah terpakai';
-        } catch (\Throwable $e) {
-            // Penanganan error lain
-            $status = 'error';
-            $pesan = 'Penghapusan Aset Gagal karena data sudah terpakai';
-        }
 
-        return redirect()
-            ->route('opd.aset.show_by_klasifikasi', $klasifikasiId)
-            ->with($status, $pesan);
+            return redirect()
+                ->route('opd.aset.show_by_klasifikasi', $aset->klasifikasiaset_id)
+                ->with('success', 'Aset berhasil dihapus.');
+        } catch (QueryException $e) {
+            // 1451 umumnya FK constraint violation
+            Log::warning('Gagal menghapus aset (FK constraint?)', [
+                'aset_id'    => $aset->id,
+                'mysql_code' => $e->errorInfo[1] ?? null,
+                'sql_state'  => $e->errorInfo[0] ?? null,
+                'driver_msg' => $e->errorInfo[2] ?? null,
+                'user_id'    => auth()->id(),
+                'route'      => request()->path(),
+            ]);
+
+            return redirect()
+                ->route('opd.aset.show_by_klasifikasi', $aset->klasifikasiaset_id) // sesuaikan nama route
+                ->with('error', 'Penghapusan gagal karena data masih digunakan.');
+        } catch (\Throwable $e) {
+            report($e);
+
+            return redirect()
+                ->route('opd.aset.show_by_klasifikasi', $aset->klasifikasiaset_id)
+                ->with('error', 'Terjadi kesalahan. Penghapusan tidak dapat diproses.');
+        }
     }
 
 
@@ -368,10 +430,24 @@ class AsetController extends Controller
         $periodeAktifId = Periode::where('status', 'open')->value('id');
         $opdId = auth()->user()->opd_id;
 
-        $klasifikasis = KlasifikasiAset::withCount(['asets as jumlah_aset' => function ($query) use ($opdId, $periodeAktifId) {
-            $query->where('opd_id', $opdId)
-                ->where('periode_id', $periodeAktifId);
-        }])->get();
+        // $klasifikasis = KlasifikasiAset::withCount(['asets as jumlah_aset' => function ($query) use ($opdId, $periodeAktifId) {
+        //     $query->where('opd_id', $opdId)
+        //         ->where('periode_id', $periodeAktifId);
+        // }])->get();
+
+
+        $klasifikasis = KlasifikasiAset::select('id', 'klasifikasiaset', 'kodeklas')
+            ->with([
+                'subklasifikasi:id,klasifikasi_aset_id,subklasifikasiaset'
+            ])
+            ->withCount([
+                'asets as jumlah_aset' => function ($q) use ($opdId, $periodeAktifId) {
+                    $q->where('opd_id', $opdId)->where('periode_id', $periodeAktifId);
+                }
+            ])
+            ->orderBy('klasifikasiaset')
+            ->get();
+
 
         // Hitung nilai aset per klasifikasi
         foreach ($klasifikasis as $klasifikasi) {
@@ -413,9 +489,10 @@ class AsetController extends Controller
             $klasifikasi->jumlah_rendah = $jumlahRendah;
         }
 
+        $ranges = RangeAset::select('nilai_akhir_aset', 'deskripsi')->orderBy('nilai_atas')->get();
         $namaOpd = auth()->user()->opd->namaopd ?? '-';
 
-        $pdf = PDF::loadView('opd.aset.export_rekap_pdf', compact('klasifikasis', 'namaOpd'))
+        $pdf = PDF::loadView('opd.aset.export_rekap_pdf', compact('klasifikasis', 'namaOpd', 'ranges'))
             ->setPaper('A4', 'portrait');
 
         $pdf->getDomPDF()->getCanvas()->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
@@ -430,7 +507,7 @@ class AsetController extends Controller
             $canvas->text($x, $y, $text, $font, $size);
         });
 
-        return $pdf->download('rekap_aset_' . date('Ymd_His') . '.pdf');
+        return $pdf->download('rekapaset_' . date('YmdHis') . '.pdf');
     }
 
     public function exportRekapKlasPdf($id)
@@ -439,7 +516,7 @@ class AsetController extends Controller
         $opdId = auth()->user()->opd_id;
 
         $klasifikasi = KlasifikasiAset::findOrFail($id);
-
+        $subs = $klasifikasi->subklasifikasi;
         $asets = Aset::where('klasifikasiaset_id', $id)
             ->where('opd_id', $opdId)
             ->where('periode_id', $periodeAktif)
@@ -447,7 +524,7 @@ class AsetController extends Controller
             ->get();
         $namaOpd = auth()->user()->opd->namaopd ?? '-';
 
-        $pdf = PDF::loadView('opd.aset.export_rekap_klas_pdf', compact('klasifikasi', 'asets', 'namaOpd'))
+        $pdf = PDF::loadView('opd.aset.export_rekap_klas_pdf', compact('klasifikasi', 'asets', 'namaOpd', 'subs'))
             ->setPaper('A4', 'potrait');
         $pdf->getDomPDF()->getCanvas()->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
             $text = "PERISAI  :: Page $pageNumber of $pageCount";
@@ -460,7 +537,7 @@ class AsetController extends Controller
             $y = $height - 30; // 30 px from bottom
             $canvas->text($x, $y, $text, $font, $size);
         });
-        return $pdf->download('rekap_aset_klas_' . date('Ymd_His') . '.pdf');
+        return $pdf->download('rekapasetklas_' . date('YmdHis') . '.pdf');
     }
 
     public function pdf($id)
@@ -476,7 +553,7 @@ class AsetController extends Controller
 
         $hiddenFields = ['opd_id', 'klasifikasiaset_id', 'periode_id', 'kode_aset', 'kategori_se'];
         $fieldList = array_diff($fieldList, $hiddenFields);
-
+        $ranges = RangeAset::select('nilai_akhir_aset', 'deskripsi')->orderBy('nilai_atas')->get();
         // Hitung nilai keamanan
         $total = collect([
             $aset->kerahasiaan,
@@ -495,7 +572,7 @@ class AsetController extends Controller
 
         $namaOpd = auth()->user()->opd->namaopd ?? '-';
 
-        $pdf = PDF::loadView('opd.aset.pdf', compact('aset', 'namaOpd', 'klasifikasi', 'fieldList', 'subklasifikasis'))
+        $pdf = PDF::loadView('opd.aset.pdf', compact('aset', 'namaOpd', 'klasifikasi', 'fieldList', 'subklasifikasis', 'ranges'))
             ->setPaper('A4', 'portrait');
 
         $pdf->getDomPDF()->getCanvas()->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
@@ -510,6 +587,6 @@ class AsetController extends Controller
             $canvas->text($x, $y, $text, $font, $size);
         });
 
-        return $pdf->download('detilaset_' . date('Ymd_His') . '.pdf');
+        return $pdf->download('nilaiaset_' . strtolower(str_replace('-', '', $aset->kode_aset)) . '_' . date('YmdHis') . '.pdf');
     }
 }

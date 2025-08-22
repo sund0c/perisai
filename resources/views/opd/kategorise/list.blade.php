@@ -6,6 +6,17 @@
     <h1>Kategori SE : {{ strtoupper($kategori) }}, pada {{ strtoupper($namaOpd) }}</h1>
 @endsection
 
+@section('content_top_nav_left')
+    <li class="nav-item d-none d-sm-inline-block">
+        <span class="nav-link font-weight-bold">
+            Tahun Aktif: {{ $tahunAktifGlobal ?? '-' }}
+            @if ($kunci === 'locked')
+                <i class="fas fa-lock text-danger ml-1" title="Terkunci"></i>
+            @endif
+        </span>
+    </li>
+@endsection
+
 @section('content')
     <div class="card">
         <div class="card-body table-responsive">
@@ -66,9 +77,11 @@
                                 <a href="{{ route('opd.kategorise.exportPdf', $aset->id) }}" class="btn btn-sm btn-primary">
                                     <i class="fas fa-file-pdf"></i>
                                 </a>
-                                <a href="{{ route('opd.kategorise.edit', $aset->id) }}" class="btn btn-sm btn-warning">
-                                    <i class="fas fa-edit"></i>
-                                </a>
+                                @if ($kunci !== 'locked')
+                                    <a href="{{ route('opd.kategorise.edit', $aset->id) }}" class="btn btn-sm btn-warning">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                @endif
                             </td>
                         </tr>
                     @endforeach

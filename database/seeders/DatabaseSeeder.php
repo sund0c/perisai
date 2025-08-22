@@ -15,20 +15,20 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             PeriodeSeeder::class,
-            OPDUserSeeder::class,
+            //OPDUserSeeder::class,
             KlasifikasiAsetSeeder::class,
             SubKlasifikasiAsetSeeder::class,
             RangeAsetSeeder::class,
             RangeSeSeeder::class,
 
-            AsetSeeder::class,
+            //AsetSeeder::class,
             IndikatorKategoriSeSeeder::class,
             KategoriStandardSeeder::class,
             FungsiStandardSeeder::class,
             IndikatorStandardSeeder::class,
             RekomendasiStandardSeeder::class,
-            KategoriSeSeeder::class,
-            PtkkaSessionSeeder::class,
+            //KategoriSeSeeder::class,
+            // PtkkaSessionSeeder::class,
 
             RolePermissionSeeder::class
         ]);

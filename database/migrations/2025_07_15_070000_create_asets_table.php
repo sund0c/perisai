@@ -11,11 +11,15 @@ class CreateAsetsTable extends Migration
         Schema::create('asets', function (Blueprint $table) {
             $table->id();
 
+
+            $table->unique(['opd_id', 'periode_id', 'kode_aset'], 'asets_opd_periode_kode_unique');
+
+
             // Tahun Anggaran Aktif
             $table->foreignId('periode_id')->constrained('periodes')->restrictOnDelete();
 
             // Informasi Aset
-            $table->string('kode_aset')->unique();
+            $table->string('kode_aset'); //->unique();
             $table->string('nama_aset');
             $table->string('keterangan')->nullable();
             $table->foreignId('klasifikasiaset_id')->constrained('klasifikasi_asets')->restrictOnDelete();

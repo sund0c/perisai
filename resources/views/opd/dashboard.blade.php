@@ -16,27 +16,27 @@
     </li>
 @endsection
 
-@section('content')
-    <div class="card">
-        <div class="card-body">
-            <h3>Welcome PERISAI !</h3>
+@section('content_header')
+    <h3>Welcome PERISAI !</h3>
 
-            <ul>
-                <li><b>PERISAI</b> adalah sistem elektronik untuk melakukan <b>PE</b>ngelolaan <b>RIS</b>iko <b>A</b>set
-                    <b>I</b>nformasi di lingkup Pemerintah Provinsi Bali
-                </li>
-                <li>Fitur PERISAI adalah mulai dari Inventarisir aset sampai ke Analisa Risiko aset.</li>
-                <li>Yang dimaksud dengan <b>Aset</b> dalam PERISAI adalah <b>khusus aset yang terkait
-                        dengan pelindungan data dan keamanan informasi.</b>
-                </li>
-                <li>PERISAI dikelola oleh
-                    Dinas Kominfos Provinsi Bali (Contact: Bidang Persandian)</li>
-                <li>Periode pemutahiran data aset PERISAI wajib dilakukan sekali setahun oleh Pemilik Aset.</li>
-                <li>Review tindak lanjut dari analisa risiko setiap aset wajib dilakukan minimal setiap 6 bulan sekali.
-                </li>
-            </ul>
-        </div>
-    </div>
+    <ul>
+        <li><b>PERISAI</b> adalah sistem elektronik untuk melakukan <b>PE</b>ngelolaan <b>RIS</b>iko <b>A</b>set
+            <b>I</b>nformasi di lingkup Pemerintah Provinsi Bali
+        </li>
+        <li>Fitur PERISAI adalah mulai dari Inventarisir aset sampai ke Analisa Risiko aset.</li>
+        <li>Yang dimaksud dengan <b>Aset</b> dalam PERISAI adalah <b>khusus aset yang terkait
+                dengan pelindungan data dan keamanan informasi.</b>
+        </li>
+        <li>PERISAI dikelola oleh
+            Dinas Kominfos Provinsi Bali (Contact: Bidang Persandian)</li>
+        <li>Periode pemutahiran data aset PERISAI wajib dilakukan sekali setahun oleh Pemilik Aset.</li>
+        <li>Review tindak lanjut dari analisa risiko setiap aset wajib dilakukan minimal setiap 6 bulan sekali.
+        </li>
+    </ul>
+@endsection
+
+@section('content')
+
     <div class="card">
         <div class="card-body">
             <h5>Kepada Yth <b>{{ auth()->user()->opd->namaopd }},</b> sebagai salah satu Perangkat Daerah di Pemprov Bali
@@ -60,12 +60,14 @@
                 <li>Pemutahiran data aset informasi dalam PERISAI wajib dilakukan setiap tahun sekali. Analisa risiko dan
                     review tindak lanjutnya wajib dilakukan setiap 6 bulan sekali (semester). Periode akan dibuka secara
                     bersamaan oleh Dinas Kominfos Prov Balli</li>
-                <li>{{ auth()->user()->opd->namaopd }} sebagai pemilik proses bisnis dan layanan, pemilik dan pengelola
+                <li><b>{{ auth()->user()->opd->namaopd }}</b> sebagai pemilik proses bisnis dan layanan, pemilik dan
+                    pengelola
                     aset, bertanggungjawab penuh terhadap upaya pengamanan aset informasinya sendiri dan tetap berkoordinasi
                     dengan Dinas Kominfos Prov Bali. </li>
                 <li>Dalam rangka mematuhi amanat UU No 27 tahun 2022 tentang Pelindungan Data Pribadi, agar masing-masing
                     Perangkat Daerah/UPTD termasuk
-                    {{ auth()->user()->opd->namaopd }} dapat menunjuk Pejabat Pengendali Data Pribadinya yang akan bertugas
+                    <b>{{ auth()->user()->opd->namaopd }}</b> dapat menunjuk Pejabat Pengendali Data Pribadinya yang akan
+                    bertugas
                     untuk : <ul>
                         <li>melakukan pemrosesan Data Pribadi secara terbatas dan spesifik, sah secara hukum, dan
                             transparan;

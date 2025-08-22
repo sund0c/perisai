@@ -3,7 +3,10 @@
 @section('title', 'Daftar Aset - ' . $klasifikasi->klasifikasiaset)
 
 @section('content_header')
-    <h1>{{ strtoupper($namaOpd) }} : [{{ $klasifikasi->kodeklas }}] {{ $klasifikasi->klasifikasiaset }}</h1>
+    <h1>[{{ $klasifikasi->kodeklas }}] {{ $klasifikasi->klasifikasiaset }}</h1>
+    <div style="line-height:1.2; font-size: 0.9em">
+        {{ $subs->pluck('subklasifikasiaset')->implode(', ') ?: '-' }}
+    </div>
 @endsection
 
 @section('content_top_nav_left')
@@ -13,6 +16,7 @@
             @if ($kunci === 'locked')
                 <i class="fas fa-lock text-danger ml-1" title="Terkunci"></i>
             @endif
+            :: {{ strtoupper($namaOpd) }}
         </span>
     </li>
 @endsection
@@ -79,15 +83,18 @@
                             <td>
                                 <a href="{{ route('opd.aset.pdf', $aset->id) }}" class="btn btn-sm btn-success"><i
                                         class="fas fa-file-pdf"></i></a>
-                                <a href="{{ route('opd.aset.edit', $aset->id) }}" class="btn btn-sm btn-primary"><i
-                                        class="fas fa-edit"></i></a>
-                                <form action="{{ route('opd.aset.destroy', $aset->id) }}" method="POST"
-                                    style="display:inline-block">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button onclick="return confirm('Yakin hapus aset ini?')" class="btn btn-sm btn-danger">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
+                                @if ($kunci !== 'locked')
+                                    <a href="{{ route('opd.aset.edit', $aset->id) }}" class="btn btn-sm btn-primary"><i
+                                            class="fas fa-edit"></i></a>
+                                    <form action="{{ route('opd.aset.destroy', $aset->id) }}" method="POST"
+                                        style="display:inline-block">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button onclick="return confirm('Yakin hapus aset ini?')"
+                                            class="btn btn-sm btn-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                @endif
                                 </form>
                             </td>
                         </tr>

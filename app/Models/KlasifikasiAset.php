@@ -9,7 +9,7 @@ class KlasifikasiAset extends Model
 {
     use HasFactory;
     protected $table = 'klasifikasi_asets'; // ← tambahkan ini
-    protected $fillable = ['klasifikasiaset','kodeklas'];
+    protected $fillable = ['klasifikasiaset', 'kodeklas'];
 
     protected $casts = [
         'tampilan_field_aset' => 'array',
@@ -24,7 +24,4 @@ class KlasifikasiAset extends Model
     {
         return $this->hasMany(Aset::class, 'klasifikasiaset_id');
     }
-
-
-
 }

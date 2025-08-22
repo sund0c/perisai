@@ -10,6 +10,7 @@ use App\Models\RangeSe;
 use App\Models\IndikatorKategoriSe;
 use Illuminate\Http\Request;
 use PDF;
+use Illuminate\Support\Facades\DB;
 
 use App\Models\KlasifikasiAset;
 use App\Models\Periode;
@@ -21,16 +22,49 @@ class KategoriSeController extends Controller
         $userOpdId = auth()->user()->opd_id;
         $namaOpd = auth()->user()->opd->namaopd ?? '-';
 
-        // Ambil semua aset perangkat lunak milik OPD login
+        // Ambil periode aktif
+        $periodeAktifId = Periode::where('status', 'open')->value('id');
+        if (!$periodeAktifId) {
+            // bebas: bisa redirect balik dengan flash message juga
+            abort(409, 'Tidak ada periode yang berstatus open.');
+        }
+
         $asetPL = Aset::whereHas('klasifikasi', function ($q) {
             $q->where('klasifikasiaset', 'PERANGKAT LUNAK');
         })
             ->where('opd_id', $userOpdId)
+            ->where('periode_id', $periodeAktifId) // ← filter periode aktif
             ->with('kategoriSe')
             ->get();
 
         // Ambil semua range kategori dari tabel range_ses
         $rangeSes = RangeSe::all();
+
+        // Normalisasi helper
+        $norm = fn($v) => strtoupper(trim((string) $v));
+
+        // Bangun mapping yang tahan spasi/kapitalisasi
+        $kategoriMeta = collect(['TINGGI', 'SEDANG', 'RENDAH'])->mapWithKeys(function ($K) use ($rangeSes, $norm) {
+            $row = $rangeSes->first(fn($r) => $norm($r->nilai_akhir_aset) === $K);
+            return [
+                $K => [
+                    'label'     => $K,
+                    'deskripsi' => $row->deskripsi ?? '-',
+                ],
+            ];
+        })->toArray();
+
+        // Tambahan khusus
+        $kategoriMeta['BELUM'] = [
+            'label'     => 'BELUM DINILAI',
+            'deskripsi' => 'Belum ada skor (belum dilakukan penilaian).',
+        ];
+        $kategoriMeta['TOTAL'] = [
+            'label'     => 'TOTAL',
+            'deskripsi' => 'Jumlah seluruh aset perangkat lunak pada periode aktif.',
+        ];
+
+
 
         // Inisialisasi penghitung kategori
         $kategoriCount = [
@@ -64,6 +98,7 @@ class KategoriSeController extends Controller
             }
         }
 
+
         return view('opd.kategorise.index', [
             'tinggi' => $kategoriCount['TINGGI'] ?? 0,
             'sedang' => $kategoriCount['SEDANG'] ?? 0,
@@ -71,7 +106,128 @@ class KategoriSeController extends Controller
             'belum' => $kategoriCount['BELUM'],
             'total' => $kategoriCount['TOTAL'],
             'namaOpd' => $namaOpd,
+            'kategoriMeta' => $kategoriMeta,   // ← tambahkan key + variabel
+            'rangeSes'    => $rangeSes,       // ← tambahkan key + variabel
         ]);
+    }
+
+
+    public function syncFromPrevious(Request $request)
+    {
+        $opdId = auth()->user()->opd_id;
+
+        $periodeAktif = Periode::where('status', 'open')->first();
+        if (!$periodeAktif) {
+            return back()->withErrors(['periode' => 'Tidak ada periode aktif.']);
+        }
+
+        // Batasi: tombol hanya boleh jalan jika TIDAK ada aset di periode aktif
+        $sudahAda = Aset::where('opd_id', $opdId)
+            ->where('periode_id', $periodeAktif->id)
+            ->exists();
+
+        if ($sudahAda) {
+            return back()->withErrors([
+                'sync' => 'Sinkronisasi dibatalkan: data aset untuk periode aktif sudah ada.'
+            ]);
+        }
+
+        // Cari periode sebelumnya (tahun aktif - 1)
+        $periodeSebelumnya = Periode::where('tahun', $periodeAktif->tahun - 1)->first();
+        if (!$periodeSebelumnya) {
+            return back()->withErrors([
+                'sync' => 'Periode tahun sebelumnya tidak ditemukan.'
+            ]);
+        }
+
+        // Cek ada aset sumber?
+        $totalPrev = Aset::where('opd_id', $opdId)
+            ->where('periode_id', $periodeSebelumnya->id)
+            ->count();
+
+        if ($totalPrev === 0) {
+            return back()->with('warning', 'Tidak ada data aset pada periode tahun sebelumnya untuk disinkronkan.');
+        }
+
+        $copiedAssets = 0;
+        $skippedAssets = 0;
+        $copiedKategori = 0;
+        $skippedKategori = 0;
+
+        DB::transaction(function () use (
+            $opdId,
+            $periodeAktif,
+            $periodeSebelumnya,
+            &$copiedAssets,
+            &$skippedAssets,
+            &$copiedKategori,
+            &$skippedKategori
+        ) {
+            // 1) Copy ASET + buat peta ID lama → ID baru
+            $idMap = []; // [old_aset_id => new_aset_id]
+
+            Aset::where('opd_id', $opdId)
+                ->where('periode_id', $periodeSebelumnya->id)
+                ->orderBy('id')
+                ->chunkById(300, function ($rows) use ($periodeAktif, &$copiedAssets, &$skippedAssets, &$idMap) {
+                    foreach ($rows as $row) {
+                        $new = $row->replicate();     // semua kolom kecuali PK
+                        $new->periode_id = $periodeAktif->id;
+
+                        // (opsional) jika ada kolom unik (mis. kode_aset), regenerate di sini:
+                        // $new->kode_aset = app(YourService::class)->generateKodeAset($row);
+
+                        $new->created_at = now();
+                        $new->updated_at = now();
+
+                        try {
+                            $new->save();
+                            $copiedAssets++;
+                            $idMap[$row->id] = $new->id;
+                        } catch (\Throwable $e) {
+                            $skippedAssets++;
+                        }
+                    }
+                });
+
+            if (empty($idMap)) {
+                return; // tidak ada aset yang tersalin → stop
+            }
+
+            // 2) Copy KATEGORI_SE dan ganti aset_id ke ID baru hasil peta
+            KategoriSe::whereIn('aset_id', array_keys($idMap))
+                ->orderBy('id')
+                ->chunkById(500, function ($rows) use ($idMap, $periodeAktif, &$copiedKategori, &$skippedKategori) {
+                    foreach ($rows as $row) {
+                        if (!isset($idMap[$row->aset_id])) {
+                            $skippedKategori++;
+                            continue;
+                        }
+
+                        $new = $row->replicate();
+                        $new->aset_id = $idMap[$row->aset_id];
+
+                        // Jika tabel kategori_ses punya kolom periode_id dan harus ikut periode aktif, set di sini:
+                        // $new->periode_id = $periodeAktif->id;
+
+                        $new->created_at = now();
+                        $new->updated_at = now();
+
+                        try {
+                            $new->save();
+                            $copiedKategori++;
+                        } catch (\Throwable $e) {
+                            $skippedKategori++;
+                        }
+                    }
+                });
+        });
+
+        $msg = "Sinkronisasi selesai → " .
+            "Aset: {$copiedAssets} tersalin" . ($skippedAssets ? ", {$skippedAssets} dilewati" : "") .
+            " | Kategori SE: {$copiedKategori} tersalin" . ($skippedKategori ? ", {$skippedKategori} dilewati" : "") . ".";
+
+        return back()->with('success', $msg);
     }
 
     public function show($kategori)

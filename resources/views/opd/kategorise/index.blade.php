@@ -2,21 +2,34 @@
 
 @section('title', 'Rekap Kategori SE')
 
+
 @section('content_header')
-    <h1>Kategori SE pada {{ strtoupper($namaOpd) }}</h1>
-    <p class="text-muted small mb-0">
-        SE adalah sistem elektronik yaitu dalam PERISAI adalah <strong>aset dengan klasifikasi [PL] Perangkat
+    <h1>Kategori Sistem Elektronik</h1>
+    <div style="line-height:1.2; font-size: 0.9em">
+        Sistem elektronik (SE) dalam PERISAI adalah <strong>aset dengan klasifikasi [PL] Perangkat
             Lunak.</strong> Contoh SE adalah
         website, aplikasi
         berbasis web, mobile, sistem operasi dan utility.
-    </p>
+    </div>
+@endsection
+
+@section('content_top_nav_left')
+    <li class="nav-item d-none d-sm-inline-block">
+        <span class="nav-link font-weight-bold">
+            Tahun Aktif: {{ $tahunAktifGlobal ?? '-' }}
+            @if ($kunci === 'locked')
+                <i class="fas fa-lock text-danger ml-1" title="Terkunci"></i>
+            @endif
+            :: {{ strtoupper($namaOpd) }}
+        </span>
+    </li>
 @endsection
 
 
 
 @section('content')
     <div class="row">
-        <div class="col-md-4">
+        <div class="col-md-8">
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex mb-3" style="gap: 10px;">
@@ -28,39 +41,59 @@
                     <table class="table table-bordered text-center" style="width:100%">
                         <thead class="font-weight-bold">
                             <tr>
-                                <th style="width:200px">KATEGORI SE</th>
+                                <th style="width:80%">KATEGORI SE</th>
                                 <th>JUMLAH ASET</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td class="bg-danger text-white" style="text-align: left">TINGGI</td>
-                                <td>
-                                    <a href="{{ route('opd.kategorise.show', ['kategori' => 'tinggi']) }}">
+                            <tr class="bg-danger text-white" style="text-align: left">
+                                <td style="text-align: left"><b>TINGGI</b>
+                                    <div class="mt-1" style="font-size:.9rem;line-height:1.2">
+                                        {{ data_get($kategoriMeta, 'TINGGI.deskripsi', '-') }}
+                                    </div>
+                                </td>
+                                <td style="vertical-align: middle; text-align: center;">
+                                    <a class="btn btn-light btn-sm px-4"
+                                        href="{{ route('opd.kategorise.show', ['kategori' => 'tinggi']) }}">
                                         {{ $tinggi }}
                                     </a>
                                 </td>
                             </tr>
-                            <tr>
-                                <td class="bg-warning" style="text-align: left">SEDANG</td>
-                                <td>
-                                    <a href="{{ route('opd.kategorise.show', ['kategori' => 'sedang']) }}">
+                            <tr class="bg-warning text-white" style="text-align: left">
+                                <td style="text-align: left"><b>SEDANG</b>
+                                    <div class="mt-1" style="font-size:.9rem;line-height:1.2">
+                                        {{ $kategoriMeta['SEDANG']['deskripsi'] ?? '-' }}
+                                    </div>
+                                </td>
+                                <td style="vertical-align: middle; text-align: center;">
+                                    <a class="btn btn-light btn-sm px-4"
+                                        href="{{ route('opd.kategorise.show', ['kategori' => 'sedang']) }}">
                                         {{ $sedang }}
                                     </a>
                                 </td>
                             </tr>
-                            <tr>
-                                <td class="bg-success text-white" style="text-align: left">RENDAH</td>
-                                <td>
-                                    <a href="{{ route('opd.kategorise.show', ['kategori' => 'rendah']) }}">
+                            <tr class="bg-success text-white" style="text-align: left">
+                                <td style="text-align: left"><b>RENDAH</b>
+                                    <div class="mt-1" style="font-size:.9rem;line-height:1.2">
+                                        {{ $kategoriMeta['RENDAH']['deskripsi'] ?? '-' }}
+                                    </div>
+                                </td>
+                                <td style="vertical-align: middle; text-align: center;">
+                                    <a class="btn btn-light btn-sm px-4"
+                                        href="{{ route('opd.kategorise.show', ['kategori' => 'rendah']) }}">
                                         {{ $rendah }}
                                     </a>
                                 </td>
                             </tr>
-                            <tr>
-                                <td class="bg-secondary text-white" style="text-align: left">Belum Dinilai</td>
-                                <td>
-                                    <a href="{{ route('opd.kategorise.show', ['kategori' => 'belum']) }}">
+                            <tr class="bg-secondary text-white" style="text-align: left">
+                                <td style="text-align: left"><b>Belum Dinilai</b>
+                                    <div class="mt-1" style="font-size:.9rem;line-height:1.2">
+                                        {{ $kategoriMeta['BELUM']['deskripsi'] ?? '-' }}
+                                    </div>
+                                </td>
+                                <td style="vertical-align: middle; text-align: center;">
+                                    <a class="btn btn-light btn-sm px-4"
+                                        href="{{ route('opd.kategorise.show', ['kategori' => 'belum']) }}">
                                         {{ $belum }}
                                     </a>
                                 </td>
@@ -74,7 +107,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-8">
+        <div class="col-md-4">
             <div class="card">
                 <div class="card-body text-center">
                     <div style="width: 50%;margin: auto;">
@@ -126,7 +159,8 @@
                         const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
                         const label = context.chart.data.labels[context.dataIndex];
                         const percentage = total ? Math.round((value / total) * 100) : 0;
-                        return `${label}\n${value} (${percentage}%)`;
+                        //return `${label}\n${value} (${percentage}%)`;
+                        return `${percentage}%`;
                     }
 
                 }

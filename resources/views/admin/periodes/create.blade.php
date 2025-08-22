@@ -7,27 +7,33 @@
 @endsection
 
 @section('content')
-<div class="card">
-    <div class="card-body">
-        <form action="{{ route('periodes.store') }}" method="POST">
-            @csrf
+    <div class="card">
+        <div class="card-body">
+            <form action="{{ route('periodes.store') }}" method="POST">
+                @csrf
 
-            <div class="form-group">
-                <label for="tahun">Tahun</label>
-                <input type="number" name="tahun" class="form-control" value="{{ old('tahun') }}" required>
-            </div>
+                <div class="form-group">
+                    <label for="tahun">Tahun</label>
+                    <input type="number" name="tahun" class="form-control" value="{{ old('tahun') }}" required>
+                </div>
 
-            <div class="form-group">
-                <label for="status">Status</label>
-                <select name="status" class="form-control" required>
-                    <option value="open" {{ old('status') == 'open' ? 'selected' : '' }}>Open</option>
-                    <option value="closed" {{ old('status') == 'closed' ? 'selected' : '' }}>Closed</option>
-                </select>
-            </div>
+                <div class="form-group">
+                    <label for="status">Status</label>
+                    <select name="status" class="form-control" required>
+                        <option value="closed" {{ old('status') == 'closed' ? 'selected' : '' }}>Closed</option>
+                    </select>
+                </div>
 
-            <button type="submit" class="btn btn-primary">Simpan</button>
-            <a href="{{ route('periodes.index') }}" class="btn btn-secondary">Batal</a>
-        </form>
+                <div class="form-group">
+                    <label for="kunci">Kunci</label>
+                    <select name="kunci" class="form-control" required>
+                        <option value="locked" {{ old('kunci') == 'locked' ? 'selected' : '' }}>Locked</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Simpan</button>
+                <a href="{{ route('periodes.index') }}" class="btn btn-secondary">Batal</a>
+            </form>
+        </div>
     </div>
-</div>
 @endsection

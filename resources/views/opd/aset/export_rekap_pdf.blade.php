@@ -66,6 +66,10 @@
 </head>
 
 <body>
+    <div style="text-align:center; margin-bottom:20px;">
+        <img src="{{ public_path('images/tlp/tlp_teaser_green.png') }}" alt="TLP:AMBER+STRICT" width="150">
+        {{-- <p style="font-weight:bold; color:#FFBF00; margin:0;">TLP:AMBER+STRICT</p> --}}
+    </div>
     <h2>Rekap Aset KAMI Tahun {{ $tahunAktifGlobal ?? '-' }}</h2>
     <h3>Pemilik Aset : {{ strtoupper($namaOpd) }}</h3>
     <table>
@@ -83,26 +87,60 @@
         </thead>
         <tbody>
             @foreach ($klasifikasis as $klasifikasi)
-                <tr>
-                    <td>{{ $klasifikasi->klasifikasiaset }}</td>
+                <tr">
+                    <td style="height:40px;"><b>[{{ $klasifikasi->kodeklas }}] {{ $klasifikasi->klasifikasiaset }}</b>
+                        <div style="font-size:.9em;line-height:1.2;">
+                            {{ $klasifikasi->subklasifikasi->pluck('subklasifikasiaset')->implode(', ') ?: '-' }}
+                        </div>
+                    </td>
                     <td style="text-align: center;">{{ $klasifikasi->jumlah_aset }}</td>
                     <td style="text-align: center;">{{ $klasifikasi->jumlah_tinggi ?? 0 }}</td>
                     <td style="text-align: center;">{{ $klasifikasi->jumlah_sedang ?? 0 }}</td>
                     <td style="text-align: center;">{{ $klasifikasi->jumlah_rendah ?? 0 }}</td>
-                </tr>
+                    </tr>
             @endforeach
         </tbody>
-    </table><BR><BR><BR>
+        <tfoot>
+            <tr style="background-color:#eeeeee; font-weight:bold;height:200px;">
+                <td style="text-align: center;height: 40px">TOTAL JUMLAH ASET</td>
+                <td style="text-align: center;">
+                    {{ $klasifikasis->sum('jumlah_aset') }}
+                </td>
+                <td style="text-align: center;">
+                    {{ $klasifikasis->sum('jumlah_tinggi') }}
+                </td>
+                <td style="text-align: center;">
+                    {{ $klasifikasis->sum('jumlah_sedang') }}
+                </td>
+                <td style="text-align: center;">
+                    {{ $klasifikasis->sum('jumlah_rendah') }}
+                </td>
+            </tr>
+        </tfoot>
+    </table><BR>
+    <h4>KETERANGAN NILAI ASET</h4>
+    <ol>
+        @foreach ($ranges as $range)
+            <li><b>{{ $range->nilai_akhir_aset }} :</b> {{ $range->deskripsi }}</li>
+        @endforeach
+    </ol><BR>
     <h4>Catatan</h4>
     <ol>
+        <li>Kode TLP (Traffic Light Protocol) dipakai untuk mengklasifikasikan sensitivitas informasi, supaya jelas
+            sejauh mana informasi boleh dibagikan.
+            <b>Kode TLP:GREEN berarti boleh dibagikan dalam komunitas lebih luas.</b>
+        </li>
         <li><b>PERISAI</b> adalah sistem elektronik untuk melakukan <span class="underline">PEngelolaan RISiko Aset
                 Informasi,</span> dikelola oleh
             Bidang
             Persandian Dinas Kominfos Provinsi Bali</li>
-        <li>Yang dimaksud dengan <b>Aset</b> dalam PERISAI adalah <span class="underline">khusus aset yang terkait
+        <li>Yang dimaksud dengan <b>Aset KAMI</b> dalam PERISAI adalah Aset Keamanan Informasi, yaitu <span
+                class="underline">khusus aset yang terkait
                 dengan pelindungan data dan keamanan informasi.</span>
         </li>
-        <li>Periode pemutahiran data PERISAI <b>wajib dilakukan sekali setahun oleh Pemilik Aset.</b> </li>
+        <li><b>Pemutahiran data PERISAI wajib dilakukan minimal sekali setahun oleh Pemilik Aset.</b>
+            Pemutahiran akan
+            dilakukan serentak, menunggu informasi dari Dinas Kominfos Prov Bali. </li>
     </ol>
 </body>
 
