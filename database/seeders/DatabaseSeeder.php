@@ -29,6 +29,7 @@ class DatabaseSeeder extends Seeder
             RekomendasiStandardSeeder::class,
             //KategoriSeSeeder::class,
             // PtkkaSessionSeeder::class,
+            //AsetbanyakSeeder::class,
 
             RolePermissionSeeder::class
         ]);

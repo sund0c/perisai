@@ -1,11 +1,11 @@
 @extends('adminlte::page')
 
-@section('title', 'Daftar Aset - ' . $klasifikasi->klasifikasiaset)
+@section('title', 'Daftar Aset - ' . ($klasifikasi->klasifikasiaset ?? '-'))
 
 @section('content_header')
     <h1>[{{ $klasifikasi->kodeklas }}] {{ $klasifikasi->klasifikasiaset }}</h1>
     <div style="line-height:1.2; font-size: 0.9em">
-        {{ $subs->pluck('subklasifikasiaset')->implode(', ') ?: '-' }}
+        {{ optional($subs)->pluck('subklasifikasiaset')->implode(', ') ?: '-' }}
     </div>
 @endsection
 
@@ -13,10 +13,10 @@
     <li class="nav-item d-none d-sm-inline-block">
         <span class="nav-link font-weight-bold">
             Tahun Aktif: {{ $tahunAktifGlobal ?? '-' }}
-            @if ($kunci === 'locked')
+            @if (($kunci ?? null) === 'locked')
                 <i class="fas fa-lock text-danger ml-1" title="Terkunci"></i>
             @endif
-            :: {{ strtoupper($namaOpd) }}
+            :: {{ strtoupper($namaOpd ?? '-') }}
         </span>
     </li>
 @endsection
@@ -39,24 +39,27 @@
             </button>
         </div>
     @endif
+
     <div class="card">
         <div class="card-body">
             <div class="d-flex mb-3" style="gap: 10px;">
                 <a href="{{ route('opd.aset.index') }}" class="btn btn-secondary mb-3 me-2">
                     ← Kembali
                 </a>
-                <a href="{{ route('opd.aset.export_rekap_klas', $klasifikasi->id) }}" class="btn btn-danger mb-3">
 
+                {{-- WAJIB: kirim param "klasifikasiaset" --}}
+                <a href="{{ route('opd.aset.export_rekap_klas', ['klasifikasiaset' => $klasifikasi]) }}"
+                    class="btn btn-danger mb-3">
                     <i class="fas fa-file-pdf"></i> Export PDF
                 </a>
-                {{-- <a href="{{ route('opd.aset.create', $klasifikasi->id) }}" class="btn btn-success btn-sm">
-                <i class="fas fa-plus"></i> Tambah Aset
-            </a> --}}
-                @if ($kunci !== 'locked')
-                    <a href="{{ route('opd.aset.create', $klasifikasi->id) }}" class="btn btn-success mb-3">
+
+                @if (($kunci ?? null) !== 'locked')
+                    <a href="{{ route('opd.aset.create', ['klasifikasiaset' => $klasifikasi]) }}"
+                        class="btn btn-success mb-3">
                         <i class="fas fa-plus"></i> Tambah Aset
                     </a>
                 @endif
+
 
             </div>
 
@@ -71,22 +74,27 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach ($asets as $aset)
+                    @forelse ($asets as $aset)
                         <tr>
                             <td>{{ $aset->kode_aset }}</td>
                             <td>{{ $aset->nama_aset }}</td>
-                            <td>{{ $aset->subklasifikasiaset->subklasifikasiaset ?? '-' }}</td>
+                            <td>{{ optional($aset->subklasifikasiaset)->subklasifikasiaset ?? '-' }}</td>
                             <td style="background-color: {{ $aset->warna_hexa }}; color: #fff; font-weight: bold;">
                                 {{ $aset->nilai_akhir_aset }}
                             </td>
-
                             <td>
-                                <a href="{{ route('opd.aset.pdf', $aset->id) }}" class="btn btn-sm btn-success"><i
-                                        class="fas fa-file-pdf"></i></a>
-                                @if ($kunci !== 'locked')
-                                    <a href="{{ route('opd.aset.edit', $aset->id) }}" class="btn btn-sm btn-primary"><i
-                                            class="fas fa-edit"></i></a>
-                                    <form action="{{ route('opd.aset.destroy', $aset->id) }}" method="POST"
+                                {{-- Rute aset pakai {aset:uuid} → kirim uuid eksplisit --}}
+                                <a href="{{ route('opd.aset.pdf', ['aset' => $aset->uuid]) }}"
+                                    class="btn btn-sm btn-success">
+                                    <i class="fas fa-file-pdf"></i>
+                                </a>
+
+                                @if (($kunci ?? null) !== 'locked')
+                                    <a href="{{ route('opd.aset.edit', ['aset' => $aset->uuid]) }}"
+                                        class="btn btn-sm btn-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <form action="{{ route('opd.aset.destroy', ['aset' => $aset->uuid]) }}" method="POST"
                                         style="display:inline-block">
                                         @csrf
                                         @method('DELETE')
@@ -94,16 +102,15 @@
                                             class="btn btn-sm btn-danger">
                                             <i class="fas fa-trash"></i>
                                         </button>
+                                    </form>
                                 @endif
-                                </form>
                             </td>
                         </tr>
-                    @endforeach
-                    @if ($asets->isEmpty())
+                    @empty
                         <tr>
-                            <td colspan="4" class="text-center">Belum ada data aset untuk klasifikasi ini.</td>
+                            <td colspan="5" class="text-center">Belum ada data aset untuk klasifikasi ini.</td>
                         </tr>
-                    @endif
+                    @endforelse
                 </tbody>
             </table>
 
@@ -133,7 +140,7 @@
                         targets: 3
                     },
                     {
-                        width: "100px",
+                        width: "140px",
                         targets: 4
                     },
                 ]

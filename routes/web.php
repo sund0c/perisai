@@ -241,19 +241,53 @@ Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd'])->pre
     Route::get('/export/pdf/{id}', [PtkkaController::class, 'exportPDF'])->name('exportPDF');
 });
 
-Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd'])->prefix('opd/aset')->name('opd.aset.')->group(function () {
-    Route::get('/', [AsetController::class, 'index'])->name('index');
-    Route::get('/export/rekap', [AsetController::class, 'exportRekapPdf'])->name('export_rekap');
-    Route::get('/export/rekapklas/{id}', [AsetController::class, 'exportRekapKlasPdf'])->name('export_rekap_klas');
-    Route::get('/klasifikasi/{id}', [AsetController::class, 'showByKlasifikasi'])->name('show_by_klasifikasi');
-    Route::get('/export/klasifikasi/{id}', [AsetController::class, 'exportKlasifikasiPdf'])->name('export_klasifikasi');
-    Route::get('/klasifikasi/{id}/create', [AsetController::class, 'create'])->name('create');
-    Route::post('/klasifikasi/{id}', [AsetController::class, 'store'])->name('store');
-    Route::get('/{id}/edit', [AsetController::class, 'edit'])->name('edit');
-    Route::get('/{id}/pdf', [AsetController::class, 'pdf'])->name('pdf');
-    Route::put('/{id}', [AsetController::class, 'update'])->name('update');
-    Route::delete('/{id}', [AsetController::class, 'destroy'])->name('destroy');
-});
+
+
+Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd'])
+    ->prefix('opd/aset')
+    ->name('opd.aset.')
+    ->group(function () {
+
+
+
+
+        // List & Rekap (tidak spesifik ke satu aset)
+        Route::get('/', [AsetController::class, 'index'])->name('index');
+        Route::get('/export/rekap', [AsetController::class, 'exportRekapPdf'])->name('export_rekap');
+
+        // Berdasarkan Klasifikasi (gunakan binding ke model kalau ada)
+        Route::get('/export/rekapklas/{klasifikasiaset}', [AsetController::class, 'exportRekapKlasPdf'])
+            ->name('export_rekap_klas');
+
+        Route::get('/klasifikasi/{klasifikasiaset}', [AsetController::class, 'showByKlasifikasi'])
+            ->name('show_by_klasifikasi');
+
+        Route::get('/export/klasifikasi/{klasifikasiaset}', [AsetController::class, 'exportKlasifikasiPdf'])
+            ->name('export_klasifikasi');
+
+        // Create/Store aset di dalam konteks klasifikasi tertentu
+        Route::get('/klasifikasi/{klasifikasiaset}/create', [AsetController::class, 'create'])
+            ->name('create');
+        Route::post('/klasifikasi/{klasifikasiaset}', [AsetController::class, 'store'])
+            ->name('store');
+
+        // ====== Rute yang spesifik ke SATU aset (pakai UUID) ======
+        Route::get('/{aset:uuid}/pdf', [AsetController::class, 'pdf'])
+            ->middleware('can:view,aset')        // ganti owns.aset -> can:view,aset
+            ->name('pdf');                       // <-- cukup 'pdf', prefix akan jadi 'opd.aset.pdf'
+
+        Route::get('/{aset:uuid}/edit', [AsetController::class, 'edit'])
+            ->middleware('can:update,aset')
+            ->name('edit');
+
+        Route::put('/{aset:uuid}', [AsetController::class, 'update'])
+            ->middleware('can:update,aset')
+            ->name('update');
+
+        Route::delete('/{aset:uuid}', [AsetController::class, 'destroy'])
+            ->middleware('can:delete,aset')
+            ->name('destroy');
+    });
 
 Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd'])->prefix('opd/kategorise')->name('opd.kategorise.')->group(function () {
     Route::get('/export/rekap/{kategori}', [KategoriSeController::class, 'exportRekapKategoriPdf'])->name('export_rekap_kategori');
@@ -277,3 +311,6 @@ Route::middleware('SSOBrokerMiddleware', 'spatie_role_or_permission:admin|opd|bi
 });
 
 // require __DIR__ . '/auth.php';
+Route::fallback(function () {
+    abort(403);
+});

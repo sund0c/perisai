@@ -29,7 +29,7 @@
 
 @section('content')
     <div class="row">
-        <div class="col-md-8">
+        <div class="col-md-9">
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex mb-3" style="gap: 10px;">
@@ -107,12 +107,12 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card">
                 <div class="card-body text-center">
-                    <div style="width: 50%;margin: auto;">
+                    <div style="width: 100%;margin: auto;">
                         <canvas id="pieChart1"></canvas>
-                    </div>
+                    </div><BR>
                 </div>
 
 

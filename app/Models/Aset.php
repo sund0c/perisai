@@ -4,11 +4,21 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Aset extends Model
 {
     use HasFactory;
 
+    // Primary key tetap bigint auto-increment (aman untuk FK)
+    protected $primaryKey = 'id';
+    public $incrementing = true;
+    protected $keyType = 'int';
+
+    /**
+     * Kolom yang boleh diisi mass assignment.
+     * (uuid jangan diisi manual—di-generate otomatis di booted())
+     */
     protected $fillable = [
         'periode_id',
         'kode_aset',
@@ -35,67 +45,127 @@ class Aset extends Model
         'fungsi_personil',
         'unit_personil',
         'keterangan',
+        'aset_key_id',
     ];
 
-    // Relasi ke Periode (Tahun Anggaran)
-    public function periode()
+    /**
+     * Casting tipe data untuk konsistensi.
+     */
+    protected $casts = [
+        'kerahasiaan'   => 'integer',
+        'integritas'    => 'integer',
+        'ketersediaan'  => 'integer',
+        'keaslian'      => 'integer',
+        'kenirsangkalan' => 'integer',
+        // kalau enum disimpan sebagai string, biarkan default (string).
+        // bisa juga buat Enum cast sendiri kalau perlu.
+    ];
+
+    /**
+     * Auto-generate UUID saat create.
+     */
+    protected static function booted(): void
     {
-        return $this->belongsTo(Periode::class);
+        static::creating(function (self $model) {
+            if (empty($model->uuid)) {
+                $model->uuid = (string) Str::uuid();
+            }
+        });
+
+        // (Opsional) Global scope multi-tenant:
+        // static::addGlobalScope('opd', function ($q) {
+        //     if (auth()->check()) {
+        //         $q->where($q->getModel()->getTable().'.opd_id', auth()->user()->opd_id);
+        //     }
+        // });
     }
 
-    // Relasi ke Klasifikasi Aset
+    /**
+     * Gunakan UUID untuk route model binding.
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'uuid';
+    }
+
+    /* ============================
+     *           RELASI
+     * ============================ */
+
+    // Periode (tahun anggaran)
+    public function periode()
+    {
+        return $this->belongsTo(Periode::class, 'periode_id');
+    }
+
+    // Klasifikasi Aset
     public function klasifikasi()
     {
         return $this->belongsTo(KlasifikasiAset::class, 'klasifikasiaset_id');
     }
 
-
+    // Sub Klasifikasi Aset
     public function subklasifikasiaset()
     {
         return $this->belongsTo(SubKlasifikasiAset::class, 'subklasifikasiaset_id');
     }
 
-
-    // Relasi ke OPD
+    // OPD pemilik aset
     public function opd()
     {
-        return $this->belongsTo(Opd::class);
+        return $this->belongsTo(Opd::class, 'opd_id');
     }
 
+    // Nilai/objek kategori SE untuk aset (jika tabel kategori_ses punya aset_id)
     public function kategoriSe()
     {
-        return $this->hasOne(\App\Models\KategoriSe::class);
+        return $this->hasOne(KategoriSe::class, 'aset_id', 'id');
     }
 
+    // Semua sesi PTKKA milik aset
     public function ptkkaSessions()
     {
-        return $this->hasMany(\App\Models\PtkkaSession::class);
+        return $this->hasMany(PtkkaSession::class, 'aset_id', 'id');
     }
 
-    // latest status=1
+    // Sesi PTKKA terbaru dengan status = 1 (Pengajuan)
     public function ptkkaPengajuan()
     {
-        return $this->hasOne(\App\Models\PtkkaSession::class)
+        return $this->hasOne(PtkkaSession::class, 'aset_id', 'id')
             ->where('status', 1)
             ->latestOfMany('updated_at')
             ->select('ptkka_sessions.*');
     }
 
-    // latest status in {0,2,3}
+    // Sesi PTKKA terbaru dengan status dalam {0,2,3}
     public function ptkkaTerakhir()
     {
-        return $this->hasOne(\App\Models\PtkkaSession::class)
+        return $this->hasOne(PtkkaSession::class, 'aset_id', 'id')
             ->whereIn('status', [0, 2, 3])
             ->latestOfMany('updated_at')
             ->select('ptkka_sessions.*');
     }
 
-    // latest status=4
+    // Sesi PTKKA terbaru dengan status = 4 (Rampung)
     public function ptkkaTerakhirRampung()
     {
-        return $this->hasOne(\App\Models\PtkkaSession::class)
+        return $this->hasOne(PtkkaSession::class, 'aset_id', 'id')
             ->where('status', 4)
             ->latestOfMany('updated_at')
             ->select('ptkka_sessions.*');
+    }
+
+    /* ============================
+     *           SCOPES
+     * ============================ */
+
+    /**
+     * Scope bantu untuk filter ke OPD user aktif (dipanggil eksplisit).
+     * Gunakan ini kalau tidak mengaktifkan Global Scope.
+     */
+    public function scopeOwned($query, $user = null)
+    {
+        $user = $user ?: auth()->user();
+        return $query->where($this->getTable() . '.opd_id', $user?->opd_id ?? 0);
     }
 }

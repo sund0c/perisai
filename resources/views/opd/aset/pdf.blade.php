@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Aset KAMI</title>
+    <title>Aset KamI</title>
     <style>
         table {
             width: 100%;
@@ -84,18 +84,55 @@
         .value {
             width: 60%;
         }
+
+        @page {
+            margin: 160px 50px 70px 40px;
+        }
+
+
+        .header {
+            position: fixed;
+            top: -110px;
+            left: 0px;
+            right: 0px;
+            text-align: left;
+        }
+
+        .header img.tlp {
+            position: absolute;
+            top: 0;
+            right: -30;
+            width: 150px;
+        }
+
+        .header .subs {
+            line-height: 1.2;
+            font-size: 0.9em;
+            margin-right: 100px;
+            /* ruang kosong supaya teks turun & tidak timpa gambar */
+        }
+
+        .header h2,
+        .header h3 {
+            margin: 6px 0;
+        }
     </style>
 </head>
 
 <body>
-    <div style="text-align:center; margin-bottom:20px;">
-        <img src="{{ public_path('images/tlp/tlp_teaser_amber_strict.png') }}" alt="TLP:AMBER+STRICT" width="150">
-        {{-- <p style="font-weight:bold; color:#FFBF00; margin:0;">TLP:AMBER+STRICT</p> --}}
-    </div>
-    <BR>
-    <h2>Informasi Aset - Tahun {{ $tahunAktifGlobal ?? '-' }}</h2>
-    <h3>Pemilik Aset : {{ strtoupper($namaOpd) }}</h3>
+    <div class="header">
+        <img src="{{ public_path('images/tlp/tlp_teaser_amber_strict.png') }}" alt="TLP:AMBER+STRICT" class="tlp">
+        <h2>Informasi dan Nilai Aset KamI - Tahun {{ $tahunAktifGlobal ?? '-' }}</h2>
+        <h3>Pemilik Risiko: {{ strtoupper($namaOpd) }}</h3>
+        <h3 style="line-height:1; margin-bottom:0;">
+            {{-- Klasifikasi Aset : {{ $klasifikasi->klasifikasiaset }} --}}
+        </h3>
 
+        <div class="subs">
+            {{-- {{ $subs->pluck('subklasifikasiaset')->implode(', ') ?: '-' }} --}}
+        </div>
+
+    </div>
     {{--
     @foreach ($fieldList as $field)
         @includeIf('opd.aset.fields.' . $field, ['aset' => $aset])
@@ -148,7 +185,7 @@
                 Informasi,</span> dikelola oleh
             Bidang
             Persandian Dinas Kominfos Provinsi Bali</li>
-        <li>Yang dimaksud dengan <b>Aset KAMI</b> dalam PERISAI adalah Aset Keamanan Informasi, yaitu <span
+        <li>Yang dimaksud dengan <b>Aset KamI</b> dalam PERISAI adalah Aset Keamanan Informasi, yaitu <span
                 class="underline">khusus aset yang terkait
                 dengan pelindungan data dan keamanan informasi.</span>
         </li>

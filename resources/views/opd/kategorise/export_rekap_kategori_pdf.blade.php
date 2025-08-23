@@ -66,6 +66,10 @@
 </head>
 
 <body>
+    <div style="text-align:center; margin-bottom:20px;">
+        <img src="{{ public_path('images/tlp/tlp_teaser_green.png') }}" alt="TLP:GREEN" width="150">
+        {{-- <p style="font-weight:bold; color:#FFBF00; margin:0;">TLP:AMBER+STRICT</p> --}}
+    </div>
     <h2>Rekap Kategori SE: {{ strtoupper($kategori) }}, Tahun {{ $tahunAktifGlobal ?? '-' }}</h2>
     <h3>Pemilik Aset : {{ strtoupper($namaOpd) }}</h3>
     <table class="table table-bordered text-center" style="width:100%">
@@ -115,6 +119,11 @@
     <BR><BR><BR>
     <h4>Catatan</h4>
     <ol>
+        <li>Kode TLP (Traffic Light Protocol) dipakai untuk mengklasifikasikan sensitivitas informasi, supaya jelas
+            sejauh mana informasi boleh dibagikan.
+            <b>Kode TLP:GREEN berarti boleh dibagikan di dalam komunitas/sektor (misalnya antar instansi pemerintah),
+                tapi tidak untuk publik luas.</b>
+        </li>
         <li><b>PERISAI</b> adalah sistem elektronik untuk melakukan <span class="underline">PEngelolaan RISiko Aset
                 Informasi,</span> dikelola oleh
             Bidang

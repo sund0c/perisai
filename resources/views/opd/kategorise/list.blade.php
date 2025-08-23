@@ -3,7 +3,7 @@
 @section('title', 'Kategori SE ' . strtoupper($kategori))
 
 @section('content_header')
-    <h1>Kategori SE : {{ strtoupper($kategori) }}, pada {{ strtoupper($namaOpd) }}</h1>
+    <h1>Sistem Elektronik Kategori {{ strtoupper($kategori) }}</h1>
 @endsection
 
 @section('content_top_nav_left')
@@ -13,11 +13,30 @@
             @if ($kunci === 'locked')
                 <i class="fas fa-lock text-danger ml-1" title="Terkunci"></i>
             @endif
+            :: {{ strtoupper($namaOpd) }}
         </span>
     </li>
 @endsection
 
 @section('content')
+    @if (session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Tutup">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ session('error') }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Tutup">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    @endif
+
     <div class="card">
         <div class="card-body table-responsive">
             <div class="d-flex mb-3" style="gap: 10px;">
@@ -74,11 +93,13 @@
                             </td>
 
                             <td>
-                                <a href="{{ route('opd.kategorise.exportPdf', $aset->id) }}" class="btn btn-sm btn-primary">
+                                <a href="{{ route('opd.kategorise.exportPdf', $aset->id) }}"
+                                    class="btn btn-sm btn-primary">
                                     <i class="fas fa-file-pdf"></i>
                                 </a>
                                 @if ($kunci !== 'locked')
-                                    <a href="{{ route('opd.kategorise.edit', $aset->id) }}" class="btn btn-sm btn-warning">
+                                    <a href="{{ route('opd.kategorise.edit', ['aset' => $aset->id, 'kategori' => $kategori]) }}"
+                                        class="btn btn-sm btn-warning">
                                         <i class="fas fa-edit"></i>
                                     </a>
                                 @endif

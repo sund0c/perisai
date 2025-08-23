@@ -21,17 +21,20 @@
 
     <ul>
         <li><b>PERISAI</b> adalah sistem elektronik untuk melakukan <b>PE</b>ngelolaan <b>RIS</b>iko <b>A</b>set
-            <b>I</b>nformasi di lingkup Pemerintah Provinsi Bali
+            <b>I</b>nformasi di lingkup Pemerintah Provinsi Bali. PERISAI dikelola oleh
+            Dinas Kominfos Provinsi Bali (Contact: Bidang Persandian)
         </li>
-        <li>Fitur PERISAI adalah mulai dari Inventarisir aset sampai ke Analisa Risiko aset.</li>
-        <li>Yang dimaksud dengan <b>Aset</b> dalam PERISAI adalah <b>khusus aset yang terkait
+        <li>Fitur PERISAI adalah mulai dari inventarisir aset keamanan informasi sampai ke Analisa Risiko keamanan informasi
+            aset.</li>
+        <li>Yang dimaksud dengan <b>Aset Keamanan Informasi (KamI)</b> dalam PERISAI adalah <b>khusus aset keamanan
+                informasi yang
+                terkait
                 dengan pelindungan data dan keamanan informasi.</b>
         </li>
-        <li>PERISAI dikelola oleh
-            Dinas Kominfos Provinsi Bali (Contact: Bidang Persandian)</li>
-        <li>Periode pemutahiran data aset PERISAI wajib dilakukan sekali setahun oleh Pemilik Aset.</li>
-        <li>Review tindak lanjut dari analisa risiko setiap aset wajib dilakukan minimal setiap 6 bulan sekali.
-        </li>
+        <li><b>Pemilik Risiko</b> adalah pihak yang bertanggung jawab terhadap proses bisnis secara kesuluruhan yang terkait
+            dengan aset atau yang bertanggungjawab penuh mengelola aset.</li>
+        <li>Periode pemutahiran data aset keamanan informasi pada PERISAI wajib dilakukan sekali setahun oleh Pemilik
+            Risiko.</li>
     </ul>
 @endsection
 
@@ -40,7 +43,7 @@
     <div class="card">
         <div class="card-body">
             <h5>Kepada Yth <b>{{ auth()->user()->opd->namaopd }},</b> sebagai salah satu Perangkat Daerah di Pemprov Bali
-                yang mempunyai proses bisnis dan layanan, mempunyai dan mengelola aset informasi, sangat penting untuk
+                yang sekaligus menjadi <b>Pemilik Risiko keamanan informasi</b>, sangat penting untuk
                 mengetahui hal-hal sebagai berikut : </h5>
             <ol>
                 <li>Pemprov Bali telah mempunyai kebijakan keamanan yaitu <B>KEPGUB BALI
@@ -48,21 +51,23 @@
                         tentang PEDOMAN MANAJEMEN
                         KEAMANAN INFORMASI DAN STANDAR TEKNIS
                         DAN PROSEDUR KEAMANAN SPBE DI LINGKUNGAN PEMPROV BALI</b>. Seluruh aset informasi baik Sistem
-                    Elektronik, Perangkat Keras dan lainnya, wajib mematuhi standard di
+                    Elektronik, Perangkat Keras dan lainnya, wajib mematuhi standar di
                     atas</li>
-                <li>Khusus untuk aset Perangkat Lunak /Sistem Elektronik /Aplikasi, harus dilakukan IT Security Assessment
+                {{-- <li>Khusus untuk aset Perangkat Lunak /Sistem Elektronik /Aplikasi, harus dilakukan uji keamanan atau IT
+                    Security Assessment
                     (ITSA) secara berkala.
                     ITSA dari Dinas Kominfos terbagi dalam 3(tiga) tahapan yaitu T1.Black-Box (sebelum pertama publish),
                     T2.PTKKA dan T3.Grey-Box (PoC dari PTKKA).
                     Laporan hasil ITSA akan menghasilkan rekomendasi terkait keberlangsungan operasional aset. Tidak menutup
                     kemungkinan aset akan dinonaktifkan jika ditemukan berdampak risiko kritis (terutama yang menyangkut
-                    kebocoran data sensitif).</li>
-                <li>Pemutahiran data aset informasi dalam PERISAI wajib dilakukan setiap tahun sekali. Analisa risiko dan
+                    kebocoran data sensitif).</li> --}}
+                <li>Pemutahiran data aset keamanan informasi dalam PERISAI wajib dilakukan setiap tahun sekali. Analisa
+                    risiko keamanan informasi dan
                     review tindak lanjutnya wajib dilakukan setiap 6 bulan sekali (semester). Periode akan dibuka secara
-                    bersamaan oleh Dinas Kominfos Prov Balli</li>
-                <li><b>{{ auth()->user()->opd->namaopd }}</b> sebagai pemilik proses bisnis dan layanan, pemilik dan
-                    pengelola
-                    aset, bertanggungjawab penuh terhadap upaya pengamanan aset informasinya sendiri dan tetap berkoordinasi
+                    serentak oleh Dinas Kominfos Prov Balli</li>
+                <li><b>{{ auth()->user()->opd->namaopd }}</b> sebagai pemilik risiko keamanan informasi bertanggungjawab
+                    penuh terhadap upaya pengamanan aset keamanan
+                    informasinya sendiri dengan tetap berkoordinasi
                     dengan Dinas Kominfos Prov Bali. </li>
                 <li>Dalam rangka mematuhi amanat UU No 27 tahun 2022 tentang Pelindungan Data Pribadi, agar masing-masing
                     Perangkat Daerah/UPTD termasuk

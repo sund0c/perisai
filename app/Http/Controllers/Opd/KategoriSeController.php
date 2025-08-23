@@ -238,11 +238,25 @@ class KategoriSeController extends Controller
         // Ambil semua range dari DB
         $range = RangeSe::whereRaw('LOWER(nilai_akhir_aset) = ?', [strtolower($kategori)])->first();
 
+        // Ambil periode aktif
+        $periodeAktifId = Periode::where('status', 'open')->value('id');
+        if (!$periodeAktifId) {
+            // bebas: bisa redirect balik dengan flash message juga
+            abort(409, 'Tidak ada periode yang berstatus open.');
+        }
+
         $query = Aset::whereHas('klasifikasi', function ($q) {
             $q->where('klasifikasiaset', 'PERANGKAT LUNAK');
         })
             ->where('opd_id', $userOpdId)
-            ->with(['subklasifikasiaset', 'kategoriSe']);
+            ->where('periode_id', $periodeAktifId) // ← filter periode aktif
+            ->with('kategoriSe');
+
+        // $query = Aset::whereHas('klasifikasi', function ($q) {
+        //     $q->where('klasifikasiaset', 'PERANGKAT LUNAK');
+        // })
+        //     ->where('opd_id', $userOpdId)
+        //     ->with(['subklasifikasiaset', 'kategoriSe']);
 
         if ($range) {
             // Jika ada skor total, filter berdasarkan range
@@ -277,26 +291,86 @@ class KategoriSeController extends Controller
         $userOpdId = auth()->user()->opd_id;
         $namaOpd = auth()->user()->opd->namaopd ?? '-';
 
-        // Ambil semua aset perangkat lunak milik OPD login
-        $asetPL = \App\Models\Aset::whereHas('klasifikasi', function ($q) {
+        $periodeAktifId = Periode::where('status', 'open')->value('id');
+        if (!$periodeAktifId) {
+            // bebas: bisa redirect balik dengan flash message juga
+            abort(409, 'Tidak ada periode yang berstatus open.');
+        }
+        $asetPL = Aset::whereHas('klasifikasi', function ($q) {
             $q->where('klasifikasiaset', 'PERANGKAT LUNAK');
         })
             ->where('opd_id', $userOpdId)
+            ->where('periode_id', $periodeAktifId) // ← filter periode aktif
             ->with('kategoriSe')
             ->get();
 
-        // Hitung kategori
-        $tinggi = $asetPL->where('opd.kategorise.skor_total', '>=', 16)->count();
-        $sedang = $asetPL->whereBetween('opd.kategorise.skor_total', [8, 15])->count();
-        $rendah = $asetPL->where('opd.kategorise.skor_total', '<', 8)->filter(function ($a) {
-            return $a->kategoriSe !== null;
-        })->count();
-        $belum = $asetPL->whereNull('kategoriSe')->count();
-        $total = $asetPL->count();
+        $rangeSes = RangeSe::all();
+        // Normalisasi helper
+        $norm = fn($v) => strtoupper(trim((string) $v));
+
+        // Bangun mapping yang tahan spasi/kapitalisasi
+        $kategoriMeta = collect(['TINGGI', 'SEDANG', 'RENDAH'])->mapWithKeys(function ($K) use ($rangeSes, $norm) {
+            $row = $rangeSes->first(fn($r) => $norm($r->nilai_akhir_aset) === $K);
+            return [
+                $K => [
+                    'label'     => $K,
+                    'deskripsi' => $row->deskripsi ?? '-',
+                ],
+            ];
+        })->toArray();
+
+        // Tambahan khusus
+
+        $kategoriMeta['BELUM'] = [
+            'label'     => 'BELUM DINILAI',
+            'deskripsi' => 'Belum ada skor (belum dilakukan penilaian).',
+        ];
+        $kategoriMeta['TOTAL'] = [
+            'label'     => 'TOTAL',
+            'deskripsi' => 'Jumlah seluruh aset perangkat lunak pada periode aktif.',
+        ];
+
+        // Inisialisasi penghitung kategori
+        $kategoriCount = [
+            'TINGGI' => 0,
+            'SEDANG' => 0,
+            'RENDAH' => 0,
+            'BELUM' => 0,
+            'TOTAL' => $asetPL->count()
+        ];
+
+        foreach ($asetPL as $aset) {
+            $skor = $aset->kategoriSe->skor_total ?? null;
+
+            if ($skor === null) {
+                $kategoriCount['BELUM']++;
+                continue;
+            }
+
+            // Tentukan kategori berdasarkan skor dan range
+            $kategori = $rangeSes->first(function ($range) use ($skor) {
+                return $skor >= $range->nilai_bawah && $skor <= $range->nilai_atas;
+            });
+
+            if ($kategori) {
+                $namaKategori = strtoupper($kategori->nilai_akhir_aset); // contoh: TINGGI
+                if (isset($kategoriCount[$namaKategori])) {
+                    $kategoriCount[$namaKategori]++;
+                } else {
+                    $kategoriCount[$namaKategori] = 1;
+                }
+            }
+        }
+        $tinggi = $kategoriCount['TINGGI'];
+        $sedang = $kategoriCount['SEDANG'];
+        $rendah = $kategoriCount['RENDAH'];
+        $total = $kategoriCount['TOTAL'];
+        $belum = $kategoriCount['BELUM'];
 
         $namaOpd = auth()->user()->opd->namaopd ?? '-';
 
-        $pdf = PDF::loadView('opd.kategorise.export_rekap_pdf', compact('tinggi', 'sedang', 'rendah', 'belum', 'total', 'namaOpd'))
+
+        $pdf = PDF::loadView('opd.kategorise.export_rekap_pdf', compact('tinggi', 'sedang', 'rendah', 'belum', 'total', 'namaOpd', 'kategoriMeta'))
             ->setPaper('A4', 'portrait');
 
         $pdf->getDomPDF()->getCanvas()->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
@@ -318,6 +392,7 @@ class KategoriSeController extends Controller
     {
         $request->validate([
             'jawaban' => 'required|array',
+            'kategori' => 'required|in:tinggi,sedang,rendah',
         ]);
 
         $indikators = IndikatorKategoriSe::all()->keyBy('kode');
@@ -336,15 +411,43 @@ class KategoriSeController extends Controller
             }
         }
 
-        KategoriSe::updateOrCreate(
-            ['aset_id' => $asetId],
-            [
-                'jawaban' => $inputJawaban,
-                'skor_total' => $skorTotal
-            ]
-        );
+        try {
+            KategoriSe::updateOrCreate(
+                ['aset_id' => $asetId],
+                [
+                    'jawaban' => $inputJawaban,
+                    'skor_total' => $skorTotal
+                ]
+            );
+            $kategori = $request->string('kategori'); // 'tinggi' | 'sedang' | 'rendah'
+            return redirect()
+                ->route('opd.kategorise.show', ['kategori' => $kategori])
+                ->with('success', 'Kategori SE berhasil diperbaharui.');
+        } catch (QueryException $e) {
+            Log::warning('Gagal memperbaharui aset (QueryException)', [
+                'mysql_code' => $e->errorInfo[1] ?? null,   // 1062, 1452, dst.
+                'sql_state'  => $e->errorInfo[0] ?? null,
+                'driver_msg' => $e->errorInfo[2] ?? null,
+                'user_id'    => auth()->id(),
+                'route'      => request()->path(),
+            ]);
+            return back()->withInput()->with('error', 'Gagal memperbaharui. Silakan periksa kembali isian Anda.');
+        } catch (\Throwable $e) {
+            report($e);
+            return back()->withInput()->with('error', 'Terjadi kesalahan. Silakan coba lagi atau hubungi admin.');
+        }
 
-        return redirect()->route('opd.kategorise.index')->with('success', 'Penilaian berhasil disimpan.');
+
+
+        // KategoriSe::updateOrCreate(
+        //     ['aset_id' => $asetId],
+        //     [
+        //         'jawaban' => $inputJawaban,
+        //         'skor_total' => $skorTotal
+        //     ]
+        // );
+
+        // return redirect()->route('opd.kategorise.index')->with('success', 'Penilaian berhasil disimpan.');
     }
 
     public function exportRekapKategoriPdf($kategori)
@@ -374,6 +477,8 @@ class KategoriSeController extends Controller
 
         $data = $query->get();
         $rangeSes = RangeSe::all();
+
+
 
         $pdf = PDF::loadView('opd.kategorise.export_rekap_kategori_pdf', compact('data', 'kategori', 'namaOpd', 'rangeSes'))
             ->setPaper('A4', 'potrait');

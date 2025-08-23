@@ -80,7 +80,7 @@ class SSOBrokerController extends Controller
             session([
                 'UserIsAuthenticated' => 1,
                 'authUserData'        => $payload,
-                'defaultRole'         => $payload->roles[0],
+                'defaultRole'         => $payload->roles[0],  // roles[0] : admin, roles[1] : bidang, roles[2] : opd (Ubah ini untuk ganti role di 1 user yang punya banyak role. PASTIKAN di tabel model_has_roles 1 user hanya punya 1 role)
                 'sso_user_id'         => $payload->user->id
             ]);
 

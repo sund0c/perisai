@@ -11,6 +11,14 @@ use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware as SpatieRoleMiddleware;
 
+// Tambahan IMPORT untuk handler
+use Illuminate\Support\Facades\Log;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
+
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__ . '/../routes/web.php',
@@ -30,5 +38,27 @@ return Application::configure(basePath: dirname(__DIR__))
         // $middleware->web(append: [ \Illuminate\Session\Middleware\StartSession::class ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Not found / method salah → paksa 403
+        $exceptions->render(function (ModelNotFoundException|NotFoundHttpException|MethodNotAllowedHttpException $e, $request) {
+            Log::debug('custom-403 (notfound/method) hit', [
+                'ex' => get_class($e),
+                'path' => $request->path(),
+            ]);
+
+            return $request->expectsJson()
+                ? response()->json(['message' => 'Forbidden'], 403)
+                : response()->view('errors.403', ['forced' => true], 403);
+        });
+
+        // Auth / policy → 403 (tetap 403, tapi kita pastikan view konsisten & log)
+        $exceptions->render(function (AuthorizationException|AuthenticationException $e, $request) {
+            Log::debug('custom-403 (auth/policy) hit', [
+                'ex' => get_class($e),
+                'path' => $request->path(),
+            ]);
+
+            return $request->expectsJson()
+                ? response()->json(['message' => 'Forbidden'], 403)
+                : response()->view('errors.403', ['forced' => true], 403);
+        });
     })->create();

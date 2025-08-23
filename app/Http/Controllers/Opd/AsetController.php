@@ -13,22 +13,28 @@ use App\Models\SubKlasifikasiAset;
 use App\Models\KonfigurasiField;
 use Illuminate\Http\Request;
 use PDF;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
+use Dompdf\FontMetrics;
+
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Database\QueryException;
 
 class AsetController extends Controller
 {
+
+    public function __construct()
+    {
+        // Otomatis otorisasi semua method resource berbasis Policy Aset
+        $this->authorizeResource(Aset::class, 'aset');
+    }
+
     public function index()
     {
         $periodeAktifId = Periode::where('status', 'open')->value('id');
         $opdId = auth()->user()->opd_id;
-
-        // Ambil klasifikasi + jumlah aset total per klasifikasi
-        // $klasifikasis = KlasifikasiAset::withCount(['asets as jumlah_aset' => function ($query) use ($opdId, $periodeAktifId) {
-        //     $query->where('opd_id', $opdId)
-        //         ->where('periode_id', $periodeAktifId);
-        // }])->get();
-
 
         $klasifikasis = KlasifikasiAset::select('id', 'klasifikasiaset', 'kodeklas')
             ->with([
@@ -105,46 +111,40 @@ class AsetController extends Controller
         ));
     }
 
-
-
-
-
-
-
-    public function showByKlasifikasi($id)
+    public function showByKlasifikasi(KlasifikasiAset $klasifikasiaset)
     {
-        $periodeAktif = Periode::where('status', 'open')->value('id');
-        $opdId = auth()->user()->opd_id;
+        // kalau mau tetap pakai variabel $klasifikasi di bawah:
+        $klasifikasi = $klasifikasiaset;
 
-        $klasifikasi = KlasifikasiAset::findOrFail($id);
-        $subs = $klasifikasi->subklasifikasi;
-        $asets = Aset::where('klasifikasiaset_id', $id)
+        $periodeAktif = Periode::where('status', 'open')->value('id');
+        $opdId        = auth()->user()->opd_id;
+
+        $subs  = $klasifikasi->subklasifikasi;
+        $asets = Aset::where('klasifikasiaset_id', $klasifikasi->id)
             ->where('opd_id', $opdId)
             ->where('periode_id', $periodeAktif)
             ->with('subklasifikasiaset')
             ->get();
 
         foreach ($asets as $aset) {
-            // Total nilai keamanan informasi
             $total = collect([
                 $aset->kerahasiaan,
                 $aset->integritas,
                 $aset->ketersediaan,
                 $aset->keaslian,
                 $aset->kenirsangkalan,
-            ])->map(fn($v) => intval($v))->sum();
+            ])->map(fn($v) => (int) $v)->sum();
 
-            // Cari nilai_akhir_aset dan warna
             $range = \App\Models\RangeAset::where('nilai_bawah', '<=', $total)
                 ->where('nilai_atas', '>=', $total)
                 ->first();
 
             $aset->nilai_akhir_aset = $range->nilai_akhir_aset ?? '-';
-            $aset->warna_hexa = $range->warna_hexa ?? '#999999'; // default abu-abu
+            $aset->warna_hexa       = $range->warna_hexa ?? '#999999';
         }
 
-
         $namaOpd = auth()->user()->opd->namaopd ?? '-';
+
         return view('opd.aset.show_by_klasifikasi', compact('klasifikasi', 'asets', 'namaOpd', 'subs'));
     }
 
@@ -169,96 +169,108 @@ class AsetController extends Controller
         return view('opd.aset.create', compact('klasifikasi', 'subklasifikasis', 'fieldList', 'namaOpd'));
     }
 
-
-    public function store(Request $request, $klasifikasiId)
+    public function store(Request $request, KlasifikasiAset $klasifikasiaset)
     {
-        // Ambil konfigurasi field dari klasifikasi
-        $klasifikasi = \App\Models\KlasifikasiAset::findOrFail($klasifikasiId);
-        $fields = is_array($klasifikasi->tampilan_field_aset)
-            ? $klasifikasi->tampilan_field_aset
-            : json_decode($klasifikasi->tampilan_field_aset, true);
+        $this->authorize('create', [Aset::class, $klasifikasiaset]);
 
-        // Buat aturan validasi berdasarkan field yang aktif
+        $periodeAktif = Periode::where('status', 'open')->value('id');
+        if (!$periodeAktif) {
+            return back()->withInput()->with('error', 'Tidak ada tahun anggaran aktif.');
+        }
+
+        $opdId = auth()->user()->opd_id ?? null;
+        if (!$opdId) {
+            return back()->withInput()->with('error', 'Akun tidak terkait OPD.');
+        }
+
+        // ---- Konfigurasi field dari klasifikasi ----
+        $cfg = $klasifikasiaset->tampilan_field_aset;
+        $fields = is_array($cfg) ? $cfg : (json_decode($cfg ?? '[]', true) ?: []);
+
+        // ---- Aturan validasi dinamis ----
         $rules = [];
 
-        if (in_array('nama_aset', $fields)) {
-            $rules['nama_aset'] = 'required|string|max:255';
-        }
+        if (in_array('nama_aset', $fields))                $rules['nama_aset'] = 'required|string|max:255';
+        if (in_array('spesifikasi_aset', $fields))         $rules['spesifikasi_aset'] = 'required|string|max:255';
+        if (in_array('lokasi', $fields))                   $rules['lokasi'] = 'required|string|max:255';
+        if (in_array('keterangan', $fields))               $rules['keterangan'] = 'nullable|string';
+        if (in_array('format_penyimpanan', $fields))       $rules['format_penyimpanan'] = 'required|in:Fisik,Dokumen Elektronik,Fisik dan Dokumen Elektronik';
+        if (in_array('masa_berlaku', $fields))             $rules['masa_berlaku'] = 'required|string|max:100';
+        if (in_array('penyedia_aset', $fields))            $rules['penyedia_aset'] = 'required|string|max:255';
+        if (in_array('status_aktif', $fields))             $rules['status_aktif'] = 'required|in:Aktif,Tidak Aktif';
+        if (in_array('kondisi_aset', $fields))             $rules['kondisi_aset'] = 'required|in:Baik,Tidak Layak,Rusak';
+
+        // subklasifikasi: harus ada & milik klasifikasi ini
         if (in_array('subklasifikasiaset_id', $fields)) {
-            $rules['subklasifikasiaset_id'] = 'required|exists:sub_klasifikasi_asets,id';
-        }
-        if (in_array('spesifikasi_aset', $fields)) {
-            $rules['spesifikasi_aset'] = 'required|string|max:255';
-        }
-        if (in_array('lokasi', $fields)) {
-            $rules['lokasi'] = 'required|string|max:255';
-        }
-        if (in_array('keterangan', $fields)) {
-            $rules['keterangan'] = 'nullable|string';
-        }
-        if (in_array('format_penyimpanan', $fields)) {
-            $rules['format_penyimpanan'] = 'required|in:Fisik,Dokumen Elektronik,Fisik dan Dokumen Elektronik';
-        }
-        if (in_array('masa_berlaku', $fields)) {
-            $rules['masa_berlaku'] = 'required|string|max:100'; // karena "12 Bulan" bukan format date
-        }
-        if (in_array('penyedia_aset', $fields)) {
-            $rules['penyedia_aset'] = 'required|string|max:255';
-        }
-        if (in_array('status_aktif', $fields)) {
-            $rules['status_aktif'] = 'required|in:Aktif,Tidak Aktif';
-        }
-        if (in_array('kondisi_aset', $fields)) {
-            $rules['kondisi_aset'] = 'required|in:Baik,Tidak Layak,Rusak';
+            $rules['subklasifikasiaset_id'] = [
+                'required',
+                Rule::exists('sub_klasifikasi_asets', 'id')
+                    ->where('klasifikasi_aset_id', $klasifikasiaset->id),
+            ];
         }
 
-        // Validasi CIAAA
+        // CIAAA
         foreach (['kerahasiaan', 'integritas', 'ketersediaan', 'keaslian', 'kenirsangkalan'] as $ci) {
             if (in_array($ci, $fields)) {
                 $rules[$ci] = 'required|in:1,2,3';
             }
         }
 
-        // Validasi personil
-        if (in_array('status_personil', $fields)) {
-            $rules['status_personil'] = 'nullable|in:SDM,Pihak Ketiga';
-        }
-        if (in_array('nip_personil', $fields)) {
-            $rules['nip_personil'] = 'nullable|string|max:50';
-        }
-        if (in_array('jabatan_personil', $fields)) {
-            $rules['jabatan_personil'] = 'nullable|string|max:100';
-        }
-        if (in_array('fungsi_personil', $fields)) {
-            $rules['fungsi_personil'] = 'nullable|string|max:100';
-        }
-        if (in_array('unit_personil', $fields)) {
-            $rules['unit_personil'] = 'nullable|string|max:100';
-        }
+        // Personil
+        if (in_array('status_personil', $fields))  $rules['status_personil'] = 'nullable|in:SDM,Pihak Ketiga';
+        if (in_array('nip_personil', $fields))     $rules['nip_personil'] = 'nullable|string|max:50';
+        if (in_array('jabatan_personil', $fields)) $rules['jabatan_personil'] = 'nullable|string|max:100';
+        if (in_array('fungsi_personil', $fields))  $rules['fungsi_personil'] = 'nullable|string|max:100';
+        if (in_array('unit_personil', $fields))    $rules['unit_personil'] = 'nullable|string|max:100';
 
-        // Lakukan validasi
         $validated = $request->validate($rules);
 
+        // ---- Field tetap & anti-IDOR ----
+        $validated['uuid']               = (string) Str::uuid();
+        $validated['periode_id']         = $periodeAktif;
+        $validated['klasifikasiaset_id'] = $klasifikasiaset->id; // FK integer
+        $validated['opd_id']             = $opdId;
 
-        // Tambahkan field tetap (wajib disimpan meskipun tidak dari form)
-        $validated['periode_id'] = Periode::where('status', 'open')->value('id');
-        $validated['klasifikasiaset_id'] = $klasifikasiId;
-        $validated['opd_id'] = auth()->user()->opd_id;
-
-        // Generate kode aset
-        $prefix = strtoupper($klasifikasi->kodeklas);
-        $jumlahAsetSebelumnya = Aset::where('klasifikasiaset_id', $klasifikasiId)->count();
-        $nomorUrut = str_pad($jumlahAsetSebelumnya + 1, 4, '0', STR_PAD_LEFT);
-        $validated['kode_aset'] = $prefix . '-' . $nomorUrut;
+        // Prefix dari klasifikasi (misal: "SK-" atau berdasarkan kode klasifikasi)
+        $prefix = strtoupper($klasifikasiaset->kodeklas ?? substr($klasifikasiaset->klasifikasiaset, 0, 2)) . '-';
 
         try {
-            $aset = Aset::create($validated);
+            $aset = DB::transaction(function () use ($validated, $prefix, $opdId, $periodeAktif, $klasifikasiaset) {
+                // 1) Dapatkan atau buat ASET KEY (kepemilikan kode_aset oleh OPD ini, global sepanjang waktu)
+                //    Kode digenerate berurutan per OPD+prefix dan DIJAMIN unik global oleh tabel aset_keys (unique: kode_aset)
+                $kode = $this->generateKodeAsetForOpd($opdId, $prefix); // lihat helper di bawah
+
+                // Ambil row aset_key milik (opd_id, kode)
+                $key = DB::table('aset_keys')->where('kode_aset', $kode)->lockForUpdate()->first();
+                if (!$key) {
+                    // Safety net: seharusnya sudah dibuat di helper; tapi kalau belum (race), buat di sini
+                    $keyId = DB::table('aset_keys')->insertGetId([
+                        'opd_id'     => $opdId,
+                        'kode_aset'  => $kode,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                } else {
+                    if ((int) $key->opd_id !== (int) $opdId) {
+                        abort(422, "Kode aset {$kode} sudah dimiliki OPD lain.");
+                    }
+                    $keyId = $key->id;
+                }
+
+                // 2) Simpan baris ASSET untuk periode ini
+                $data = $validated;
+                $data['aset_key_id'] = $keyId;
+                $data['kode_aset']   = $kode;
+
+                return Aset::create($data);
+            });
+
             return redirect()
-                ->route('opd.aset.show_by_klasifikasi', $klasifikasiId)
+                ->route('opd.aset.show_by_klasifikasi', ['klasifikasiaset' => $klasifikasiaset])
                 ->with('success', 'Aset berhasil ditambahkan.');
         } catch (QueryException $e) {
             Log::warning('Gagal menyimpan aset (QueryException)', [
-                'mysql_code' => $e->errorInfo[1] ?? null,   // 1062, 1452, dst.
+                'mysql_code' => $e->errorInfo[1] ?? null,
                 'sql_state'  => $e->errorInfo[0] ?? null,
                 'driver_msg' => $e->errorInfo[2] ?? null,
                 'user_id'    => auth()->id(),
@@ -271,112 +283,87 @@ class AsetController extends Controller
         }
     }
 
-    public function edit($id)
+
+    public function edit(Aset $aset)
     {
-        // Ambil data aset beserta relasinya
-        $aset = Aset::with('klasifikasi', 'subklasifikasiaset')->findOrFail($id);
+        // Akses hanya untuk pemilik OPD (lihat AsetPolicy@update)
+        $this->authorize('update', $aset);
 
-        // Ambil klasifikasi dari relasi aset
-        $klasifikasi = $aset->klasifikasi;
+        // Ambil relasi yang dibutuhkan (lebih hemat query)
+        $aset->load(['klasifikasi.subklasifikasi', 'subklasifikasiaset']);
 
-        // Ambil subklasifikasi terkait
-        $subklasifikasis = SubKlasifikasiAset::where('klasifikasi_aset_id', $klasifikasi->id)->get();
+        $klasifikasi       = $aset->klasifikasi;
+        $subklasifikasis   = $klasifikasi->subklasifikasi; // dari relasi, tidak perlu query manual
 
-        // Ambil field-field yang akan ditampilkan
-        $fieldList = $klasifikasi->tampilan_field_aset;
-        if (!is_array($fieldList)) {
-            $fieldList = json_decode($fieldList, true) ?? [];
-        }
+        // Field list bisa tersimpan sebagai JSON di DB → pastikan array
+        $fieldListRaw = $klasifikasi->tampilan_field_aset;
+        $fieldList    = is_array($fieldListRaw) ? $fieldListRaw : (json_decode($fieldListRaw ?? '[]', true) ?: []);
 
-        // Saring field tersembunyi
+        // Saring field yang tidak perlu diedit
         $hiddenFields = ['opd_id', 'klasifikasiaset_id', 'periode_id', 'kode_aset', 'kategori_se'];
-        $fieldList = array_diff($fieldList, $hiddenFields);
+        $fieldList    = array_values(array_diff($fieldList, $hiddenFields));
 
-        // Ambil nama OPD
         $namaOpd = auth()->user()->opd->namaopd ?? '-';
 
         return view('opd.aset.edit', compact('aset', 'namaOpd', 'klasifikasi', 'fieldList', 'subklasifikasis'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, Aset $aset)
     {
-        $aset = Aset::findOrFail($id);
-        // Ambil konfigurasi field yang ditampilkan dari tabel klasifikasi_asets
-        $klasifikasi = \App\Models\KlasifikasiAset::find($aset->klasifikasiaset_id);
-        $fields = is_array($klasifikasi->tampilan_field_aset)
-            ? $klasifikasi->tampilan_field_aset
-            : json_decode($klasifikasi->tampilan_field_aset, true);
+        // Pastikan user berhak mengubah aset ini
+        $this->authorize('update', $aset);
 
-        // Buat aturan validasi berdasarkan field yang aktif
+        // Ambil klasifikasi & konfigurasi field
+        $aset->load('klasifikasi');
+        $klasifikasi = $aset->klasifikasi;
+
+        $cfg    = $klasifikasi->tampilan_field_aset;
+        $fields = is_array($cfg) ? $cfg : (json_decode($cfg ?? '[]', true) ?: []);
+
+        // Aturan validasi dinamis berdasar field aktif
         $rules = [];
 
-        if (in_array('nama_aset', $fields)) {
-            $rules['nama_aset'] = 'required|string|max:255';
-        }
-        if (in_array('subklasifikasiaset_id', $fields)) {
-            $rules['subklasifikasiaset_id'] = 'required|exists:sub_klasifikasi_asets,id';
-        }
-        if (in_array('spesifikasi_aset', $fields)) {
-            $rules['spesifikasi_aset'] = 'required|string|max:255';
-        }
-        if (in_array('lokasi', $fields)) {
-            $rules['lokasi'] = 'required|string|max:255';
-        }
-        if (in_array('keterangan', $fields)) {
-            $rules['keterangan'] = 'nullable|string';
-        }
-        if (in_array('format_penyimpanan', $fields)) {
-            $rules['format_penyimpanan'] = 'required|in:Fisik,Dokumen Elektronik,Fisik dan Dokumen Elektronik';
-        }
-        if (in_array('masa_berlaku', $fields)) {
-            $rules['masa_berlaku'] = 'required|string|max:100'; // karena "12 Bulan" bukan format date
-        }
-        if (in_array('penyedia_aset', $fields)) {
-            $rules['penyedia_aset'] = 'required|string|max:255';
-        }
-        if (in_array('status_aktif', $fields)) {
-            $rules['status_aktif'] = 'required|in:Aktif,Tidak Aktif';
-        }
-        if (in_array('kondisi_aset', $fields)) {
-            $rules['kondisi_aset'] = 'required|in:Baik,Tidak Layak,Rusak';
-        }
+        if (in_array('nama_aset', $fields))                $rules['nama_aset'] = 'required|string|max:255';
+        if (in_array('subklasifikasiaset_id', $fields))    $rules['subklasifikasiaset_id'] = [
+            'required',
+            Rule::exists('sub_klasifikasi_asets', 'id')
+                ->where('klasifikasi_aset_id', $klasifikasi->id), // anti-tamper
+        ];
+        if (in_array('spesifikasi_aset', $fields))         $rules['spesifikasi_aset'] = 'required|string|max:255';
+        if (in_array('lokasi', $fields))                   $rules['lokasi'] = 'required|string|max:255';
+        if (in_array('keterangan', $fields))               $rules['keterangan'] = 'nullable|string';
+        if (in_array('format_penyimpanan', $fields))       $rules['format_penyimpanan'] = 'required|in:Fisik,Dokumen Elektronik,Fisik dan Dokumen Elektronik';
+        if (in_array('masa_berlaku', $fields))             $rules['masa_berlaku'] = 'required|string|max:100';
+        if (in_array('penyedia_aset', $fields))            $rules['penyedia_aset'] = 'required|string|max:255';
+        if (in_array('status_aktif', $fields))             $rules['status_aktif'] = 'required|in:Aktif,Tidak Aktif';
+        if (in_array('kondisi_aset', $fields))             $rules['kondisi_aset'] = 'required|in:Baik,Tidak Layak,Rusak';
 
-        // Validasi CIAAA
         foreach (['kerahasiaan', 'integritas', 'ketersediaan', 'keaslian', 'kenirsangkalan'] as $ci) {
-            if (in_array($ci, $fields)) {
-                $rules[$ci] = 'required|in:1,2,3';
-            }
+            if (in_array($ci, $fields)) $rules[$ci] = 'required|in:1,2,3';
         }
 
-        // Validasi personil
-        if (in_array('status_personil', $fields)) {
-            $rules['status_personil'] = 'nullable|in:SDM,Pihak Ketiga';
-        }
-        if (in_array('nip_personil', $fields)) {
-            $rules['nip_personil'] = 'nullable|string|max:50';
-        }
-        if (in_array('jabatan_personil', $fields)) {
-            $rules['jabatan_personil'] = 'nullable|string|max:100';
-        }
-        if (in_array('fungsi_personil', $fields)) {
-            $rules['fungsi_personil'] = 'nullable|string|max:100';
-        }
-        if (in_array('unit_personil', $fields)) {
-            $rules['unit_personil'] = 'nullable|string|max:100';
-        }
+        if (in_array('status_personil', $fields))  $rules['status_personil'] = 'nullable|in:SDM,Pihak Ketiga';
+        if (in_array('nip_personil', $fields))     $rules['nip_personil'] = 'nullable|string|max:50';
+        if (in_array('jabatan_personil', $fields)) $rules['jabatan_personil'] = 'nullable|string|max:100';
+        if (in_array('fungsi_personil', $fields))  $rules['fungsi_personil'] = 'nullable|string|max:100';
+        if (in_array('unit_personil', $fields))    $rules['unit_personil'] = 'nullable|string|max:100';
 
-        // Lakukan validasi
         $validated = $request->validate($rules);
 
+        // Hanya update field yang diizinkan di konfigurasi
+        $allowedKeys = array_flip($fields);
+        $payload     = array_intersect_key($validated, $allowedKeys);
 
         try {
-            $aset->update(array_intersect_key($validated, array_flip($fields)));
+            $aset->update($payload);
+
+            // Redirect ke halaman klasifikasi (siap UUID jika binding UUID aktif)
             return redirect()
-                ->route('opd.aset.show_by_klasifikasi', $aset->klasifikasiaset_id)
+                ->route('opd.aset.show_by_klasifikasi', ['klasifikasiaset' => $klasifikasi])
                 ->with('success', 'Aset berhasil diperbaharui.');
         } catch (QueryException $e) {
             Log::warning('Gagal memperbaharui aset (QueryException)', [
-                'mysql_code' => $e->errorInfo[1] ?? null,   // 1062, 1452, dst.
+                'mysql_code' => $e->errorInfo[1] ?? null,
                 'sql_state'  => $e->errorInfo[0] ?? null,
                 'driver_msg' => $e->errorInfo[2] ?? null,
                 'user_id'    => auth()->id(),
@@ -389,19 +376,22 @@ class AsetController extends Controller
         }
     }
 
-    public function destroy($id)
+    public function destroy(Aset $aset)
     {
-        $aset = Aset::findOrFail($id);
-        $klasifikasiId = $aset->klasifikasiaset_id;
+        // Cek hak akses (OPD pemilik)
+        $this->authorize('delete', $aset);
+
+        // Ambil model klasifikasi untuk redirect (pakai model agar siap UUID)
+        $aset->loadMissing('klasifikasi');
+        $klasifikasi = $aset->klasifikasi; // instance KlasifikasiAset
 
         try {
             $aset->delete();
 
             return redirect()
-                ->route('opd.aset.show_by_klasifikasi', $aset->klasifikasiaset_id)
+                ->route('opd.aset.show_by_klasifikasi', ['klasifikasiaset' => $klasifikasi])
                 ->with('success', 'Aset berhasil dihapus.');
         } catch (QueryException $e) {
-            // 1451 umumnya FK constraint violation
             Log::warning('Gagal menghapus aset (FK constraint?)', [
                 'aset_id'    => $aset->id,
                 'mysql_code' => $e->errorInfo[1] ?? null,
@@ -412,13 +402,13 @@ class AsetController extends Controller
             ]);
 
             return redirect()
-                ->route('opd.aset.show_by_klasifikasi', $aset->klasifikasiaset_id) // sesuaikan nama route
+                ->route('opd.aset.show_by_klasifikasi', ['klasifikasiaset' => $klasifikasi])
                 ->with('error', 'Penghapusan gagal karena data masih digunakan.');
         } catch (\Throwable $e) {
             report($e);
 
             return redirect()
-                ->route('opd.aset.show_by_klasifikasi', $aset->klasifikasiaset_id)
+                ->route('opd.aset.show_by_klasifikasi', ['klasifikasiaset' => $klasifikasi])
                 ->with('error', 'Terjadi kesalahan. Penghapusan tidak dapat diproses.');
         }
     }
@@ -429,12 +419,6 @@ class AsetController extends Controller
 
         $periodeAktifId = Periode::where('status', 'open')->value('id');
         $opdId = auth()->user()->opd_id;
-
-        // $klasifikasis = KlasifikasiAset::withCount(['asets as jumlah_aset' => function ($query) use ($opdId, $periodeAktifId) {
-        //     $query->where('opd_id', $opdId)
-        //         ->where('periode_id', $periodeAktifId);
-        // }])->get();
-
 
         $klasifikasis = KlasifikasiAset::select('id', 'klasifikasiaset', 'kodeklas')
             ->with([
@@ -494,66 +478,134 @@ class AsetController extends Controller
 
         $pdf = PDF::loadView('opd.aset.export_rekap_pdf', compact('klasifikasis', 'namaOpd', 'ranges'))
             ->setPaper('A4', 'portrait');
+        $dompdf = $pdf->getDomPDF();
+        $dompdf->render();
 
-        $pdf->getDomPDF()->getCanvas()->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
-            $text = "PERISAI  :: Page $pageNumber of $pageCount";
-            $font = $fontMetrics->getFont('Helvetica', 'normal');
-            $size = 9;
-            $width = $canvas->get_width();
-            $height = $canvas->get_height();
+        $canvas = $dompdf->getCanvas();
+        $fontMetrics = $dompdf->getFontMetrics();        // <- ambil dari DOMPDF, bukan canvas
+        $font = $fontMetrics->getFont('Helvetica', 'normal'); // atau 'DejaVu Sans' bila perlu
+        $size = 9;
+
+        $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) use ($font, $size) {
+            $text = "PERISAI :: Hal {$pageNumber} dari {$pageCount}";
+            $w    = $canvas->get_width();
+            $h    = $canvas->get_height();
+
             $textWidth = $fontMetrics->getTextWidth($text, $font, $size);
-            $x = ($width - $textWidth) / 2;
-            $y = $height - 30;
+            $x = ($w - $textWidth) / 2;
+            $y = $h - 30; // 30px dari bawah (pastikan margin bawah cukup)
+
             $canvas->text($x, $y, $text, $font, $size);
         });
 
         return $pdf->download('rekapaset_' . date('YmdHis') . '.pdf');
     }
 
-    public function exportRekapKlasPdf($id)
+    // public function exportRekapKlasPdf(KlasifikasiAset $klasifikasiaset)
+    // {
+    //     // Jika route binding pakai UUID, $klasifikasiaset sudah terisi by uuid.
+    //     // FK aset tetap cari dengan $klasifikasiaset->id (integer).
+    //     $periodeAktif = Periode::where('status', 'open')->value('id');
+    //     $opdId        = auth()->user()->opd_id;
+
+    //     $klasifikasi  = $klasifikasiaset;
+    //     $subs         = $klasifikasi->subklasifikasi;
+
+    //     $asets = Aset::where('klasifikasiaset_id', $klasifikasi->id)
+    //         ->where('opd_id', $opdId)
+    //         ->where('periode_id', $periodeAktif)
+    //         ->with('subklasifikasiaset')
+    //         ->get();
+
+    //     $namaOpd = auth()->user()->opd->namaopd ?? '-';
+
+    //     $pdf = PDF::loadView(
+    //         'opd.aset.export_rekap_klas_pdf',
+    //         compact('klasifikasi', 'asets', 'namaOpd', 'subs')
+    //     )->setPaper('A4', 'portrait'); // perbaiki typo: 'portrait'
+
+    //     $pdf->getDomPDF()->getCanvas()->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
+    //         $text       = "PERISAI  :: Page $pageNumber of $pageCount";
+    //         $font       = $fontMetrics->getFont('Helvetica', 'normal');
+    //         $size       = 9;
+    //         $width      = $canvas->get_width();
+    //         $height     = $canvas->get_height();
+    //         $textWidth  = $fontMetrics->getTextWidth($text, $font, $size);
+    //         $x          = ($width - $textWidth) / 2;
+    //         $y          = $height - 30;
+    //         $canvas->text($x, $y, $text, $font, $size);
+    //     });
+
+    //     return $pdf->download('rekapasetklas_' . date('YmdHis') . '.pdf');
+    // }
+
+    public function exportRekapKlasPdf(KlasifikasiAset $klasifikasiaset)
     {
-        $periodeAktif = Periode::where('status', 'open')->value('id');
-        $opdId = auth()->user()->opd_id;
+        $periodeAktifId = Periode::where('status', 'open')->value('id');
+        if (!$periodeAktifId) {
+            return back()->with('error', 'Tidak ada Periode dengan status OPEN.');
+        }
 
-        $klasifikasi = KlasifikasiAset::findOrFail($id);
-        $subs = $klasifikasi->subklasifikasi;
-        $asets = Aset::where('klasifikasiaset_id', $id)
+        $opdId = Auth::user()->opd_id;
+
+        $klasifikasi = $klasifikasiaset->fresh(['subklasifikasi']); // ambil sub-sekaligus
+        $subs        = $klasifikasi->subklasifikasi;
+
+        $asets = Aset::where('klasifikasiaset_id', $klasifikasi->id)
             ->where('opd_id', $opdId)
-            ->where('periode_id', $periodeAktif)
+            ->where('periode_id', $periodeAktifId)
             ->with('subklasifikasiaset')
+            ->orderBy('kode_aset')
             ->get();
-        $namaOpd = auth()->user()->opd->namaopd ?? '-';
 
-        $pdf = PDF::loadView('opd.aset.export_rekap_klas_pdf', compact('klasifikasi', 'asets', 'namaOpd', 'subs'))
-            ->setPaper('A4', 'potrait');
-        $pdf->getDomPDF()->getCanvas()->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
-            $text = "PERISAI  :: Page $pageNumber of $pageCount";
-            $font = $fontMetrics->getFont('Helvetica', 'normal');
-            $size = 9;
-            $width = $canvas->get_width();
-            $height = $canvas->get_height();
+        $namaOpd = Auth::user()->opd->namaopd ?? '-';
+
+        $pdf = Pdf::loadView('opd.aset.export_rekap_klas_pdf', compact('klasifikasi', 'asets', 'namaOpd', 'subs'))
+            ->setPaper('A4', 'portrait');
+
+        $dompdf = $pdf->getDomPDF();
+        $dompdf->render();
+
+        $canvas = $dompdf->getCanvas();
+        $fontMetrics = $dompdf->getFontMetrics();        // <- ambil dari DOMPDF, bukan canvas
+        $font = $fontMetrics->getFont('Helvetica', 'normal'); // atau 'DejaVu Sans' bila perlu
+        $size = 9;
+
+        $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) use ($font, $size) {
+            $text = "PERISAI :: Hal {$pageNumber} dari {$pageCount}";
+            $w    = $canvas->get_width();
+            $h    = $canvas->get_height();
+
             $textWidth = $fontMetrics->getTextWidth($text, $font, $size);
-            $x = ($width - $textWidth) / 2; // Center horizontally
-            $y = $height - 30; // 30 px from bottom
+            $x = ($w - $textWidth) / 2;
+            $y = $h - 30; // 30px dari bawah (pastikan margin bawah cukup)
+
             $canvas->text($x, $y, $text, $font, $size);
         });
-        return $pdf->download('rekapasetklas_' . date('YmdHis') . '.pdf');
+        $filename = 'rekapasetklas_' . now()->format('YmdHis') . '.pdf';
+        return $pdf->download($filename);
     }
 
-    public function pdf($id)
+    public function pdf(Aset $aset)
     {
-        $aset = Aset::with('klasifikasi', 'subklasifikasiaset')->findOrFail($id);
+        // $aset otomatis di-resolve dari UUID (karena rute {aset:uuid})
+        $aset->load(['klasifikasi.subklasifikasi', 'subklasifikasiaset']);
 
-        $klasifikasi = $aset->klasifikasi;
-        $subklasifikasis = SubKlasifikasiAset::where('klasifikasi_aset_id', $klasifikasi->id)->get();
+        $klasifikasi      = $aset->klasifikasi;
+        $subklasifikasis  = $klasifikasi->subklasifikasi; // via relasi
 
-        $fieldList = is_array($klasifikasi->tampilan_field_aset)
-            ? $klasifikasi->tampilan_field_aset
-            : json_decode($klasifikasi->tampilan_field_aset, true) ?? [];
+        // Pastikan fieldList array (bisa tersimpan JSON di DB)
+        $fieldListRaw = $klasifikasi->tampilan_field_aset;
+        $fieldList    = is_array($fieldListRaw) ? $fieldListRaw : (json_decode($fieldListRaw ?? '[]', true) ?: []);
 
+        // Sembunyikan field yang tidak perlu dicetak
         $hiddenFields = ['opd_id', 'klasifikasiaset_id', 'periode_id', 'kode_aset', 'kategori_se'];
-        $fieldList = array_diff($fieldList, $hiddenFields);
-        $ranges = RangeAset::select('nilai_akhir_aset', 'deskripsi')->orderBy('nilai_atas')->get();
+        $fieldList    = array_values(array_diff($fieldList, $hiddenFields));
+
+        $ranges = RangeAset::select('nilai_akhir_aset', 'deskripsi')
+            ->orderBy('nilai_atas')
+            ->get();
+
         // Hitung nilai keamanan
         $total = collect([
             $aset->kerahasiaan,
@@ -561,32 +613,107 @@ class AsetController extends Controller
             $aset->ketersediaan,
             $aset->keaslian,
             $aset->kenirsangkalan,
-        ])->map(fn($v) => intval($v))->sum();
+        ])->map(fn($v) => (int) $v)->sum();
 
-        $range = \App\Models\RangeAset::where('nilai_bawah', '<=', $total)
+        $range = RangeAset::where('nilai_bawah', '<=', $total)
             ->where('nilai_atas', '>=', $total)
             ->first();
 
+        // Tambahkan atribut tampilan (tidak disimpan ke DB)
         $aset->nilai_akhir_aset = $range->nilai_akhir_aset ?? '-';
-        $aset->warna_hexa = $range->warna_hexa ?? '#999999';
+        $aset->warna_hexa       = $range->warna_hexa ?? '#999999';
 
         $namaOpd = auth()->user()->opd->namaopd ?? '-';
 
-        $pdf = PDF::loadView('opd.aset.pdf', compact('aset', 'namaOpd', 'klasifikasi', 'fieldList', 'subklasifikasis', 'ranges'))
-            ->setPaper('A4', 'portrait');
+        $pdf = PDF::loadView('opd.aset.pdf', compact(
+            'aset',
+            'namaOpd',
+            'klasifikasi',
+            'fieldList',
+            'subklasifikasis',
+            'ranges'
+        ))->setPaper('A4', 'portrait'); // 'portrait' (bukan 'potrait')
 
-        $pdf->getDomPDF()->getCanvas()->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
-            $text = "PERISAI  :: Page $pageNumber of $pageCount";
-            $font = $fontMetrics->getFont('Helvetica', 'normal');
-            $size = 9;
-            $width = $canvas->get_width();
-            $height = $canvas->get_height();
+        $dompdf = $pdf->getDomPDF();
+        $dompdf->render();
+
+        $canvas = $dompdf->getCanvas();
+        $fontMetrics = $dompdf->getFontMetrics();        // <- ambil dari DOMPDF, bukan canvas
+        $font = $fontMetrics->getFont('Helvetica', 'normal'); // atau 'DejaVu Sans' bila perlu
+        $size = 9;
+
+        $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) use ($font, $size) {
+            $text = "PERISAI :: Hal {$pageNumber} dari {$pageCount}";
+            $w    = $canvas->get_width();
+            $h    = $canvas->get_height();
+
             $textWidth = $fontMetrics->getTextWidth($text, $font, $size);
-            $x = ($width - $textWidth) / 2;
-            $y = $height - 30;
+            $x = ($w - $textWidth) / 2;
+            $y = $h - 30; // 30px dari bawah (pastikan margin bawah cukup)
+
             $canvas->text($x, $y, $text, $font, $size);
         });
 
         return $pdf->download('nilaiaset_' . strtolower(str_replace('-', '', $aset->kode_aset)) . '_' . date('YmdHis') . '.pdf');
+    }
+
+
+    /**
+     * Menghasilkan kode_aset baru untuk OPD tertentu dengan prefix tertentu
+     * dan mendaftarkannya ke tabel aset_keys (kode_aset unik global).
+     *
+     * Aturan:
+     * - Kode milik satu OPD sepanjang waktu (aset_keys.unique: kode_aset)
+     * - Nomor berurutan per OPD+prefix (misal SK-0001, SK-0002, ...)
+     * - Anti race: lock & retry jika terjadi bentrok 1062
+     */
+    private function generateKodeAsetForOpd(int $opdId, string $prefix, int $pad = 4): string
+    {
+        $attempts = 0;
+
+        return DB::transaction(function () use ($opdId, $prefix, $pad, &$attempts) {
+            // Kunci aset_keys terkait prefix ini agar aman dari balapan
+            // Ambil nomor terakhir yang dimiliki OPD ini untuk prefix tsb
+            $lastKode = DB::table('aset_keys')
+                ->where('opd_id', $opdId)
+                ->where('kode_aset', 'like', $prefix . '%')
+                ->lockForUpdate()
+                ->orderByDesc('kode_aset') // aman karena format fix: PREFIX-0001
+                ->value('kode_aset');
+
+            $lastNum = 0;
+            if ($lastKode && preg_match('/^' . preg_quote($prefix, '/') . '(\d+)$/', $lastKode, $m)) {
+                $lastNum = (int) $m[1];
+            }
+
+            while (true) {
+                $attempts++;
+                $candidate = $prefix . str_pad(++$lastNum, $pad, '0', STR_PAD_LEFT);
+
+                try {
+                    // Coba daftarkan ke aset_keys (kode unik global)
+                    DB::table('aset_keys')->insert([
+                        'opd_id'     => $opdId,
+                        'kode_aset'  => $candidate,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+
+                    // Sukses → this OPD “memiliki” kode ini selamanya
+                    return $candidate;
+                } catch (QueryException $e) {
+                    // 1062 = duplicate (kemungkinan karena OPD lain baru saja mengambil kode itu)
+                    if (($e->errorInfo[1] ?? null) === 1062) {
+                        // Naikkan nomor dan coba lagi
+                        if ($attempts > 5) {
+                            // Hindari loop tak berujung; sesuaikan kalau perlu
+                            throw $e;
+                        }
+                        continue;
+                    }
+                    throw $e;
+                }
+            }
+        }, 5); // retry transaksi jika deadlock
     }
 }

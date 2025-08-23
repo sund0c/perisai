@@ -37,7 +37,8 @@
 
 
 
-            <form action="{{ route('opd.aset.update', $aset->id) }}" method="POST">
+            <form action="{{ route('opd.aset.update', ['aset' => $aset->uuid]) }}" method="POST">
+
                 @csrf
                 @method('PUT')
 

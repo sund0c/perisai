@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Rekap Aset KAMI</title>
+    <title>Rekap Aset KamI</title>
     <style>
         table {
             width: 100%;
@@ -62,16 +62,55 @@
         .underline {
             text-decoration: underline;
         }
+
+        @page {
+            margin: 170px 50px 70px 40px;
+        }
+
+
+        .header {
+            position: fixed;
+            top: -120px;
+            left: 0px;
+            right: 0px;
+            text-align: left;
+        }
+
+        .header img.tlp {
+            position: absolute;
+            top: 0;
+            right: -30;
+            width: 150px;
+        }
+
+        .header .subs {
+            line-height: 1.2;
+            font-size: 0.9em;
+            margin-right: 100px;
+            /* ruang kosong supaya teks turun & tidak timpa gambar */
+        }
+
+        .header h2,
+        .header h3 {
+            margin: 6px 0;
+        }
     </style>
 </head>
 
 <body>
-    <div style="text-align:center; margin-bottom:20px;">
-        <img src="{{ public_path('images/tlp/tlp_teaser_green.png') }}" alt="TLP:AMBER+STRICT" width="150">
+    <div class="header">
+        <img src="{{ public_path('images/tlp/tlp_teaser_green.png') }}" alt="TLP:GREEN" class="tlp">
         {{-- <p style="font-weight:bold; color:#FFBF00; margin:0;">TLP:AMBER+STRICT</p> --}}
+        <h2>Rekap Jumlah dan Nilai Aset KamI :: Tahun {{ $tahunAktifGlobal ?? '-' }}</h2>
+        <h3>Pemilik Risiko: {{ strtoupper($namaOpd) }}</h3>
+        <h3 style="line-height:1; margin-bottom:0;">
+            {{-- Klasifikasi Aset : {{ $klasifikasi->klasifikasiaset }} --}}
+        </h3>
+
+        <div class="subs">
+            {{-- {{ $subs->pluck('subklasifikasiaset')->implode(', ') ?: '-' }} --}}
+        </div>
     </div>
-    <h2>Rekap Aset KAMI Tahun {{ $tahunAktifGlobal ?? '-' }}</h2>
-    <h3>Pemilik Aset : {{ strtoupper($namaOpd) }}</h3>
     <table>
         <thead>
             <tr>
@@ -128,13 +167,14 @@
     <ol>
         <li>Kode TLP (Traffic Light Protocol) dipakai untuk mengklasifikasikan sensitivitas informasi, supaya jelas
             sejauh mana informasi boleh dibagikan.
-            <b>Kode TLP:GREEN berarti boleh dibagikan dalam komunitas lebih luas.</b>
+            <b>Kode TLP:GREEN berarti boleh dibagikan di dalam komunitas/sektor (misalnya antar instansi pemerintah),
+                tapi tidak untuk publik luas.</b>
         </li>
         <li><b>PERISAI</b> adalah sistem elektronik untuk melakukan <span class="underline">PEngelolaan RISiko Aset
                 Informasi,</span> dikelola oleh
             Bidang
             Persandian Dinas Kominfos Provinsi Bali</li>
-        <li>Yang dimaksud dengan <b>Aset KAMI</b> dalam PERISAI adalah Aset Keamanan Informasi, yaitu <span
+        <li>Yang dimaksud dengan <b>Aset KamI</b> dalam PERISAI adalah Aset Keamanan Informasi, yaitu <span
                 class="underline">khusus aset yang terkait
                 dengan pelindungan data dan keamanan informasi.</span>
         </li>

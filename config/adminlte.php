@@ -311,108 +311,108 @@ return [
         // Menu untuk semua role
         [
             'text' => 'Dashboard',
-            'url'  => 'dashboard',
-            'icon' => 'fas fa-fw fa-tachometer-alt',
+            'route' => 'dashboard', // pakai named route kalau ada
+            'icon'  => 'fas fa-fw fa-tachometer-alt',
         ],
 
-        // Hanya untuk role BIDANG
+        // ===== BIDANG =====
         [
-            'text' => 'Aset',
+            'text' => 'Aset KAMI',
             'route' => 'bidang.aset.index',
-            'icon' => 'fas fa-fw fa-box',
-            'can'  => 'is-bidang',
+            'icon'  => 'fas fa-fw fa-box',
+            'can'   => 'is-bidang',
         ],
         [
             'text' => 'Kategori SE',
-            'route'  => 'bidang.kategorise.index',
-            'icon' => 'fas fa-fw fa-box',
-            'can'  => 'is-bidang',
+            'route' => 'bidang.kategorise.index',
+            'icon'  => 'fas fa-fw fa-box',
+            'can'   => 'is-bidang',
         ],
         [
             'text' => 'PTKKA',
-            'url'  => 'bidang/ptkka',
-            'icon' => 'fas fa-clipboard-check',
-            'can'  => 'is-bidang',
+            'route' => 'bidang.ptkka.index',
+            'icon'  => 'fas fa-clipboard-check',
+            'can'   => 'is-bidang',
         ],
-        // Hanya untuk role OPD
         [
-            'text' => 'Aset',
+            'text' => 'Tahun Aktif',
+            'route' => 'periodes.index',
+            'icon'  => 'fas fa-calendar-check',
+            'can'   => 'is-bidang',
+        ],
+
+        // ===== OPD =====
+        [
+            'text' => 'Aset KAMI',
             'route' => 'opd.aset.index',
-            'icon' => 'fas fa-fw fa-box',
-            'can'  => 'is-opd',
+            'icon'  => 'fas fa-fw fa-box',
+            'can'   => 'is-opd',
         ],
-        [
-            'text' => 'Kategori SE',
-            'route' => 'opd.kategorise.index',
-            'icon' => 'fas fa-fw fa-box',
-            'can'  => 'is-opd',
-        ],
-        [
-            'text' => 'PTKKA',
-            'route' => 'opd.ptkka.index',
-            'icon' => 'fas fa-clipboard-check',
-            'can'  => 'is-opd',
-        ],
+        // [
+        //     'text' => 'Kategori SE',
+        //     'route' => 'opd.kategorise.index',
+        //     'icon'  => 'fas fa-fw fa-box',
+        //     'can'   => 'is-opd',
+        // ],
+        // [
+        //     'text' => 'PTKKA',
+        //     'route' => 'opd.ptkka.index',
+        //     'icon'  => 'fas fa-clipboard-check',
+        //     'can'   => 'is-opd',
+        // ],
 
-
-        // Hanya untuk admin
+        // ===== ADMIN =====
+        [
+            'text' => 'Aset KAMI',
+            'route' => 'opd.aset.index',
+            'icon'  => 'fas fa-fw fa-box',
+            'can'   => 'is-admin',
+        ],
         [
             'text' => 'OPD',
-            'url'  => 'opd',
-            'icon' => 'fas fa-fw fa-building',
-            'can'  => 'is-admin',
+            'route' => 'opd.index',
+            'icon'  => 'fas fa-fw fa-building',
+            'can'   => 'is-admin',
         ],
-        [
-            'text' => 'Pengguna',
-            'url'  => 'pengguna',
-            'icon' => 'fas fa-fw fa-users',
-            'can'  => 'is-admin',
-        ],
+
         [
             'text' => 'Klasifikasi Aset',
-            'url'  => 'klasifikasiaset',
-            'icon' => 'fas fa-fw fa-tags',
-            'can'  => 'is-admin',
+            'route' => 'klasifikasiaset.index',
+            'icon'  => 'fas fa-fw fa-tags',
+            'can'   => 'is-admin',
         ],
         [
             'text' => 'Range Aset',
-            'url'  => 'rangeaset',
-            'icon' => 'fas fa-sliders-h',
-            'can'  => 'is-admin',
+            'route' => 'rangeaset.index',
+            'icon'  => 'fas fa-sliders-h',
+            'can'   => 'is-admin',
         ],
         [
             'text' => 'Range Kategori SE',
-            'url'  => 'rangese',
-            'icon' => 'fas fa-sliders-h',
-            'can'  => 'is-admin',
+            'route' => 'rangese.index',
+            'icon'  => 'fas fa-sliders-h',
+            'can'   => 'is-admin',
         ],
-        [
-            'text' => 'Indikator Kategori SE',
-            'url'  => 'indikatorkategorise',
-            'icon' => 'fas fa-poll',
-            'can'  => 'is-admin',
-        ],
+        // [
+        //     'text' => 'Indikator Kategori SE',
+        //     'route' => 'indikatorkategorise.index',
+        //     'icon'  => 'fas fa-poll',
+        //     'can'   => 'is-admin',
+        // ],
         [
             'text' => 'Standard Keamanan',
-            'url'  => 'sk',
-            'icon' => 'fas fa-poll',
-            'can'  => 'is-admin',
+            'route' => 'sk.index',
+            'icon'  => 'fas fa-poll',
+            'can'   => 'is-admin',
         ],
         [
             'text' => 'Tahun Aktif',
-            'url'  => 'periodes',
-            'icon' => 'fas fa-calendar-check',
-            'can'  => 'is-admin',
+            'route' => 'periodes.index',
+            'icon'  => 'fas fa-calendar-check',
+            'can'   => 'is-admin',
         ],
-        [
-            'text' => 'Tahun Aktif',
-            'url'  => 'periodes',
-            'icon' => 'fas fa-calendar-check',
-            'can'  => 'is-bidang',
-        ],
-
-
     ],
+
 
     /*
     |--------------------------------------------------------------------------

@@ -3,7 +3,20 @@
 @section('title', 'Edit Kategori SE')
 
 @section('content_header')
-    <h1>{{ $aset->nama_aset }} pada {{ strtoupper($namaOpd) }} - Edit Kategori SE</h1>
+    <h1>Edit {{ $aset->nama_aset }}</h1>
+@endsection
+
+
+@section('content_top_nav_left')
+    <li class="nav-item d-none d-sm-inline-block">
+        <span class="nav-link font-weight-bold">
+            Tahun Aktif: {{ $tahunAktifGlobal ?? '-' }}
+            @if ($kunci === 'locked')
+                <i class="fas fa-lock text-danger ml-1" title="Terkunci"></i>
+            @endif
+            :: {{ strtoupper($namaOpd) }}
+        </span>
+    </li>
 @endsection
 
 @section('content')
@@ -50,6 +63,8 @@
                 </div>
             </div>
         @endforeach
+        <input type="hidden" name="kategori" value="{{ request('kategori') }}">
+
 
         <div class="text-left mt-4">
             <button type="submit" class="btn btn-primary">
