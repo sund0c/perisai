@@ -38,7 +38,7 @@ class AsetController extends Controller
 
         $klasifikasis = KlasifikasiAset::select('id', 'klasifikasiaset', 'kodeklas')
             ->with([
-                'subklasifikasi:id,klasifikasi_aset_id,subklasifikasiaset'
+                'subklasifikasi:id,klasifikasi_aset_id,subklasifikasiaset,penjelasan'
             ])
             ->withCount([
                 'asets as jumlah_aset' => function ($q) use ($opdId, $periodeAktifId) {
@@ -422,7 +422,7 @@ class AsetController extends Controller
 
         $klasifikasis = KlasifikasiAset::select('id', 'klasifikasiaset', 'kodeklas')
             ->with([
-                'subklasifikasi:id,klasifikasi_aset_id,subklasifikasiaset'
+                'subklasifikasi:id,klasifikasi_aset_id,subklasifikasiaset,penjelasan'
             ])
             ->withCount([
                 'asets as jumlah_aset' => function ($q) use ($opdId, $periodeAktifId) {
@@ -500,44 +500,6 @@ class AsetController extends Controller
 
         return $pdf->download('rekapaset_' . date('YmdHis') . '.pdf');
     }
-
-    // public function exportRekapKlasPdf(KlasifikasiAset $klasifikasiaset)
-    // {
-    //     // Jika route binding pakai UUID, $klasifikasiaset sudah terisi by uuid.
-    //     // FK aset tetap cari dengan $klasifikasiaset->id (integer).
-    //     $periodeAktif = Periode::where('status', 'open')->value('id');
-    //     $opdId        = auth()->user()->opd_id;
-
-    //     $klasifikasi  = $klasifikasiaset;
-    //     $subs         = $klasifikasi->subklasifikasi;
-
-    //     $asets = Aset::where('klasifikasiaset_id', $klasifikasi->id)
-    //         ->where('opd_id', $opdId)
-    //         ->where('periode_id', $periodeAktif)
-    //         ->with('subklasifikasiaset')
-    //         ->get();
-
-    //     $namaOpd = auth()->user()->opd->namaopd ?? '-';
-
-    //     $pdf = PDF::loadView(
-    //         'opd.aset.export_rekap_klas_pdf',
-    //         compact('klasifikasi', 'asets', 'namaOpd', 'subs')
-    //     )->setPaper('A4', 'portrait'); // perbaiki typo: 'portrait'
-
-    //     $pdf->getDomPDF()->getCanvas()->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
-    //         $text       = "PERISAI  :: Page $pageNumber of $pageCount";
-    //         $font       = $fontMetrics->getFont('Helvetica', 'normal');
-    //         $size       = 9;
-    //         $width      = $canvas->get_width();
-    //         $height     = $canvas->get_height();
-    //         $textWidth  = $fontMetrics->getTextWidth($text, $font, $size);
-    //         $x          = ($width - $textWidth) / 2;
-    //         $y          = $height - 30;
-    //         $canvas->text($x, $y, $text, $font, $size);
-    //     });
-
-    //     return $pdf->download('rekapasetklas_' . date('YmdHis') . '.pdf');
-    // }
 
     public function exportRekapKlasPdf(KlasifikasiAset $klasifikasiaset)
     {

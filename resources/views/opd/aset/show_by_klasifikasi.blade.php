@@ -1,6 +1,50 @@
 @extends('adminlte::page')
 
 @section('title', 'Daftar Aset - ' . ($klasifikasi->klasifikasiaset ?? '-'))
+<style>
+    .matik-list ul {
+        margin: 0;
+        padding-left: 1.2rem;
+        /* default untuk nested */
+    }
+
+    /* level pertama */
+    .matik-list>ul {
+        padding-left: 1em;
+        /* mepet kiri */
+        list-style-type: disc;
+        /* bullet bulat */
+    }
+
+    /* level kedua */
+    .matik-list>ul>li>ul {
+        padding-left: 1.5rem;
+        list-style-type: square;
+        font-size: 0.8em;
+    }
+
+    /* Kolom aksi: rapikan tanpa mengecilkan semua tombol */
+    .actions-cell {
+        white-space: nowrap;
+        /* cegah wrap → baris tak jadi tinggi */
+        vertical-align: middle;
+        /* tombol di tengah vertikal */
+    }
+
+    /* Atur jarak antar tombol tanpa mengubah ukuran tombol global */
+    .actions-cell .btn+.btn,
+    .actions-cell .btn+form,
+    .actions-cell form+.btn,
+    .actions-cell form+form {
+        margin-left: .25rem;
+    }
+
+    /* Pastikan form tetap inline & tanpa margin */
+    .actions-cell form {
+        display: inline;
+        margin: 0;
+    }
+</style>
 
 @section('content_header')
     <h1>[{{ $klasifikasi->kodeklas }}] {{ $klasifikasi->klasifikasiaset }}</h1>
@@ -82,7 +126,7 @@
                             <td style="background-color: {{ $aset->warna_hexa }}; color: #fff; font-weight: bold;">
                                 {{ $aset->nilai_akhir_aset }}
                             </td>
-                            <td>
+                            <td class="actions-cell align-middle text-nowrap">
                                 {{-- Rute aset pakai {aset:uuid} → kirim uuid eksplisit --}}
                                 <a href="{{ route('opd.aset.pdf', ['aset' => $aset->uuid]) }}"
                                     class="btn btn-sm btn-success">
@@ -113,7 +157,19 @@
                     @endforelse
                 </tbody>
             </table>
-
+            <br>
+            <b>KETERANGAN SUB KLASIFIKASI ASET</b>
+            <div class="matik-list" style="font-size:0.9em">
+                @if (!empty($subs) && $subs->isNotEmpty())
+                    <ul>
+                        @foreach ($subs as $sub)
+                            <li><b>{{ $sub->subklasifikasiaset }} :</b> {{ $sub->penjelasan }}</li>
+                        @endforeach
+                    </ul>
+                @else
+                    -
+                @endif
+            </div>
         </div>
     </div>
 @endsection

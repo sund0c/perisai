@@ -30,11 +30,11 @@ return [
     |
     */
 
-    'use_ico_only' => false,
-    'use_full_favicon' => true,
+    'use_ico_only' => true,
+    'use_full_favicon' => false,
 
     'favicon' => [
-        'path' => 'images/logoprovbali.png',
+        'path' => 'favicon.png',
     ],
 
     /*
@@ -66,12 +66,12 @@ return [
     | https://github.com/jeroennoten/Laravel-AdminLTE/wiki/Basic-Configuration
     |
     */
-    'logo' => ' <b>PERISAI</b>',
-    'logo_img' => 'images/logoprovbali.png',
+    'logo' => '<b>PERISAI</b> BALIPROV',
+    'logo_img' => 'logo_perisai.svg',
     'logo_img_class' => 'brand-image',
     'logo_img_xl' => null,
     'logo_img_xl_class' => 'brand-image-xs',
-    'logo_img_alt' => 'Admin Logo',
+    'logo_img_alt' => 'PERISAI PEMPROV BALI',
 
 
 
@@ -161,7 +161,7 @@ return [
 
     'layout_topnav' => null,
     'layout_boxed' => null,
-    'layout_fixed_sidebar' => null,
+    'layout_fixed_sidebar' => true,
     'layout_fixed_navbar' => null,
     'layout_fixed_footer' => null,
     'layout_dark_mode' => null,
@@ -197,7 +197,9 @@ return [
     |
     */
 
-    'classes_body' => '',
+
+    'classes_body' => 'sidebar-mini layout-fixed',
+
     'classes_brand' => '',
     'classes_brand_text' => '',
     'classes_content_wrapper' => '',

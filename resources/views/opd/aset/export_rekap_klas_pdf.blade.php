@@ -94,6 +94,27 @@
         .header h3 {
             margin: 6px 0;
         }
+
+        .matik-list ul {
+            margin: 0;
+            padding-left: 1.2rem;
+            /* default untuk nested */
+        }
+
+        /* level pertama */
+        .matik-list>ul {
+            padding-left: 1em;
+            /* mepet kiri */
+            list-style-type: disc;
+            /* bullet bulat */
+        }
+
+        /* level kedua */
+        .matik-list>ul>li>ul {
+            padding-left: 1.5rem;
+            list-style-type: square;
+            font-size: 0.8em;
+        }
     </style>
 </head>
 
@@ -133,8 +154,20 @@
                 </tr>
             @endforeach
         </tbody>
-    </table><BR><BR><BR>
-    <h4>Catatan</h4>
+    </table><BR>
+    <h4>A. KETERANGAN SUB KLASIFIKASI ASET</h4>
+    <div class="matik-list" style="font-size:0.9em">
+        @if (!empty($subs) && $subs->isNotEmpty())
+            <ul>
+                @foreach ($subs as $sub)
+                    <li><b>{{ $sub->subklasifikasiaset }} :</b> {{ $sub->penjelasan }}</li>
+                @endforeach
+            </ul>
+        @else
+            -
+        @endif
+    </div> <BR>
+    <h4>B. CATATAN LAIN</h4>
     <ol>
         <li>Kode TLP (Traffic Light Protocol) dipakai untuk mengklasifikasikan sensitivitas informasi, supaya jelas
             sejauh mana informasi boleh dibagikan.
@@ -148,9 +181,9 @@
                 class="underline">khusus aset yang terkait
                 dengan pelindungan data dan keamanan informasi.</span>
         </li>
-        <li><b>Pemutahiran data PERISAI wajib dilakukan minimal sekali setahun oleh Pemilik Aset.</b>
-            Pemutahiran akan
-            dilakukan serentak, menunggu informasi dari Dinas Kominfos Prov Bali. </li>
+        <li>Semua informasi tentang aset ini dapat berubah sesuai dengan review dan pemutahiran data PERISAI <b>yang
+                dilakukan minimal sekali setahun oleh Pemilik Aset. Pemutahiran akan dilakukan serempak, menunggu
+                informasi dari Diskominfos Prov Bali.</b> </li>
     </ol>
 
 </body>

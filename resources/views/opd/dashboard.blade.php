@@ -2,6 +2,7 @@
 
 @section('title', 'Welcome PERISAI !')
 
+
 {{-- @section('content_header')
     <h4>Perangkat Daerah : {{ auth()->user()->opd->namaopd }}</h4>
 @endsection --}}

@@ -94,6 +94,27 @@
         .header h3 {
             margin: 6px 0;
         }
+
+        .matik-list ul {
+            margin: 0;
+            padding-left: 1.2rem;
+            /* default untuk nested */
+        }
+
+        /* level pertama */
+        .matik-list>ul {
+            padding-left: 1em;
+            /* mepet kiri */
+            list-style-type: disc;
+            /* bullet bulat */
+        }
+
+        /* level kedua */
+        .matik-list>ul>li>ul {
+            padding-left: 1.5rem;
+            list-style-type: square;
+            font-size: 0.8em;
+        }
     </style>
 </head>
 
@@ -115,7 +136,7 @@
         <thead>
             <tr>
                 <th style="width:auto;text-align: center;"rowspan="2">KLASIFIKASI ASET</th>
-                <th style="width:10%;text-align: center;" rowspan="2">JUMLAH ASET</th>
+                <th style="width:15%;text-align: center;" rowspan="2">JUMLAH ASET</th>
                 <th style="text-align: center;" colspan="3">NILAI ASET</th>
             </tr>
             <tr>
@@ -127,10 +148,8 @@
         <tbody>
             @foreach ($klasifikasis as $klasifikasi)
                 <tr">
-                    <td style="height:40px;"><b>[{{ $klasifikasi->kodeklas }}] {{ $klasifikasi->klasifikasiaset }}</b>
-                        <div style="font-size:.9em;line-height:1.2;">
-                            {{ $klasifikasi->subklasifikasi->pluck('subklasifikasiaset')->implode(', ') ?: '-' }}
-                        </div>
+                    <td><b>[{{ $klasifikasi->kodeklas }}] {{ $klasifikasi->klasifikasiaset }}</b>
+
                     </td>
                     <td style="text-align: center;">{{ $klasifikasi->jumlah_aset }}</td>
                     <td style="text-align: center;">{{ $klasifikasi->jumlah_tinggi ?? 0 }}</td>
@@ -141,7 +160,7 @@
         </tbody>
         <tfoot>
             <tr style="background-color:#eeeeee; font-weight:bold;height:200px;">
-                <td style="text-align: center;height: 40px">TOTAL JUMLAH ASET</td>
+                <td style="text-align: center;">TOTAL JUMLAH ASET</td>
                 <td style="text-align: center;">
                     {{ $klasifikasis->sum('jumlah_aset') }}
                 </td>
@@ -157,13 +176,28 @@
             </tr>
         </tfoot>
     </table><BR>
-    <h4>KETERANGAN NILAI ASET</h4>
+    <h4>A. KETERANGAN KLASIFIKASI ASET</h4>
+    <div class="matik-list">
+        <ul>
+            @foreach ($klasifikasis as $klasifikasi)
+                <li><b>[{{ $klasifikasi->kodeklas }}] {{ $klasifikasi->klasifikasiaset }}</b>
+                    <ul>
+                        @foreach ($klasifikasi->subklasifikasi as $sub)
+                            <li>{{ $sub->subklasifikasiaset }} : {{ $sub->penjelasan }}</li>
+                        @endforeach
+                    </ul>
+                </li>
+            @endforeach
+        </ul>
+    </div>
+    <BR>
+    <h4>B. KETERANGAN NILAI ASET</h4>
     <ol>
         @foreach ($ranges as $range)
             <li><b>{{ $range->nilai_akhir_aset }} :</b> {{ $range->deskripsi }}</li>
         @endforeach
     </ol><BR>
-    <h4>Catatan</h4>
+    <h4>C. CATATAN LAIN</h4>
     <ol>
         <li>Kode TLP (Traffic Light Protocol) dipakai untuk mengklasifikasikan sensitivitas informasi, supaya jelas
             sejauh mana informasi boleh dibagikan.
@@ -178,9 +212,9 @@
                 class="underline">khusus aset yang terkait
                 dengan pelindungan data dan keamanan informasi.</span>
         </li>
-        <li><b>Pemutahiran data PERISAI wajib dilakukan minimal sekali setahun oleh Pemilik Aset.</b>
-            Pemutahiran akan
-            dilakukan serentak, menunggu informasi dari Dinas Kominfos Prov Bali. </li>
+        <li>Semua informasi tentang aset ini dapat berubah sesuai dengan review dan pemutahiran data PERISAI <b>yang
+                dilakukan minimal sekali setahun oleh Pemilik Aset. Pemutahiran akan dilakukan serempak, menunggu
+                informasi dari Diskominfos Prov Bali.</b> </li>
     </ol>
 </body>
 

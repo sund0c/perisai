@@ -1,0 +1,14 @@
+/* Sembunyikan teks brand */
+.brand-link .brand-text {
+    display: none !important;
+}
+
+/* Bikin SVG-nya memanjang rapi */
+.brand-link .brand-image {
+    width: 100%;          /* penuh lebar container */
+    height: 40px;         /* atur tinggi sesuai selera (33–48px umum) */
+    max-height: none;     /* override default AdminLTE (33px) */
+    object-fit: contain;  /* jaga proporsi logo */
+    float: none;          /* hilangkan float default */
+    margin: 0;            /* reset margin default */
+}

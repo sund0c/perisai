@@ -1,11 +1,32 @@
 @extends('adminlte::page')
 
 @section('title', 'Rekap Aset per Klasifikasi')
+<style>
+    .matik-list ul {
+        margin: 0;
+        padding-left: 1.2rem;
+        /* default untuk nested */
+    }
 
+    /* level pertama */
+    .matik-list>ul {
+        padding-left: 1em;
+        /* mepet kiri */
+        list-style-type: disc;
+        /* bullet bulat */
+    }
+
+    /* level kedua */
+    .matik-list>ul>li>ul {
+        padding-left: 1.5rem;
+        list-style-type: square;
+        font-size: 0.8em;
+    }
+</style>
 @section('content_header')
-    <h1>Aset KAMI</h1>
+    <h1>Aset KamI</h1>
     <div style="line-height:1.2; font-size: 0.9em">
-        Aset KAMI yang dimaksud dalam PERISAI adalah <strong>aset TIK yang berhubungan dengan pelindungan data dan keamanan
+        Aset KamI yang dimaksud dalam PERISAI adalah <strong>aset TIK yang berhubungan dengan pelindungan data dan keamanan
             informasi.</strong>
         Contoh asetnya
         adalah komputer karena menyimpan data dan berpotensi data di dalamnya bocor. Mesin Ketik elektronik (bukan
@@ -30,7 +51,7 @@
 
 @section('content')
     <div class="row">
-        <div class="col-md-9">
+        <div class="col-md-7">
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex mb-3" style="gap: 10px;">
@@ -55,7 +76,7 @@
                         <thead>
                             <tr>
                                 <th rowspan="2" style="vertical-align: middle; text-align: center;">Klasifikasi Aset</th>
-                                <th style="width:10%;vertical-align: middle; text-align: center;" rowspan="2">Jumlah Aset
+                                <th style="width:15%;vertical-align: middle; text-align: center;" rowspan="2">Jumlah Aset
                                 </th>
                                 <th colspan="3">Nilai Aset</th>
                             </tr>
@@ -68,16 +89,12 @@
                         <tbody>
                             @forelse($klasifikasis as $klasifikasi)
                                 <tr>
-                                    <td style="text-align: left;height: 70px;">
+                                    <td style="text-align: left;">
                                         {{-- Kirim param dengan key "klasifikasiaset" (bisa objek model atau id) --}}
                                         <a
                                             href="{{ route('opd.aset.show_by_klasifikasi', ['klasifikasiaset' => $klasifikasi]) }}">
                                             [{{ $klasifikasi->kodeklas }}]
-                                            {{ $klasifikasi->klasifikasaset ?? $klasifikasi->klasifikasiaset }}
-                                            <div style="font-size:.9em;color:#666;line-height:1.2">
-                                                {{ optional($klasifikasi->subklasifikasi)->pluck('subklasifikasiaset')->implode(', ') ?: '-' }}
-                                            </div>
-                                        </a>
+                                            {{ $klasifikasi->klasifikasaset ?? $klasifikasi->klasifikasiaset }}</a>
                                     </td>
                                     <td style="vertical-align: middle; text-align: center;">
                                         {{ $klasifikasi->jumlah_aset ?? 0 }}
@@ -104,31 +121,46 @@
 
                         <tfoot>
                             <tr class="font-weight-bold">
-                                <td style="height:70px;vertical-align: middle; text-align: center;">Total</td>
-                                <td style="height:70px;vertical-align: middle; text-align: center;">
+                                <td style="vertical-align: middle; text-align: center;">Total</td>
+                                <td style="vertical-align: middle; text-align: center;">
                                     {{ $klasifikasis->sum('jumlah_aset') }}
                                 </td>
                                 <td
-                                    style="background-color: #FF0000; color: white;height:70px;vertical-align: middle; text-align: center;">
+                                    style="background-color: #FF0000; color: white;vertical-align: middle; text-align: center;">
                                     {{ $klasifikasis->sum('jumlah_tinggi') }}
                                 </td>
                                 <td
-                                    style="background-color: #FFD700; color: black;height:70px;vertical-align: middle; text-align: center;">
+                                    style="background-color: #FFD700; color: black;vertical-align: middle; text-align: center;">
                                     {{ $klasifikasis->sum('jumlah_sedang') }}
                                 </td>
                                 <td
-                                    style="background-color: #00B050; color: white;height:70px;vertical-align: middle; text-align: center;">
+                                    style="background-color: #00B050; color: white;vertical-align: middle; text-align: center;">
                                     {{ $klasifikasis->sum('jumlah_rendah') }}
                                 </td>
                             </tr>
                         </tfoot>
                     </table>
+                    <br>
+                    <b>KETERANGAN KLASIFIKASI ASET</b>
+                    <div class="matik-list">
+                        <ul>
+                            @foreach ($klasifikasis as $klasifikasi)
+                                <li><b>[{{ $klasifikasi->kodeklas }}] {{ $klasifikasi->klasifikasiaset }}</b>
+                                    <ul>
+                                        @foreach ($klasifikasi->subklasifikasi as $sub)
+                                            <li>{{ $sub->subklasifikasiaset }} : {{ $sub->penjelasan }}</li>
+                                        @endforeach
+                                    </ul>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
 
                 </div>
             </div>
         </div>
 
-        <div class="col-md-3">
+        <div class="col-md-5">
             <div class="card">
                 <div class="card-body">
                     @php
@@ -142,7 +174,7 @@
                     </div>
                     <br>
 
-                    <div style="font-size: 0.8em">
+                    <div class="matik-list">
                         <b>KETERANGAN NILAI ASET</b>
                         <ol style="padding-left: 20px; margin-left: 0;">
                             @foreach ($ranges ?? collect() as $range)

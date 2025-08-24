@@ -116,6 +116,27 @@
         .header h3 {
             margin: 6px 0;
         }
+
+        .matik-list ul {
+            margin: 0;
+            padding-left: 1.2rem;
+            /* default untuk nested */
+        }
+
+        /* level pertama */
+        .matik-list>ul {
+            padding-left: 1em;
+            /* mepet kiri */
+            list-style-type: disc;
+            /* bullet bulat */
+        }
+
+        /* level kedua */
+        .matik-list>ul>li>ul {
+            padding-left: 1.5rem;
+            list-style-type: square;
+            font-size: 0.8em;
+        }
     </style>
 </head>
 
@@ -167,13 +188,21 @@
             <td class="value"><strong>{{ $aset->nilai_akhir_aset }}</strong></td>
         </tr>
     </table><BR>
-    <h4>KETERANGAN NILAI ASET</h4>
+    <h4>A. KETERANGAN SUB KLASIFIKASI ASET</h4>
+    <div class="matik-list" style="font-size:0.9em">
+        <ul>
+            <li><strong>{{ optional($aset->subklasifikasiaset)->subklasifikasiaset ?? '-' }}</strong> :
+                {{ optional($aset->subklasifikasiaset)->penjelasan ?? '-' }}</li>
+
+        </ul>
+    </div> <BR>
+    <h4>B. KETERANGAN NILAI ASET</h4>
     <ol>
         @foreach ($ranges as $range)
             <li><b>{{ $range->nilai_akhir_aset }} :</b> {{ $range->deskripsi }}</li>
         @endforeach
     </ol><BR>
-    <h4>Catatan</h4>
+    <h4>C. CATATAN LAIN</h4>
     <ol>
         <li>Kode TLP (Traffic Light Protocol) dipakai untuk mengklasifikasikan sensitivitas informasi, supaya jelas
             sejauh mana informasi boleh dibagikan.
