@@ -247,60 +247,76 @@ Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd'])
     ->prefix('opd/aset')
     ->name('opd.aset.')
     ->group(function () {
-
-
-
-
-        // List & Rekap (tidak spesifik ke satu aset)
         Route::get('/', [AsetController::class, 'index'])->name('index');
         Route::get('/export/rekap', [AsetController::class, 'exportRekapPdf'])->name('export_rekap');
-
-        // Berdasarkan Klasifikasi (gunakan binding ke model kalau ada)
         Route::get('/export/rekapklas/{klasifikasiaset}', [AsetController::class, 'exportRekapKlasPdf'])
             ->name('export_rekap_klas');
-
         Route::get('/klasifikasi/{klasifikasiaset}', [AsetController::class, 'showByKlasifikasi'])
             ->name('show_by_klasifikasi');
-
         Route::get('/export/klasifikasi/{klasifikasiaset}', [AsetController::class, 'exportKlasifikasiPdf'])
             ->name('export_klasifikasi');
-
-        // Create/Store aset di dalam konteks klasifikasi tertentu
         Route::get('/klasifikasi/{klasifikasiaset}/create', [AsetController::class, 'create'])
             ->name('create');
         Route::post('/klasifikasi/{klasifikasiaset}', [AsetController::class, 'store'])
             ->name('store');
-
         // ====== Rute yang spesifik ke SATU aset (pakai UUID) ======
         Route::get('/{aset:uuid}/pdf', [AsetController::class, 'pdf'])
-            ->middleware('can:view,aset')        // ganti owns.aset -> can:view,aset
-            ->name('pdf');                       // <-- cukup 'pdf', prefix akan jadi 'opd.aset.pdf'
-
+            ->middleware('can:view,aset')
+            ->name('pdf');
         Route::get('/{aset:uuid}/edit', [AsetController::class, 'edit'])
             ->middleware('can:update,aset')
             ->name('edit');
-
         Route::put('/{aset:uuid}', [AsetController::class, 'update'])
             ->middleware('can:update,aset')
             ->name('update');
-
         Route::delete('/{aset:uuid}', [AsetController::class, 'destroy'])
             ->middleware('can:delete,aset')
             ->name('destroy');
     });
 
-Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd'])->prefix('opd/kategorise')->name('opd.kategorise.')->group(function () {
-    Route::get('/export/rekap/{kategori}', [KategoriSeController::class, 'exportRekapKategoriPdf'])->name('export_rekap_kategori');
-    Route::get('/', [KategoriSeController::class, 'index'])->name('index');
-    Route::get('/{aset}/edit', [KategoriSeController::class, 'edit'])->name('edit');
-    Route::put('/{aset}', [KategoriSeController::class, 'update'])->name('update');
-    Route::get('/export/pdf/{id}', [KategoriSeController::class, 'exportPdf'])->name('exportPdf');
-    Route::get('/kategori/{kategori}', [KategoriSeController::class, 'show'])->name('show');
-    Route::get('/export/rekap', [KategoriSeController::class, 'exportRekapPdf'])->name('export_rekap');
+// Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd'])->prefix('opd/kategorise')->name('opd.kategorise.')->group(function () {
+//     Route::put('/{aset}', [KategoriSeController::class, 'update'])->name('update');
+//     Route::get('/export/rekap/{kategori}', [KategoriSeController::class, 'exportRekapKategoriPdf'])->name('export_rekap_kategori');
+//     Route::get('/', [KategoriSeController::class, 'index'])->name('index');
+//     Route::get('/{aset}/edit', [KategoriSeController::class, 'edit'])->name('edit');
+//     Route::get('/export/pdf/{id}', [KategoriSeController::class, 'exportPdf'])->name('exportPdf');
+//     Route::get('/kategori/{kategori}', [KategoriSeController::class, 'show'])->name('show');
+//     Route::get('/export/rekap', [KategoriSeController::class, 'exportRekapPdf'])->name('export_rekap');
 
-    Route::post('/sync-previous', [KategoriSeController::class, 'syncFromPrevious'])
-        ->name('sync_previous');
-});
+//     Route::post('/sync-previous', [KategoriSeController::class, 'syncFromPrevious'])
+//         ->name('sync_previous');
+// });
+
+
+Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd'])
+    ->prefix('opd/kategorise')
+    ->name('opd.kategorise.')
+    ->group(function () {
+        Route::get('/', [KategoriSeController::class, 'index'])->name('index');
+        Route::get('/export/rekap', [KategoriSeController::class, 'exportRekapPdf'])->name('export_rekap');
+        Route::get('/kategori/{kategori}', [KategoriSeController::class, 'showByKategori'])
+            ->whereIn('kategori', ['strategis', 'tinggi', 'rendah', 'belum', 'total'])
+            ->name('show_by_kategori');
+        Route::get('/export/rekap/{kategori}', [KategoriSeController::class, 'exportRekapKategoriPdf'])
+            ->whereIn('kategori', ['strategis', 'tinggi', 'rendah', 'belum', 'total'])
+            ->name('export_rekap_kategori');
+        Route::get('/export/pdf/{aset:uuid}', [KategoriSeController::class, 'exportPdf'])
+            ->name('exportPdf');
+        Route::get('/{aset}/edit', [KategoriSeController::class, 'edit'])
+            ->where('aset', '[0-9a-fA-F-]+')
+            ->name('edit');
+
+        Route::put('/{aset}', [KategoriSeController::class, 'update'])
+            ->where('aset', '[0-9a-fA-F-]+')
+            ->name('update');
+
+
+        // Lain-lain
+
+
+
+        Route::post('/sync-previous', [KategoriSeController::class, 'syncFromPrevious'])->name('sync_previous');
+    });
 
 //============= End of OPD ===========================
 

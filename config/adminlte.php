@@ -319,7 +319,7 @@ return [
 
         // ===== BIDANG =====
         [
-            'text' => 'Aset KAMI',
+            'text' => 'Aset',
             'route' => 'bidang.aset.index',
             'icon'  => 'fas fa-fw fa-box',
             'can'   => 'is-bidang',
@@ -345,27 +345,27 @@ return [
 
         // ===== OPD =====
         [
-            'text' => 'Aset KAMI',
+            'text' => 'Aset',
             'route' => 'opd.aset.index',
             'icon'  => 'fas fa-fw fa-box',
             'can'   => 'is-opd',
         ],
-        // [
-        //     'text' => 'Kategori SE',
-        //     'route' => 'opd.kategorise.index',
-        //     'icon'  => 'fas fa-fw fa-box',
-        //     'can'   => 'is-opd',
-        // ],
-        // [
-        //     'text' => 'PTKKA',
-        //     'route' => 'opd.ptkka.index',
-        //     'icon'  => 'fas fa-clipboard-check',
-        //     'can'   => 'is-opd',
-        // ],
+        [
+            'text' => 'Kategori SE',
+            'route' => 'opd.kategorise.index',
+            'icon'  => 'fas fa-fw fa-box',
+            'can'   => 'is-opd',
+        ],
+        [
+            'text' => 'PTKKA',
+            'route' => 'opd.ptkka.index',
+            'icon'  => 'fas fa-clipboard-check',
+            'can'   => 'is-opd',
+        ],
 
         // ===== ADMIN =====
         [
-            'text' => 'Aset KAMI',
+            'text' => 'Aset',
             'route' => 'opd.aset.index',
             'icon'  => 'fas fa-fw fa-box',
             'can'   => 'is-admin',

@@ -87,19 +87,19 @@
     <div class="card">
         <div class="card-body">
             <div class="d-flex mb-3" style="gap: 10px;">
-                <a href="{{ route('opd.aset.index') }}" class="btn btn-secondary mb-3 me-2">
+                <a href="{{ route('opd.aset.index') }}" class="btn btn-sm btn-secondary mb-3 me-2">
                     ← Kembali
                 </a>
 
                 {{-- WAJIB: kirim param "klasifikasiaset" --}}
                 <a href="{{ route('opd.aset.export_rekap_klas', ['klasifikasiaset' => $klasifikasi]) }}"
-                    class="btn btn-danger mb-3">
+                    class="btn btn-sm btn-danger mb-3">
                     <i class="fas fa-file-pdf"></i> Export PDF
                 </a>
 
                 @if (($kunci ?? null) !== 'locked')
                     <a href="{{ route('opd.aset.create', ['klasifikasiaset' => $klasifikasi]) }}"
-                        class="btn btn-success mb-3">
+                        class="btn btn-sm btn-success mb-3">
                         <i class="fas fa-plus"></i> Tambah Aset
                     </a>
                 @endif
@@ -112,8 +112,8 @@
                     <tr>
                         <th>Kode Aset</th>
                         <th>Nama Aset</th>
-                        <th>Subklasifikasi</th>
-                        <th>Nilai</th>
+                        <th>Sub Klasifikasi Aset</th>
+                        <th>Nilai Aset (CIAAN)</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
@@ -158,7 +158,7 @@
                 </tbody>
             </table>
             <br>
-            <b>KETERANGAN SUB KLASIFIKASI ASET</b>
+            <b>Keterangan Sub Klasifikasi Aset</b>
             <div class="matik-list" style="font-size:0.9em">
                 @if (!empty($subs) && $subs->isNotEmpty())
                     <ul>

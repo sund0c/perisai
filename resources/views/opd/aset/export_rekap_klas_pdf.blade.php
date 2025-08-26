@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Rekap Aset KamI per Klas</title>
+    <title>Rekap Aset Informasi per Klas</title>
     <style>
         table {
             width: 100%;
@@ -65,7 +65,7 @@
 
 
         @page {
-            margin: 170px 50px 70px 40px;
+            margin: 170px 50px 70px 50px;
         }
 
         .header {
@@ -84,6 +84,7 @@
         }
 
         .header .subs {
+            margin-top: -5px;
             line-height: 1.2;
             font-size: 0.9em;
             margin-right: 100px;
@@ -122,15 +123,25 @@
     <div class="header">
         <img src="{{ public_path('images/tlp/tlp_teaser_amber.png') }}" alt="TLP:AMBER+STRICT" class="tlp">
 
-        <h2>Daftar Aset KamI per Klasifikasi :: Tahun {{ $tahunAktifGlobal ?? '-' }}</h2>
+        <h2>Daftar Aset Informasi per Klasifikasi :: Tahun {{ $tahunAktifGlobal ?? '-' }}</h2>
         <h3>Pemilik Risiko: {{ strtoupper($namaOpd) }}</h3>
+        <div class="subs">
+            Pemilik Risiko bertanggungjawab terhadap proses bisnis/layanannya dengan cara pengelolaan aset yaitu dari
+            mulai
+            melakukan Pengukuran Nilai Aset, Kategorisasi SE termasuk pemenuhan standar, Pemetaan Risiko, Analisa
+            Risiko,
+            pembuatan Rencana Tindak Lanjut dan implementasi mitigasi risiko, sampai menjadi <i>Lead Auditee</i> dalam
+            Audit Keamanan
+            {{-- {{ $subs->pluck('subklasifikasiaset')->implode(', ') ?: '-' }} --}}
+        </div>
         <h3 style="line-height:1; margin-bottom:0;">
             Klasifikasi Aset : {{ $klasifikasi->klasifikasiaset }}
         </h3>
 
+        {{--
         <div class="subs">
             {{ $subs->pluck('subklasifikasiaset')->implode(', ') ?: '-' }}
-        </div>
+        </div> --}}
     </div>
 
     <table>
@@ -139,7 +150,7 @@
                 <th style="width: 5%;">NO</th>
                 <th style="width: 15%;">KODE ASET</th>
                 <th style="width: 50%;">NAMA ASET</th>
-                <th style="width: auto;">SUB KLASIFIKASI</th>
+                <th style="width: auto;">SUB KLASIFIKASI ASET</th>
 
             </tr>
         </thead>
@@ -173,13 +184,12 @@
             sejauh mana informasi boleh dibagikan.
             <b>Kode TLP:AMBER berarti boleh dibagikan untuk komunitas tertentu sesuai kebutuhan.</b>
         </li>
-        <li><b>PERISAI</b> adalah sistem elektronik untuk melakukan <span class="underline">PEngelolaan RISiko Aset
-                Informasi,</span> dikelola oleh
-            Bidang
-            Persandian Dinas Kominfos Provinsi Bali</li>
-        <li>Yang dimaksud dengan <b>Aset KamI</b> dalam PERISAI adalah Aset Keamanan Informasi, yaitu <span
-                class="underline">khusus aset yang terkait
-                dengan pelindungan data dan keamanan informasi.</span>
+        <li><b>PERISAI</b> adalah sistem elektronik untuk melakukan <b>PE</b>ngelolaan <b>RIS</b>iko <b>A</b>set
+            <b>I</b>nformasi di lingkup Pemerintah Provinsi Bali. PERISAI dikelola oleh
+            Dinas Kominfos Provinsi Bali (Contact: Bidang Persandian)
+        </li>
+        <li>Aset dalam PERISAI adalah <strong>ASET INFORMASI yang mendukung kinerja organisasi dalam menjalakan proses
+                bisnis/layanannya.</strong>
         </li>
         <li>Semua informasi tentang aset ini dapat berubah sesuai dengan review dan pemutahiran data PERISAI <b>yang
                 dilakukan minimal sekali setahun oleh Pemilik Aset. Pemutahiran akan dilakukan serempak, menunggu

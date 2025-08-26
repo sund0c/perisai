@@ -6,6 +6,8 @@ use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvid
 use Illuminate\Support\Facades\Gate;
 use App\Models\Aset;
 use App\Policies\AsetPolicy;
+use App\Models\KategoriSe;
+use App\Policies\KategoriSePolicy;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -15,7 +17,7 @@ class AuthServiceProvider extends ServiceProvider
      */
     protected $policies = [
         Aset::class => AsetPolicy::class,
-        // Tambahkan mapping lainnya jika perlu...
+
     ];
 
     /**

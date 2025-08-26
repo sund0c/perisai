@@ -3,20 +3,31 @@
 namespace App\Http\Controllers\Opd;
 
 use App\Http\Controllers\Controller;
-
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use App\Models\Aset;
 use App\Models\KategoriSe;
 use App\Models\RangeSe;
 use App\Models\IndikatorKategoriSe;
-use Illuminate\Http\Request;
 use PDF;
 use Illuminate\Support\Facades\DB;
 
+use Illuminate\Database\QueryException;
+
 use App\Models\KlasifikasiAset;
 use App\Models\Periode;
+use Illuminate\Support\Facades\Log;
 
 class KategoriSeController extends Controller
 {
+
+    public function __construct()
+    {
+        //$this->authorizeResource(KategoriSe::class, 'kategorise');
+        $this->authorizeResource(Aset::class, 'aset');
+    }
+
+
     public function index()
     {
         $userOpdId = auth()->user()->opd_id;
@@ -44,7 +55,7 @@ class KategoriSeController extends Controller
         $norm = fn($v) => strtoupper(trim((string) $v));
 
         // Bangun mapping yang tahan spasi/kapitalisasi
-        $kategoriMeta = collect(['TINGGI', 'SEDANG', 'RENDAH'])->mapWithKeys(function ($K) use ($rangeSes, $norm) {
+        $kategoriMeta = collect(['STRATEGIS', 'TINGGI', 'RENDAH'])->mapWithKeys(function ($K) use ($rangeSes, $norm) {
             $row = $rangeSes->first(fn($r) => $norm($r->nilai_akhir_aset) === $K);
             return [
                 $K => [
@@ -68,8 +79,8 @@ class KategoriSeController extends Controller
 
         // Inisialisasi penghitung kategori
         $kategoriCount = [
+            'STRATEGIS' => 0,
             'TINGGI' => 0,
-            'SEDANG' => 0,
             'RENDAH' => 0,
             'BELUM' => 0,
             'TOTAL' => $asetPL->count()
@@ -101,7 +112,7 @@ class KategoriSeController extends Controller
 
         return view('opd.kategorise.index', [
             'tinggi' => $kategoriCount['TINGGI'] ?? 0,
-            'sedang' => $kategoriCount['SEDANG'] ?? 0,
+            'strategis' => $kategoriCount['STRATEGIS'] ?? 0,
             'rendah' => $kategoriCount['RENDAH'] ?? 0,
             'belum' => $kategoriCount['BELUM'],
             'total' => $kategoriCount['TOTAL'],
@@ -111,6 +122,153 @@ class KategoriSeController extends Controller
         ]);
     }
 
+    public function exportRekapPdf()
+    {
+        $userOpdId = auth()->user()->opd_id;
+        $namaOpd = auth()->user()->opd->namaopd ?? '-';
+
+        $periodeAktifId = Periode::where('status', 'open')->value('id');
+        if (!$periodeAktifId) {
+            // bebas: bisa redirect balik dengan flash message juga
+            abort(409, 'Tidak ada periode yang berstatus open.');
+        }
+        $asetPL = Aset::whereHas('klasifikasi', function ($q) {
+            $q->where('klasifikasiaset', 'PERANGKAT LUNAK');
+        })
+            ->where('opd_id', $userOpdId)
+            ->where('periode_id', $periodeAktifId) // ← filter periode aktif
+            ->with('kategoriSe')
+            ->get();
+
+        $rangeSes = RangeSe::all();
+        // Normalisasi helper
+        $norm = fn($v) => strtoupper(trim((string) $v));
+
+        // Bangun mapping yang tahan spasi/kapitalisasi
+        $kategoriMeta = collect(['STRATEGIS', 'TINGGI', 'RENDAH'])->mapWithKeys(function ($K) use ($rangeSes, $norm) {
+            $row = $rangeSes->first(fn($r) => $norm($r->nilai_akhir_aset) === $K);
+            return [
+                $K => [
+                    'label'     => $K,
+                    'deskripsi' => $row->deskripsi ?? '-',
+                ],
+            ];
+        })->toArray();
+
+        // Tambahan khusus
+
+        $kategoriMeta['BELUM'] = [
+            'label'     => 'BELUM DINILAI',
+            'deskripsi' => 'Belum ada skor (belum dilakukan penilaian).',
+        ];
+        $kategoriMeta['TOTAL'] = [
+            'label'     => 'TOTAL',
+            'deskripsi' => 'Jumlah seluruh aset perangkat lunak pada periode aktif.',
+        ];
+
+        // Inisialisasi penghitung kategori
+        $kategoriCount = [
+            'STRATEGIS' => 0,
+            'TINGGI' => 0,
+            'RENDAH' => 0,
+            'BELUM' => 0,
+            'TOTAL' => $asetPL->count()
+        ];
+
+        foreach ($asetPL as $aset) {
+            $skor = $aset->kategoriSe->skor_total ?? null;
+
+            if ($skor === null) {
+                $kategoriCount['BELUM']++;
+                continue;
+            }
+
+            // Tentukan kategori berdasarkan skor dan range
+            $kategori = $rangeSes->first(function ($range) use ($skor) {
+                return $skor >= $range->nilai_bawah && $skor <= $range->nilai_atas;
+            });
+
+            if ($kategori) {
+                $namaKategori = strtoupper($kategori->nilai_akhir_aset); // contoh: TINGGI
+                if (isset($kategoriCount[$namaKategori])) {
+                    $kategoriCount[$namaKategori]++;
+                } else {
+                    $kategoriCount[$namaKategori] = 1;
+                }
+            }
+        }
+        $strategis = $kategoriCount['STRATEGIS'];
+        $tinggi = $kategoriCount['TINGGI'];
+        $rendah = $kategoriCount['RENDAH'];
+        $total = $kategoriCount['TOTAL'];
+        $belum = $kategoriCount['BELUM'];
+
+        $namaOpd = auth()->user()->opd->namaopd ?? '-';
+
+
+        $pdf = PDF::loadView('opd.kategorise.export_rekap_pdf', compact('strategis', 'tinggi', 'rendah', 'belum', 'total', 'namaOpd', 'kategoriMeta'))
+            ->setPaper('A4', 'portrait');
+
+        $pdf->getDomPDF()->getCanvas()->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
+            $text = "PERISAI  :: Page $pageNumber of $pageCount";
+            $font = $fontMetrics->getFont('Helvetica', 'normal');
+            $size = 9;
+            $width = $canvas->get_width();
+            $height = $canvas->get_height();
+            $textWidth = $fontMetrics->getTextWidth($text, $font, $size);
+            $x = ($width - $textWidth) / 2;
+            $y = $height - 30;
+            $canvas->text($x, $y, $text, $font, $size);
+        });
+
+        return $pdf->download('rekap_kategorise_' . date('Ymd_His') . '.pdf');
+    }
+
+    public function exportRekapKategoriPdf($kategori)
+    {
+        $userOpdId = auth()->user()->opd_id;
+        $namaOpd = auth()->user()->opd->namaopd ?? '-';
+
+        // Ambil semua range dari DB
+        $range = RangeSe::whereRaw('LOWER(nilai_akhir_aset) = ?', [strtolower($kategori)])->first();
+
+        $query = Aset::whereHas('klasifikasi', function ($q) {
+            $q->where('klasifikasiaset', 'PERANGKAT LUNAK');
+        })
+            ->where('opd_id', $userOpdId)
+            ->with(['subklasifikasiaset', 'kategoriSe']);
+
+        if ($range) {
+            // Jika ada skor total, filter berdasarkan range
+            $query->whereHas('kategoriSe', function ($q) use ($range) {
+                $q->where('skor_total', '>=', $range->nilai_bawah)
+                    ->where('skor_total', '<=', $range->nilai_atas);
+            });
+        } elseif ($kategori === 'belum') {
+            // Jika kategori "belum", tampilkan yang belum dinilai
+            $query->doesntHave('kategoriSe');
+        }
+
+        $data = $query->get();
+        $rangeSes = RangeSe::all();
+
+
+
+        $pdf = PDF::loadView('opd.kategorise.export_rekap_kategori_pdf', compact('data', 'kategori', 'namaOpd', 'rangeSes'))
+            ->setPaper('A4', 'potrait');
+        $pdf->getDomPDF()->getCanvas()->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
+            $text = "PERISAI  :: Page $pageNumber of $pageCount";
+            $font = $fontMetrics->getFont('Helvetica', 'normal');
+            $size = 9;
+            $width = $canvas->get_width();
+            $height = $canvas->get_height();
+            $textWidth = $fontMetrics->getTextWidth($text, $font, $size);
+            $x = ($width - $textWidth) / 2; // Center horizontally
+            $y = $height - 30; // 30 px from bottom
+            $canvas->text($x, $y, $text, $font, $size);
+        });
+        return $pdf->download('kategorise_pernilai_' . date('Ymd_His') . '.pdf');
+    }
 
     public function syncFromPrevious(Request $request)
     {
@@ -230,149 +388,101 @@ class KategoriSeController extends Controller
         return back()->with('success', $msg);
     }
 
-    public function show($kategori)
+
+    public function showByKategori(string $kategori)
     {
-        $userOpdId = auth()->user()->opd_id;
-        $namaOpd = auth()->user()->opd->namaopd ?? '-';
+        $allowed = ['strategis', 'tinggi', 'rendah', 'belum']; // tambah 'total' kalau perlu
+        if (! in_array(strtolower($kategori), $allowed, true)) {
+            abort(404);
+        }
 
-        // Ambil semua range dari DB
-        $range = RangeSe::whereRaw('LOWER(nilai_akhir_aset) = ?', [strtolower($kategori)])->first();
+        $user = auth()->user();
+        $userOpdId = $user->opd_id;
+        $namaOpd   = $user->opd->namaopd ?? '-';
 
-        // Ambil periode aktif
         $periodeAktifId = Periode::where('status', 'open')->value('id');
-        if (!$periodeAktifId) {
-            // bebas: bisa redirect balik dengan flash message juga
+        if (! $periodeAktifId) {
             abort(409, 'Tidak ada periode yang berstatus open.');
         }
 
-        $query = Aset::whereHas('klasifikasi', function ($q) {
-            $q->where('klasifikasiaset', 'PERANGKAT LUNAK');
-        })
+        // base query: aset perangkat lunak milik OPD & periode aktif
+        $query = Aset::query()
             ->where('opd_id', $userOpdId)
-            ->where('periode_id', $periodeAktifId) // ← filter periode aktif
-            ->with('kategoriSe');
+            ->where('periode_id', $periodeAktifId)
+            ->whereHas('klasifikasi', fn($q) => $q->where('klasifikasiaset', 'PERANGKAT LUNAK'))
+            ->with('kategoriSe:id,aset_id,skor_total,jawaban'); // cukup field penting
 
-        // $query = Aset::whereHas('klasifikasi', function ($q) {
-        //     $q->where('klasifikasiaset', 'PERANGKAT LUNAK');
-        // })
-        //     ->where('opd_id', $userOpdId)
-        //     ->with(['subklasifikasiaset', 'kategoriSe']);
-
-        if ($range) {
-            // Jika ada skor total, filter berdasarkan range
-            $query->whereHas('kategoriSe', function ($q) use ($range) {
-                $q->where('skor_total', '>=', $range->nilai_bawah)
-                    ->where('skor_total', '<=', $range->nilai_atas);
-            });
-        } elseif ($kategori === 'belum') {
-            // Jika kategori "belum", tampilkan yang belum dinilai
+        // filter kategori
+        if ($kategori === 'belum') {
             $query->doesntHave('kategoriSe');
+        } else {
+            $range = RangeSe::whereRaw('LOWER(nilai_akhir_aset) = ?', [strtolower($kategori)])->first();
+            if (! $range) {
+                abort(404); // tak ada range utk kategori tsb
+            }
+            $query->whereHas('kategoriSe', function ($q) use ($range) {
+                $q->whereBetween('skor_total', [$range->nilai_bawah, $range->nilai_atas]);
+            });
         }
 
-        $data = $query->get();
+        $data = $query->orderBy('nama_aset')->get();
         $rangeSes = RangeSe::all();
+
         return view('opd.kategorise.list', compact('data', 'kategori', 'namaOpd', 'rangeSes'));
     }
 
 
-    public function edit($asetId)
+
+    public function exportPdf(Aset $aset) // ← dibinding via UUID
     {
-        $aset = Aset::findOrFail($asetId);
+        $this->authorize('view', $aset);
+
+        $periodeAktifId = \App\Models\Periode::where('status', 'open')->value('id');
+        if (! $periodeAktifId || (int)$aset->periode_id !== (int)$periodeAktifId) {
+            abort(404);
+        }
+
+        if ((int)$aset->opd_id !== (int)(auth()->user()->opd_id ?? 0)) {
+            abort(404);
+        }
+
+        // ⬇⬇ gunakan NAMA RELASI yang benar
+        $aset->loadMissing([
+            'klasifikasi:id,kodeklas,klasifikasiaset',
+            'subklasifikasiaset:id,subklasifikasiaset',
+            'opd:id,namaopd',
+            'kategoriSe', // hasOne
+        ]);
+
+        // cek hanya untuk klasifikasi "PERANGKAT LUNAK" jika memang wajib
+        if (optional($aset->klasifikasi)->kodeklas !== 'PL') {
+            abort(404);
+        }
+
+        $kategoriSe = $aset->kategoriSe;
         $indikators = IndikatorKategoriSe::orderBy('urutan')->get();
+        $rangeSes   = RangeSe::all();
 
-        $kategoriSe = KategoriSe::where('aset_id', $asetId)->first();
-        $namaOpd = auth()->user()->opd->namaopd ?? '-';
+        // 6) Hitung kategori & warna berdasar skor
+        $skor  = (int) ($kategoriSe->skor_total ?? 0);
+        $range = $rangeSes->first(fn($r) => $skor >= $r->nilai_bawah && $skor <= $r->nilai_atas);
 
-        return view('opd.kategorise.edit', compact('aset', 'indikators', 'kategoriSe', 'namaOpd'));
-    }
+        $kategoriLabel = $range->nilai_akhir_aset ?? 'BELUM DINILAI';
+        $warna         = $range->warna_hexa ?? '#888888';
 
-    public function exportRekapPdf()
-    {
-        $userOpdId = auth()->user()->opd_id;
-        $namaOpd = auth()->user()->opd->namaopd ?? '-';
+        // 7) Render PDF
+        $pdf = PDF::loadView('opd.kategorise.pdf_detail', compact(
+            'aset',
+            'kategoriSe',
+            'indikators',
+            'rangeSes',
+            'kategoriLabel',
+            'warna',
+            'skor'
+        ))
+            ->setPaper('a4', 'portrait');
 
-        $periodeAktifId = Periode::where('status', 'open')->value('id');
-        if (!$periodeAktifId) {
-            // bebas: bisa redirect balik dengan flash message juga
-            abort(409, 'Tidak ada periode yang berstatus open.');
-        }
-        $asetPL = Aset::whereHas('klasifikasi', function ($q) {
-            $q->where('klasifikasiaset', 'PERANGKAT LUNAK');
-        })
-            ->where('opd_id', $userOpdId)
-            ->where('periode_id', $periodeAktifId) // ← filter periode aktif
-            ->with('kategoriSe')
-            ->get();
-
-        $rangeSes = RangeSe::all();
-        // Normalisasi helper
-        $norm = fn($v) => strtoupper(trim((string) $v));
-
-        // Bangun mapping yang tahan spasi/kapitalisasi
-        $kategoriMeta = collect(['TINGGI', 'SEDANG', 'RENDAH'])->mapWithKeys(function ($K) use ($rangeSes, $norm) {
-            $row = $rangeSes->first(fn($r) => $norm($r->nilai_akhir_aset) === $K);
-            return [
-                $K => [
-                    'label'     => $K,
-                    'deskripsi' => $row->deskripsi ?? '-',
-                ],
-            ];
-        })->toArray();
-
-        // Tambahan khusus
-
-        $kategoriMeta['BELUM'] = [
-            'label'     => 'BELUM DINILAI',
-            'deskripsi' => 'Belum ada skor (belum dilakukan penilaian).',
-        ];
-        $kategoriMeta['TOTAL'] = [
-            'label'     => 'TOTAL',
-            'deskripsi' => 'Jumlah seluruh aset perangkat lunak pada periode aktif.',
-        ];
-
-        // Inisialisasi penghitung kategori
-        $kategoriCount = [
-            'TINGGI' => 0,
-            'SEDANG' => 0,
-            'RENDAH' => 0,
-            'BELUM' => 0,
-            'TOTAL' => $asetPL->count()
-        ];
-
-        foreach ($asetPL as $aset) {
-            $skor = $aset->kategoriSe->skor_total ?? null;
-
-            if ($skor === null) {
-                $kategoriCount['BELUM']++;
-                continue;
-            }
-
-            // Tentukan kategori berdasarkan skor dan range
-            $kategori = $rangeSes->first(function ($range) use ($skor) {
-                return $skor >= $range->nilai_bawah && $skor <= $range->nilai_atas;
-            });
-
-            if ($kategori) {
-                $namaKategori = strtoupper($kategori->nilai_akhir_aset); // contoh: TINGGI
-                if (isset($kategoriCount[$namaKategori])) {
-                    $kategoriCount[$namaKategori]++;
-                } else {
-                    $kategoriCount[$namaKategori] = 1;
-                }
-            }
-        }
-        $tinggi = $kategoriCount['TINGGI'];
-        $sedang = $kategoriCount['SEDANG'];
-        $rendah = $kategoriCount['RENDAH'];
-        $total = $kategoriCount['TOTAL'];
-        $belum = $kategoriCount['BELUM'];
-
-        $namaOpd = auth()->user()->opd->namaopd ?? '-';
-
-
-        $pdf = PDF::loadView('opd.kategorise.export_rekap_pdf', compact('tinggi', 'sedang', 'rendah', 'belum', 'total', 'namaOpd', 'kategoriMeta'))
-            ->setPaper('A4', 'portrait');
-
+        // 8) Footer halaman
         $pdf->getDomPDF()->getCanvas()->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
             $text = "PERISAI  :: Page $pageNumber of $pageCount";
             $font = $fontMetrics->getFont('Helvetica', 'normal');
@@ -385,164 +495,101 @@ class KategoriSeController extends Controller
             $canvas->text($x, $y, $text, $font, $size);
         });
 
-        return $pdf->download('rekap_kategorise_' . date('Ymd_His') . '.pdf');
+        return $pdf->download('penilaian_kategori_se_' . now()->format('Ymd_His') . '.pdf');
     }
 
-    public function update(Request $request, $asetId)
+
+    // GET /opd/kategorise/{aset}/edit
+    public function edit(Request $request, Aset $aset)
     {
-        $request->validate([
-            'jawaban' => 'required|array',
-            'kategori' => 'required|in:tinggi,sedang,rendah',
-        ]);
 
-        $indikators = IndikatorKategoriSe::all()->keyBy('kode');
+        $this->authorize('update', $aset);
 
-        $inputJawaban = $request->input('jawaban');
-        $skorTotal = 0;
-
-        foreach ($inputJawaban as $kode => $data) {
-            $jawaban = strtoupper($data['jawaban'] ?? '');
-            if ($jawaban === 'A') {
-                $skorTotal += $indikators[$kode]->nilai_a ?? 0;
-            } elseif ($jawaban === 'B') {
-                $skorTotal += $indikators[$kode]->nilai_b ?? 0;
-            } elseif ($jawaban === 'C') {
-                $skorTotal += $indikators[$kode]->nilai_c ?? 0;
-            }
+        // validasi query ?kategori= (opsional, kalau mau dipakai di view)
+        $kategori = strtoupper((string) $request->query('kategori', ''));
+        if ($kategori && !in_array($kategori, ['STRATEGIS', 'TINGGI', 'RENDAH', 'BELUM'], true)) {
+            abort(404);
         }
 
-        try {
-            KategoriSe::updateOrCreate(
-                ['aset_id' => $asetId],
-                [
-                    'jawaban' => $inputJawaban,
-                    'skor_total' => $skorTotal
-                ]
-            );
-            $kategori = $request->string('kategori'); // 'tinggi' | 'sedang' | 'rendah'
-            return redirect()
-                ->route('opd.kategorise.show', ['kategori' => $kategori])
-                ->with('success', 'Kategori SE berhasil diperbaharui.');
-        } catch (QueryException $e) {
-            Log::warning('Gagal memperbaharui aset (QueryException)', [
-                'mysql_code' => $e->errorInfo[1] ?? null,   // 1062, 1452, dst.
-                'sql_state'  => $e->errorInfo[0] ?? null,
-                'driver_msg' => $e->errorInfo[2] ?? null,
-                'user_id'    => auth()->id(),
-                'route'      => request()->path(),
-            ]);
-            return back()->withInput()->with('error', 'Gagal memperbaharui. Silakan periksa kembali isian Anda.');
-        } catch (\Throwable $e) {
-            report($e);
-            return back()->withInput()->with('error', 'Terjadi kesalahan. Silakan coba lagi atau hubungi admin.');
-        }
+        $indikators = IndikatorKategoriSe::orderBy('urutan')->get();
 
+        // lewat relasi (lebih aman dari N+1)
+        $kategoriSe = $aset->kategoriSe()->first(); // bisa null jika belum pernah dinilai
 
-
-        // KategoriSe::updateOrCreate(
-        //     ['aset_id' => $asetId],
-        //     [
-        //         'jawaban' => $inputJawaban,
-        //         'skor_total' => $skorTotal
-        //     ]
-        // );
-
-        // return redirect()->route('opd.kategorise.index')->with('success', 'Penilaian berhasil disimpan.');
-    }
-
-    public function exportRekapKategoriPdf($kategori)
-    {
-        $userOpdId = auth()->user()->opd_id;
         $namaOpd = auth()->user()->opd->namaopd ?? '-';
 
-        // Ambil semua range dari DB
-        $range = RangeSe::whereRaw('LOWER(nilai_akhir_aset) = ?', [strtolower($kategori)])->first();
-
-        $query = Aset::whereHas('klasifikasi', function ($q) {
-            $q->where('klasifikasiaset', 'PERANGKAT LUNAK');
-        })
-            ->where('opd_id', $userOpdId)
-            ->with(['subklasifikasiaset', 'kategoriSe']);
-
-        if ($range) {
-            // Jika ada skor total, filter berdasarkan range
-            $query->whereHas('kategoriSe', function ($q) use ($range) {
-                $q->where('skor_total', '>=', $range->nilai_bawah)
-                    ->where('skor_total', '<=', $range->nilai_atas);
-            });
-        } elseif ($kategori === 'belum') {
-            // Jika kategori "belum", tampilkan yang belum dinilai
-            $query->doesntHave('kategoriSe');
-        }
-
-        $data = $query->get();
-        $rangeSes = RangeSe::all();
-
-
-
-        $pdf = PDF::loadView('opd.kategorise.export_rekap_kategori_pdf', compact('data', 'kategori', 'namaOpd', 'rangeSes'))
-            ->setPaper('A4', 'potrait');
-        $pdf->getDomPDF()->getCanvas()->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
-            $text = "PERISAI  :: Page $pageNumber of $pageCount";
-            $font = $fontMetrics->getFont('Helvetica', 'normal');
-            $size = 9;
-            $width = $canvas->get_width();
-            $height = $canvas->get_height();
-            $textWidth = $fontMetrics->getTextWidth($text, $font, $size);
-            $x = ($width - $textWidth) / 2; // Center horizontally
-            $y = $height - 30; // 30 px from bottom
-            $canvas->text($x, $y, $text, $font, $size);
-        });
-        return $pdf->download('kategorise_pernilai_' . date('Ymd_His') . '.pdf');
+        return view('opd.kategorise.edit', compact(
+            'aset',
+            'indikators',
+            'kategoriSe',
+            'namaOpd',
+            'kategori'
+        ));
     }
 
+    // PUT /opd/kategorise/{aset}
 
-    public function exportPdf($id)
+    public function update(Request $request, Aset $aset)
     {
-        $aset = \App\Models\Aset::with(['kategoriSe', 'opd'])->findOrFail($id);
-        $kategoriSe = $aset->kategoriSe;
-        $indikators = IndikatorKategoriSe::orderBy('urutan')->get();
-        $rangeSes = RangeSe::all();
+        $this->authorize('update', $aset);
 
-        $skor = $kategoriSe->skor_total ?? 0;
+        // ✅ Validasi STRUKTUR jawaban per item
+        $validated = $request->validate([
+            'jawaban'                 => 'required|array',
+            'jawaban.*.jawaban'       => 'required|in:A,B,C',
+            'jawaban.*.keterangan'    => 'nullable|string',
+        ]);
 
-        $range = $rangeSes->first(function ($r) use ($skor) {
-            return $skor >= $r->nilai_bawah && $skor <= $r->nilai_atas;
-        });
+        // 🧮 Hitung skor (A=5, B=2, C=1)
+        $map   = ['A' => 5, 'B' => 2, 'C' => 1];
+        $jawab = collect($validated['jawaban'])
+            ->map(fn($r) => [
+                'jawaban'    => $r['jawaban'],
+                'keterangan' => $r['keterangan'] ?? null,
+            ])
+            ->all(); // tanpa ->values()
 
-        $kategoriLabel = $range->nilai_akhir_aset ?? 'BELUM DINILAI';
-        $warna = $range->warna_hexa ?? '#888';
 
+        $skor = collect($jawab)->sum(fn($r) => $map[$r['jawaban']] ?? 0);
 
-        $pdf = PDF::loadView('opd.kategorise.pdf_detail', compact(
-            'aset',
-            'kategoriSe',
-            'indikators',
-            'kategoriLabel',
-            'warna',
-            'skor'
-        ))
-            ->setPaper('A4', 'potrait');
-        $pdf->getDomPDF()->getCanvas()->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
-            $text = "PERISAI  :: Page $pageNumber of $pageCount";
-            $font = $fontMetrics->getFont('Helvetica', 'normal');
-            $size = 9;
-            $width = $canvas->get_width();
-            $height = $canvas->get_height();
-            $textWidth = $fontMetrics->getTextWidth($text, $font, $size);
-            $x = ($width - $textWidth) / 2; // Center horizontally
-            $y = $height - 30; // 30 px from bottom
-            $canvas->text($x, $y, $text, $font, $size);
-        });
-        return $pdf->download('penilaian_kategori_se_' . date('Ymd_His') . '.pdf');
+        try {
+            // 🎯 1 aset ↔ 1 kategoriSe
+            $existing = $aset->kategoriSe()->first();
 
-        // return Pdf::loadView('opd.kategorise.pdf_detail', compact(
-        //     'aset',
-        //     'kategoriSe',
-        //     'indikators',
-        //     'kategoriLabel',
-        //     'warna',
-        //     'skor'
-        // ))->setPaper('A4', 'portrait')->download('penilaian_kategori_se_' . $aset->id . '.pdf');
+            if ($existing) {
+                $existing->update([
+                    'jawaban'    => $jawab,
+                    'skor_total' => $skor,
+                ]);
+            } else {
+                $aset->kategoriSe()->create([
+                    'uuid'       => (string) Str::uuid(), // ← pasti terisi saat pertama kali
+                    'jawaban'    => $jawab,
+                    'skor_total' => $skor,
+                ]);
+            }
+
+            $allowed = ['tinggi', 'sedang', 'rendah', 'belum'];
+
+            // Opsi A: balik ke filter yang sedang dipilih user
+            $target = strtolower($request->input('kategori', 'belum'));
+            if (!in_array($target, $allowed, true)) {
+                $target = 'belum';
+            }
+            return redirect()
+                ->route('opd.kategorise.show_by_kategori', ['kategori' => $target])
+                ->with('success', 'Penilaian Kategori SE berhasil disimpan.');
+        } catch (QueryException $e) {
+            Log::warning('KategoriSe update QueryException', [
+                'mysql_code' => $e->errorInfo[1] ?? null,
+                'sql_state'  => $e->errorInfo[0] ?? null,
+                'driver_msg' => $e->errorInfo[2] ?? null,
+                'aset_id'    => $aset->id,
+            ]);
+            return back()->withInput()->with('error', 'Gagal menyimpan. Periksa kembali isian Anda.');
+        } catch (\Throwable $e) {
+            report($e);
+            return back()->withInput()->with('error', 'Terjadi kesalahan. Silakan coba lagi.');
+        }
     }
 }

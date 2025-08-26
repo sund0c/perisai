@@ -24,16 +24,10 @@
     }
 </style>
 @section('content_header')
-    <h1>Aset KamI</h1>
+    <h1>Aset</h1>
     <div style="line-height:1.2; font-size: 0.9em">
-        Aset KamI yang dimaksud dalam PERISAI adalah <strong>aset TIK yang berhubungan dengan pelindungan data dan keamanan
-            informasi.</strong>
-        Contoh asetnya
-        adalah komputer karena menyimpan data dan berpotensi data di dalamnya bocor. Mesin Ketik elektronik (bukan
-        komputer), Air Conditioner
-        (AC), mesing penghancur kertas, dan sejenisnya, tidak perlu dimasukkan sebagai aset dalam PERISAI karena tidak
-        terhubung
-        langsung dengan pelindungan data dan keamanan informasi.
+        Aset dalam PERISAI adalah <strong>ASET INFORMASI yang mendukung kinerja organisasi dalam menjalakan proses
+            bisnis/layanannya.</strong>
     </div>
 @endsection
 
@@ -54,10 +48,9 @@
         <div class="col-md-7">
             <div class="card">
                 <div class="card-body">
-                    <div class="d-flex mb-3" style="gap: 10px;">
+                    <div style="gap: 10px;">
                         <a href="{{ route('opd.aset.export_rekap') }}" class="btn btn-danger btn-sm mb-3 me-2">
-                            <i class="fas fa-file-pdf"></i> Export PDF
-                        </a>
+                            <i class="fas fa-file-pdf"></i> Export PDF</a>
 
                         @if (($kunci ?? null) !== 'locked')
                             @if (!empty($canSync) && $canSync)
@@ -76,7 +69,7 @@
                         <thead>
                             <tr>
                                 <th rowspan="2" style="vertical-align: middle; text-align: center;">Klasifikasi Aset</th>
-                                <th style="width:15%;vertical-align: middle; text-align: center;" rowspan="2">Jumlah Aset
+                                <th style="width:20%;vertical-align: middle; text-align: center;" rowspan="2">Jumlah Aset
                                 </th>
                                 <th colspan="3">Nilai Aset</th>
                             </tr>
@@ -141,7 +134,7 @@
                         </tfoot>
                     </table>
                     <br>
-                    <b>KETERANGAN KLASIFIKASI ASET</b>
+                    <b>Keterangan Klasifikasi Aset :</b>
                     <div class="matik-list">
                         <ul>
                             @foreach ($klasifikasis as $klasifikasi)
@@ -175,7 +168,7 @@
                     <br>
 
                     <div class="matik-list">
-                        <b>KETERANGAN NILAI ASET</b>
+                        <b>Keterangan Nilai Aset (CIAAN): </b>
                         <ol style="padding-left: 20px; margin-left: 0;">
                             @foreach ($ranges ?? collect() as $range)
                                 <li><b>{{ $range->nilai_akhir_aset }} :</b> {{ $range->deskripsi }}</li>

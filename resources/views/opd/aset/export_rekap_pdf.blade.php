@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Rekap Aset KamI</title>
+    <title>Rekap Aset</title>
     <style>
         table {
             width: 100%;
@@ -38,9 +38,8 @@
         padding: 0;
         }
 
-        h3 {
-            margin-bottom: 10px;
-        }
+
+
 
         h4 {
             margin-bottom: 2px;
@@ -64,7 +63,7 @@
         }
 
         @page {
-            margin: 170px 50px 70px 40px;
+            margin: 170px 50px 70px 50px;
         }
 
 
@@ -72,7 +71,7 @@
             position: fixed;
             top: -120px;
             left: 0px;
-            right: 0px;
+            right: 5px;
             text-align: left;
         }
 
@@ -84,6 +83,7 @@
         }
 
         .header .subs {
+            margin-top: -5px;
             line-height: 1.2;
             font-size: 0.9em;
             margin-right: 100px;
@@ -122,13 +122,16 @@
     <div class="header">
         <img src="{{ public_path('images/tlp/tlp_teaser_green.png') }}" alt="TLP:GREEN" class="tlp">
         {{-- <p style="font-weight:bold; color:#FFBF00; margin:0;">TLP:AMBER+STRICT</p> --}}
-        <h2>Rekap Jumlah dan Nilai Aset KamI :: Tahun {{ $tahunAktifGlobal ?? '-' }}</h2>
+        <h2>Rekap Jumlah dan Nilai Aset Informasi :: Tahun {{ $tahunAktifGlobal ?? '-' }}</h2>
         <h3>Pemilik Risiko: {{ strtoupper($namaOpd) }}</h3>
-        <h3 style="line-height:1; margin-bottom:0;">
-            {{-- Klasifikasi Aset : {{ $klasifikasi->klasifikasiaset }} --}}
-        </h3>
 
         <div class="subs">
+            Pemilik Risiko bertanggungjawab terhadap proses bisnis/layanannya dengan cara pengelolaan aset yaitu dari
+            mulai
+            melakukan Pengukuran Nilai Aset, Kategorisasi SE termasuk pemenuhan standar, Pemetaan Risiko, Analisa
+            Risiko,
+            pembuatan Rencana Tindak Lanjut dan implementasi mitigasi risiko, sampai menjadi <i>Lead Auditee</i> dalam
+            Audit Keamanan
             {{-- {{ $subs->pluck('subklasifikasiaset')->implode(', ') ?: '-' }} --}}
         </div>
     </div>
@@ -191,7 +194,7 @@
         </ul>
     </div>
     <BR>
-    <h4>B. KETERANGAN NILAI ASET</h4>
+    <h4>B. KETERANGAN NILAI ASET (CIAAN )</h4>
     <ol>
         @foreach ($ranges as $range)
             <li><b>{{ $range->nilai_akhir_aset }} :</b> {{ $range->deskripsi }}</li>
@@ -199,21 +202,20 @@
     </ol><BR>
     <h4>C. CATATAN LAIN</h4>
     <ol>
-        <li>Kode TLP (Traffic Light Protocol) dipakai untuk mengklasifikasikan sensitivitas informasi, supaya jelas
+        <li>Kode TLP (Traffic Light Protocol) dipakai untuk mengklasifikasikan sensitifitas informasi, supaya jelas
             sejauh mana informasi boleh dibagikan.
             <b>Kode TLP:GREEN berarti boleh dibagikan di dalam komunitas/sektor (misalnya antar instansi pemerintah),
                 tapi tidak untuk publik luas.</b>
         </li>
-        <li><b>PERISAI</b> adalah sistem elektronik untuk melakukan <span class="underline">PEngelolaan RISiko Aset
-                Informasi,</span> dikelola oleh
-            Bidang
-            Persandian Dinas Kominfos Provinsi Bali</li>
-        <li>Yang dimaksud dengan <b>Aset KamI</b> dalam PERISAI adalah Aset Keamanan Informasi, yaitu <span
-                class="underline">khusus aset yang terkait
-                dengan pelindungan data dan keamanan informasi.</span>
+        <li><b>PERISAI</b> adalah sistem elektronik untuk melakukan <b>PE</b>ngelolaan <b>RIS</b>iko <b>A</b>set
+            <b>I</b>nformasi di lingkup Pemerintah Provinsi Bali. PERISAI dikelola oleh
+            Dinas Kominfos Provinsi Bali (Contact: Bidang Persandian)
+        </li>
+        <li>Aset dalam PERISAI adalah <strong>ASET INFORMASI yang mendukung kinerja organisasi dalam menjalakan proses
+                bisnis/layanannya.</strong>
         </li>
         <li>Semua informasi tentang aset ini dapat berubah sesuai dengan review dan pemutahiran data PERISAI <b>yang
-                dilakukan minimal sekali setahun oleh Pemilik Aset. Pemutahiran akan dilakukan serempak, menunggu
+                dilakukan minimal sekali setahun oleh Pemilik Risiko. Pemutahiran akan dilakukan serempak, menunggu
                 informasi dari Diskominfos Prov Bali.</b> </li>
     </ol>
 </body>

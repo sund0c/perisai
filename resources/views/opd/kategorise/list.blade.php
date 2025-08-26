@@ -93,12 +93,13 @@
                             </td>
 
                             <td>
-                                <a href="{{ route('opd.kategorise.exportPdf', $aset->id) }}"
+
+                                <a href="{{ route('opd.kategorise.exportPdf', $aset->uuid) }}"
                                     class="btn btn-sm btn-primary">
                                     <i class="fas fa-file-pdf"></i>
                                 </a>
                                 @if ($kunci !== 'locked')
-                                    <a href="{{ route('opd.kategorise.edit', ['aset' => $aset->id, 'kategori' => $kategori]) }}"
+                                    <a href="{{ route('opd.kategorise.edit', ['aset' => $aset, 'kategori' => $kategori]) }}"
                                         class="btn btn-sm btn-warning">
                                         <i class="fas fa-edit"></i>
                                     </a>

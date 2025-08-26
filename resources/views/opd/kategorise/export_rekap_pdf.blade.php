@@ -38,9 +38,8 @@
         padding: 0;
         }
 
-        h3 {
-            margin-bottom: 10px;
-        }
+
+
 
         h4 {
             margin-bottom: 2px;
@@ -62,16 +61,82 @@
         .underline {
             text-decoration: underline;
         }
+
+        @page {
+            margin: 170px 50px 70px 50px;
+        }
+
+
+        .header {
+            position: fixed;
+            top: -120px;
+            left: 0px;
+            right: 5px;
+            text-align: left;
+        }
+
+        .header img.tlp {
+            position: absolute;
+            top: 0;
+            right: -30;
+            width: 150px;
+        }
+
+        .header .subs {
+            margin-top: -5px;
+            line-height: 1.2;
+            font-size: 0.9em;
+            margin-right: 100px;
+            /* ruang kosong supaya teks turun & tidak timpa gambar */
+        }
+
+        .header h2,
+        .header h3 {
+            margin: 6px 0;
+        }
+
+        .matik-list ul {
+            margin: 0;
+            padding-left: 1.2rem;
+            /* default untuk nested */
+        }
+
+        /* level pertama */
+        .matik-list>ul {
+            padding-left: 1em;
+            /* mepet kiri */
+            list-style-type: disc;
+            /* bullet bulat */
+        }
+
+        /* level kedua */
+        .matik-list>ul>li>ul {
+            padding-left: 1.5rem;
+            list-style-type: square;
+            font-size: 0.8em;
+        }
     </style>
 </head>
 
 <body>
-    <div style="text-align:center; margin-bottom:20px;">
-        <img src="{{ public_path('images/tlp/tlp_teaser_green.png') }}" alt="TLP:GREEN" width="150">
+    <div class="header">
+        <img src="{{ public_path('images/tlp/tlp_teaser_green.png') }}" alt="TLP:GREEN" class="tlp">
         {{-- <p style="font-weight:bold; color:#FFBF00; margin:0;">TLP:AMBER+STRICT</p> --}}
+        <h2>Rekap Kategori SE :: Tahun {{ $tahunAktifGlobal ?? '-' }}</h2>
+        <h3>Pemilik Risiko: {{ strtoupper($namaOpd) }}</h3>
+
+        <div class="subs">
+            Pemilik Risiko bertanggungjawab terhadap proses bisnis/layanannya dengan cara pengelolaan aset yaitu dari
+            mulai
+            melakukan Pengukuran Nilai Aset, Kategorisasi SE termasuk pemenuhan standar, Pemetaan Risiko, Analisa
+            Risiko,
+            pembuatan Rencana Tindak Lanjut dan implementasi mitigasi risiko, sampai menjadi <i>Lead Auditee</i> dalam
+            Audit Keamanan
+            {{-- {{ $subs->pluck('subklasifikasiaset')->implode(', ') ?: '-' }} --}}
+        </div>
     </div>
-    <h2>Rekap Kategori SE Tahun {{ $tahunAktifGlobal ?? '-' }}</h2>
-    <h3>Pemilik Aset : {{ strtoupper($namaOpd) }}</h3>
+
+
     <table class="table table-bordered text-center" style="width:100%">
         <thead class="font-weight-bold">
             <tr>
@@ -84,24 +149,24 @@
                 <td
                     style="vertical-align:
                     middle; height: 70px;background-color:#FF0000; color:#fff;text-align: left">
-                    <b>TINGGI</b>
+                    <b>STRATEGIS</b>
                     <div>
-                        {{ data_get($kategoriMeta, 'TINGGI.deskripsi', '-') }}
+                        {{ data_get($kategoriMeta, 'STRATEGIS.deskripsi', '-') }}
                     </div>
                 </td>
                 <td style="vertical-align: middle; text-align: center;font-size:.9rem;">
-                    {{ $tinggi }}
+                    {{ $strategis }}
 
                 </td>
             </tr>
             <tr>
                 <td style="vertical-align: middle; height: 70px;background-color:#FFD700; color:#000;text-align: left">
-                    <b>SEDANG</b>
+                    <b>TINGGI</b>
                     <div>
-                        {{ data_get($kategoriMeta, 'SEDANG.deskripsi', '-') }}
+                        {{ data_get($kategoriMeta, 'TINGGI.deskripsi', '-') }}
                     </div>
                 </td>
-                <td style="vertical-align: middle; text-align: center;font-size:.9rem;"> {{ $sedang }}
+                <td style="vertical-align: middle; text-align: center;font-size:.9rem;"> {{ $tinggi }}
                 </td>
             </tr>
             <tr>
@@ -141,19 +206,21 @@
             <b>Kode TLP:GREEN berarti boleh dibagikan di dalam komunitas/sektor (misalnya antar instansi pemerintah),
                 tapi tidak untuk publik luas.</b>
         </li>
-        <li><b>PERISAI</b> adalah sistem elektronik untuk melakukan <span class="underline">PEngelolaan RISiko Aset
-                Informasi,</span> dikelola oleh
-            Bidang
-            Persandian Dinas Kominfos Provinsi Bali</li>
-        <li>Yang dimaksud dengan <b>Aset</b> dalam PERISAI adalah <span class="underline">khusus aset yang terkait
-                dengan pelindungan data dan keamanan informasi.</span>
+        <li><b>PERISAI</b> adalah sistem elektronik untuk melakukan <b>PE</b>ngelolaan <b>RIS</b>iko <b>A</b>set
+            <b>I</b>nformasi di lingkup Pemerintah Provinsi Bali. PERISAI dikelola oleh
+            Dinas Kominfos Provinsi Bali (Contact: Bidang Persandian)
         </li>
-        <li>Periode pemutahiran data PERISAI <b>wajib dilakukan sekali setahun oleh Pemilik Aset.</b>. Pemutahiran
-            dilakukan serentak menunggu informasi dari Dinas Kominfos Prov Bali. </li>
+        <li>Aset dalam PERISAI adalah <strong>ASET INFORMASI yang mendukung kinerja organisasi dalam menjalakan proses
+                bisnis/layanannya.</strong>
+        </li>
         <li>SE adalah sistem elektronik yaitu dalam PERISAI adalah <strong>aset dengan klasifikasi [PL] Perangkat
                 Lunak.</strong> Contoh SE adalah
             website, aplikasi
             berbasis web, mobile, sistem operasi dan utility.</li>
+        <li>Semua informasi tentang aset ini dapat berubah sesuai dengan review dan pemutahiran data PERISAI <b>yang
+                dilakukan minimal sekali setahun oleh Pemilik Risiko. Pemutahiran akan dilakukan serempak, menunggu
+                informasi dari Diskominfos Prov Bali.</b> </li>
+
     </ol>
 </body>
 

@@ -2,11 +2,32 @@
 
 @section('title', 'Rekap Kategori SE')
 
+<style>
+    .matik-list ul {
+        margin: 0;
+        padding-left: 1.2rem;
+        /* default untuk nested */
+    }
 
+    /* level pertama */
+    .matik-list>ul {
+        padding-left: 1em;
+        /* mepet kiri */
+        list-style-type: disc;
+        /* bullet bulat */
+    }
+
+    /* level kedua */
+    .matik-list>ul>li>ul {
+        padding-left: 1.5rem;
+        list-style-type: square;
+        font-size: 0.8em;
+    }
+</style>
 @section('content_header')
     <h1>Kategori Sistem Elektronik</h1>
     <div style="line-height:1.2; font-size: 0.9em">
-        Sistem elektronik (SE) dalam PERISAI adalah <strong>aset dengan klasifikasi [PL] Perangkat
+        Sistem Elektronik (SE) dalam PERISAI adalah <strong>ASET INFORMASI dengan klasifikasi [PL] Perangkat
             Lunak.</strong> Contoh SE adalah
         website, aplikasi
         berbasis web, mobile, sistem operasi dan utility.
@@ -29,7 +50,7 @@
 
 @section('content')
     <div class="row">
-        <div class="col-md-9">
+        <div class="col-md-7">
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex mb-3" style="gap: 10px;">
@@ -41,73 +62,72 @@
                     <table class="table table-bordered text-center" style="width:100%">
                         <thead class="font-weight-bold">
                             <tr>
-                                <th style="width:80%">KATEGORI SE</th>
-                                <th>JUMLAH ASET</th>
+                                <th style="width:60%">Kategori Aset</th>
+                                <th>Jumlah Aset</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr class="bg-danger text-white" style="text-align: left">
-                                <td style="text-align: left"><b>TINGGI</b>
-                                    <div class="mt-1" style="font-size:.9rem;line-height:1.2">
-                                        {{ data_get($kategoriMeta, 'TINGGI.deskripsi', '-') }}
-                                    </div>
+                                <td style="text-align: left"><b>STRATEGIS</b>
                                 </td>
                                 <td style="vertical-align: middle; text-align: center;">
                                     <a class="btn btn-light btn-sm px-4"
-                                        href="{{ route('opd.kategorise.show', ['kategori' => 'tinggi']) }}">
-                                        {{ $tinggi }}
+                                        href="{{ route('opd.kategorise.show_by_kategori', ['kategori' => 'strategis']) }}">
+                                        {{ $strategis }}
                                     </a>
                                 </td>
                             </tr>
                             <tr class="bg-warning text-white" style="text-align: left">
-                                <td style="text-align: left"><b>SEDANG</b>
-                                    <div class="mt-1" style="font-size:.9rem;line-height:1.2">
-                                        {{ $kategoriMeta['SEDANG']['deskripsi'] ?? '-' }}
-                                    </div>
+                                <td style="text-align: left"><b>TINGGI</b>
                                 </td>
                                 <td style="vertical-align: middle; text-align: center;">
                                     <a class="btn btn-light btn-sm px-4"
-                                        href="{{ route('opd.kategorise.show', ['kategori' => 'sedang']) }}">
-                                        {{ $sedang }}
+                                        href="{{ route('opd.kategorise.show_by_kategori', ['kategori' => 'tinggi']) }}">
+                                        {{ $tinggi }}
                                     </a>
                                 </td>
                             </tr>
                             <tr class="bg-success text-white" style="text-align: left">
                                 <td style="text-align: left"><b>RENDAH</b>
-                                    <div class="mt-1" style="font-size:.9rem;line-height:1.2">
-                                        {{ $kategoriMeta['RENDAH']['deskripsi'] ?? '-' }}
-                                    </div>
                                 </td>
                                 <td style="vertical-align: middle; text-align: center;">
                                     <a class="btn btn-light btn-sm px-4"
-                                        href="{{ route('opd.kategorise.show', ['kategori' => 'rendah']) }}">
+                                        href="{{ route('opd.kategorise.show_by_kategori', ['kategori' => 'rendah']) }}">
                                         {{ $rendah }}
                                     </a>
                                 </td>
                             </tr>
                             <tr class="bg-secondary text-white" style="text-align: left">
                                 <td style="text-align: left"><b>Belum Dinilai</b>
-                                    <div class="mt-1" style="font-size:.9rem;line-height:1.2">
-                                        {{ $kategoriMeta['BELUM']['deskripsi'] ?? '-' }}
-                                    </div>
                                 </td>
                                 <td style="vertical-align: middle; text-align: center;">
                                     <a class="btn btn-light btn-sm px-4"
-                                        href="{{ route('opd.kategorise.show', ['kategori' => 'belum']) }}">
+                                        href="{{ route('opd.kategorise.show_by_kategori', ['kategori' => 'belum']) }}">
                                         {{ $belum }}
                                     </a>
                                 </td>
                             </tr>
                             <tr class="font-weight-bold">
-                                <td>Total</td>
+                                <td>Total Jumlah Aset</td>
                                 <td>{{ $total }}</td>
                             </tr>
                         </tbody>
                     </table>
+                    <br>
+                    <b>Keterangan Kategori Sistem Elektronik:</b>
+                    <div class="matik-list">
+                        <ul>
+                            <li><b>STRATEGIS: </b>{{ data_get($kategoriMeta, 'STRATEGIS.deskripsi', '-') }}</li>
+                            <li><b>TINGGI: </b>{{ data_get($kategoriMeta, 'TINGGI.deskripsi', '-') }}</li>
+                            <li><b>RENDAH: </b>{{ data_get($kategoriMeta, 'RENDAH.deskripsi', '-') }}</li>
+                            <li><b>BELUM: </b>{{ data_get($kategoriMeta, 'BELUM.deskripsi', '-') }}</li>
+                        </ul>
+                    </div>
+
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-5">
             <div class="card">
                 <div class="card-body text-center">
                     <div style="width: 100%;margin: auto;">
@@ -129,9 +149,9 @@
 
     <script>
         const pieData = {
-            labels: ['TINGGI', 'SEDANG', 'RENDAH', 'BELUM DINILAI'],
+            labels: ['STRATEGIS', 'TINGGI', 'RENDAH', 'BELUM DINILAI'],
             datasets: [{
-                data: [{{ $tinggi }}, {{ $sedang }}, {{ $rendah }}, {{ $belum }}],
+                data: [{{ $strategis }}, {{ $tinggi }}, {{ $rendah }}, {{ $belum }}],
                 backgroundColor: ['#dc3545', '#ffc107', '#28a745', '#6c757d'],
                 borderColor: '#fff',
                 borderWidth: 2

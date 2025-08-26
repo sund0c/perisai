@@ -20,14 +20,30 @@
 @endsection
 
 @section('content')
-    <form action="{{ route('opd.kategorise.update', $aset->id) }}" method="POST">
+
+
+    <form action="{{ route('opd.kategorise.update', ['aset' => $aset, 'kategori' => request('kategori')]) }}" method="POST">
+
+
         @csrf
         @method('PUT')
 
         @foreach ($indikators as $indikator)
             @php
-                $jawabanLama = $kategoriSe->jawaban[$indikator->kode]['jawaban'] ?? null;
-                $keteranganLama = $kategoriSe->jawaban[$indikator->kode]['keterangan'] ?? '';
+                // Ambil seluruh old input untuk field 'jawaban' (bisa null jika tidak ada)
+                $oldAll = old('jawaban');
+
+                // Ambil data tersimpan dari DB (bisa null kalau belum ada)
+                $saved = is_array($kategoriSe->jawaban ?? null) ? $kategoriSe->jawaban : [];
+
+                // Pilih sumber: prioritas old() (ketika validasi gagal), fallback ke tersimpan
+                $fromOld =
+                    is_array($oldAll) && array_key_exists($indikator->kode, $oldAll)
+                        ? $oldAll[$indikator->kode]
+                        : $saved[$indikator->kode] ?? [];
+
+                $jawabanLama = $fromOld['jawaban'] ?? null;
+                $keteranganLama = $fromOld['keterangan'] ?? '';
             @endphp
 
             <div class="card mb-4">
@@ -42,9 +58,7 @@
                                 <div class="form-check mb-2">
                                     <input class="form-check-input" type="radio"
                                         name="jawaban[{{ $indikator->kode }}][jawaban]" value="{{ $opsi }}"
-                                        {{ old("jawaban.{$indikator->kode}.jawaban", $jawabanLama ?? 'A') === $opsi ? 'checked' : '' }}
-                                        required>
-
+                                        {{ ($jawabanLama ?? 'A') === $opsi ? 'checked' : '' }} required>
                                     <label class="form-check-label">
                                         <strong>{{ $opsi }}</strong> –
                                         {{ $indikator['opsi_' . strtolower($opsi)] }}
@@ -57,13 +71,14 @@
                         <div class="col-md-6">
                             <label for="keterangan_{{ $indikator->kode }}"><strong>Keterangan:</strong></label>
                             <textarea name="jawaban[{{ $indikator->kode }}][keterangan]" id="keterangan_{{ $indikator->kode }}"
-                                class="form-control" rows="3" placeholder="Tulis catatan Anda jika ada...">{{ old('jawaban.' . $indikator->kode . '.keterangan', $keteranganLama) }}</textarea>
+                                class="form-control" rows="3" placeholder="Tulis catatan Anda jika ada...">{{ $keteranganLama }}</textarea>
                         </div>
                     </div>
                 </div>
             </div>
         @endforeach
         <input type="hidden" name="kategori" value="{{ request('kategori') }}">
+
 
 
         <div class="text-left mt-4">

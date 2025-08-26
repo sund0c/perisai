@@ -11,21 +11,42 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Schema::create('kategori_ses', function (Blueprint $table) {
+        //     $table->id();
+        //     $table->foreignId('aset_id')->constrained()->restrictOnDelete(); // hanya untuk aset perangkat lunak
+
+        //     /**
+        //      * Format jawaban:
+        //      * {
+        //      *   "I1": { "jawaban": "A", "keterangan": "..." },
+        //      *   "I2": { "jawaban": "C", "keterangan": "..." },
+        //      *   ...
+        //      * }
+        //      */
+        //     $table->json('jawaban')->nullable(); // jawaban + keterangan per indikator
+        //     $table->integer('skor_total')->nullable(); // total bobot dari seluruh jawaban
+        //     $table->timestamps();
+        // });
         Schema::create('kategori_ses', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('aset_id')->constrained()->restrictOnDelete(); // hanya untuk aset perangkat lunak
 
-            /**
-             * Format jawaban:
-             * {
-             *   "I1": { "jawaban": "A", "keterangan": "..." },
-             *   "I2": { "jawaban": "C", "keterangan": "..." },
-             *   ...
-             * }
-             */
-            $table->json('jawaban')->nullable(); // jawaban + keterangan per indikator
-            $table->integer('skor_total')->nullable(); // total bobot dari seluruh jawaban
+            // UUID publik
+            $table->uuid('uuid')->unique();
+
+            $table->foreignId('aset_id')
+                ->constrained('asets')
+                ->restrictOnDelete();
+
+            $table->json('jawaban')->nullable()
+                ->comment('Jawaban indikator: {I1:{jawaban,keterangan},...}');
+
+            $table->unsignedInteger('skor_total')->default(0)
+                ->comment('Total bobot nilai jawaban');
+
             $table->timestamps();
+
+            $table->unique('aset_id', 'kategori_ses_aset_unique');
+            $table->index('aset_id');
         });
     }
 

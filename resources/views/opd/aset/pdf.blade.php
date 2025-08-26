@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Aset KamI</title>
+    <title>Aset Informasi</title>
     <style>
         table {
             width: 100%;
@@ -86,7 +86,7 @@
         }
 
         @page {
-            margin: 160px 50px 70px 40px;
+            margin: 160px 50px 70px 50px;
         }
 
 
@@ -106,6 +106,7 @@
         }
 
         .header .subs {
+            margin-top: -5px;
             line-height: 1.2;
             font-size: 0.9em;
             margin-right: 100px;
@@ -143,13 +144,16 @@
 <body>
     <div class="header">
         <img src="{{ public_path('images/tlp/tlp_teaser_amber_strict.png') }}" alt="TLP:AMBER+STRICT" class="tlp">
-        <h2>Informasi dan Nilai Aset KamI - Tahun {{ $tahunAktifGlobal ?? '-' }}</h2>
-        <h3>Pemilik Risiko: {{ strtoupper($namaOpd) }}</h3>
-        <h3 style="line-height:1; margin-bottom:0;">
-            {{-- Klasifikasi Aset : {{ $klasifikasi->klasifikasiaset }} --}}
-        </h3>
-
+        <h2>Informasi dan Nilai Aset Informasi - Tahun {{ $tahunAktifGlobal ?? '-' }}</h2>
+        <h3>
+            Pemilik Risiko: {{ strtoupper($namaOpd) }}</h3>
         <div class="subs">
+            Pemilik Risiko bertanggungjawab terhadap proses bisnis/layanannya dengan cara pengelolaan aset yaitu dari
+            mulai
+            melakukan Pengukuran Nilai Aset, Kategorisasi SE termasuk pemenuhan standar, Pemetaan Risiko, Analisa
+            Risiko,
+            pembuatan Rencana Tindak Lanjut dan implementasi mitigasi risiko, sampai menjadi <i>Lead Auditee</i> dalam
+            Audit Keamanan
             {{-- {{ $subs->pluck('subklasifikasiaset')->implode(', ') ?: '-' }} --}}
         </div>
 
@@ -168,23 +172,34 @@
                     $field === 'subklasifikasiaset_id'
                         ? $aset->subklasifikasiaset->subklasifikasiaset ?? '-'
                         : $aset->$field ?? '-';
-                // Daftar field CIAAA
-                $ciaaaFields = ['kerahasiaan', 'integritas', 'ketersediaan', 'keaslian', 'kenirsangkalan'];
+
+                // Daftar field CIAAA + kode singkat
+                $ciaaaMap = [
+                    'kerahasiaan' => 'C',
+                    'integritas' => 'I',
+                    'ketersediaan' => 'A',
+                    'keaslian' => 'A',
+                    'kenirsangkalan' => 'N',
+                ];
             @endphp
             <tr>
                 <td class="label">
-                    {{ in_array($field, $ciaaaFields) ? 'Tingkat ' . $label : $label }}
+                    @if (array_key_exists($field, $ciaaaMap))
+                        Tingkat {{ $label }} ({{ $ciaaaMap[$field] }})
+                    @else
+                        {{ $label }}
+                    @endif
                 </td>
                 <td class="value">
                     {{ $value }}
-                    @if (in_array($field, $ciaaaFields))
+                    @if (array_key_exists($field, $ciaaaMap))
                         <span class="text-muted"> dari 3</span>
                     @endif
                 </td>
             </tr>
         @endforeach
         <tr>
-            <td class="label">NILAI ASET</td>
+            <td class="label">NILAI ASET (CIAAN)</td>
             <td class="value"><strong>{{ $aset->nilai_akhir_aset }}</strong></td>
         </tr>
     </table><BR>
@@ -204,19 +219,18 @@
     </ol><BR>
     <h4>C. CATATAN LAIN</h4>
     <ol>
-        <li>Kode TLP (Traffic Light Protocol) dipakai untuk mengklasifikasikan sensitivitas informasi, supaya jelas
+        <li>Kode TLP (Traffic Light Protocol) dipakai untuk mengklasifikasikan sensitifitas informasi, supaya jelas
             sejauh mana informasi boleh dibagikan.
             <b>Kode TLP:AMBER+STRICT berarti berisi informasi cukup sensitif. Hanya untuk internal organisasi penerima,
                 tidak boleh
                 keluar.</b>
         </li>
-        <li><b>PERISAI</b> adalah sistem elektronik untuk melakukan <span class="underline">PEngelolaan RISiko Aset
-                Informasi,</span> dikelola oleh
-            Bidang
-            Persandian Dinas Kominfos Provinsi Bali</li>
-        <li>Yang dimaksud dengan <b>Aset KamI</b> dalam PERISAI adalah Aset Keamanan Informasi, yaitu <span
-                class="underline">khusus aset yang terkait
-                dengan pelindungan data dan keamanan informasi.</span>
+        <li><b>PERISAI</b> adalah sistem elektronik untuk melakukan <b>PE</b>ngelolaan <b>RIS</b>iko <b>A</b>set
+            <b>I</b>nformasi di lingkup Pemerintah Provinsi Bali. PERISAI dikelola oleh
+            Dinas Kominfos Provinsi Bali (Contact: Bidang Persandian)
+        </li>
+        <li>Aset dalam PERISAI adalah <strong>ASET INFORMASI yang mendukung kinerja organisasi dalam menjalakan proses
+                bisnis/layanannya.</strong>
         </li>
         <li>Semua informasi tentang aset ini dapat berubah sesuai dengan review dan pemutahiran data PERISAI <b>yang
                 dilakukan minimal sekali setahun oleh Pemilik Aset. Pemutahiran akan dilakukan serempak, menunggu

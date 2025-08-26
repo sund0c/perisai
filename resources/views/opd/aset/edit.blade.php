@@ -47,8 +47,9 @@
                     @includeIf('opd.aset.fields.' . $field, ['aset' => $aset])
                 @endforeach
 
-                <button type="submit" class="btn btn-primary">Simpan</button>
-                <a href="{{ route('opd.aset.show_by_klasifikasi', $klasifikasi->id) }}" class="btn btn-secondary">Batal</a>
+                <button type="submit" class="btn btn-sm btn-primary">Simpan</button>
+                <a href="{{ route('opd.aset.show_by_klasifikasi', $klasifikasi->id) }}"
+                    class="btn btn-sm btn-secondary">Batal</a>
             </form>
 
         </div>
