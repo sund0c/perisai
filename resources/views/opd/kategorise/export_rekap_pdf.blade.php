@@ -66,7 +66,6 @@
             margin: 170px 50px 70px 50px;
         }
 
-
         .header {
             position: fixed;
             top: -120px;
@@ -86,7 +85,7 @@
             margin-top: -5px;
             line-height: 1.2;
             font-size: 0.9em;
-            margin-right: 100px;
+            margin-right: 0px;
             /* ruang kosong supaya teks turun & tidak timpa gambar */
         }
 
@@ -94,6 +93,7 @@
         .header h3 {
             margin: 6px 0;
         }
+
 
         .matik-list ul {
             margin: 0;
@@ -120,21 +120,34 @@
 
 <body>
     <div class="header">
-        <img src="{{ public_path('images/tlp/tlp_teaser_green.png') }}" alt="TLP:GREEN" class="tlp">
-        {{-- <p style="font-weight:bold; color:#FFBF00; margin:0;">TLP:AMBER+STRICT</p> --}}
-        <h2>Rekap Kategori SE :: Tahun {{ $tahunAktifGlobal ?? '-' }}</h2>
-        <h3>Pemilik Risiko: {{ strtoupper($namaOpd) }}</h3>
+        <table width="100%" style="border:none;">
+            <tr>
+                <!-- KIRI: judul + subs (tetap) -->
+                <td style="vertical-align: top;border:none;">
+                    <h2>Rekap Kategori SE :: Tahun {{ $tahunAktifGlobal ?? '-' }}</h2>
+                    <h3>Pemilik Risiko: {{ strtoupper($namaOpd) }}</h3>
 
-        <div class="subs">
-            Pemilik Risiko bertanggungjawab terhadap proses bisnis/layanannya dengan cara pengelolaan aset yaitu dari
-            mulai
-            melakukan Pengukuran Nilai Aset, Kategorisasi SE termasuk pemenuhan standar, Pemetaan Risiko, Analisa
-            Risiko,
-            pembuatan Rencana Tindak Lanjut dan implementasi mitigasi risiko, sampai menjadi <i>Lead Auditee</i> dalam
-            Audit Keamanan
-            {{-- {{ $subs->pluck('subklasifikasiaset')->implode(', ') ?: '-' }} --}}
-        </div>
+                    <div class="subs">
+                        Pemilik Risiko bertanggungjawab terhadap proses bisnis/layanannya dengan cara pengelolaan aset
+                        yaitu dari
+                        mulai melakukan Pengukuran Nilai Aset, Kategorisasi SE termasuk pemenuhan standar, Pemetaan
+                        Risiko, Analisa
+                        Risiko, pembuatan Rencana Tindak Lanjut dan implementasi mitigasi risiko, sampai menjadi
+                        <i>Lead Auditee</i> dalam Audit Keamanan
+                    </div>
+                </td>
+
+                <!-- KANAN: dua logo sejajar -->
+                <td style="width: 100px; vertical-align: top; text-align: right; white-space: nowrap;border:none;">
+                    <img src="{{ public_path('images/logobaliprovcsirt.png') }}" alt="Logo"
+                        style="height:70px; vertical-align: top; margin-right:0px;">
+                    <img src="{{ public_path('images/tlp/tlp_teaser_green.jpg') }}" alt="TLP:GREEN"
+                        style="height:70px; vertical-align: top;">
+                </td>
+            </tr>
+        </table>
     </div>
+
 
 
     <table class="table table-bordered text-center" style="width:100%">
@@ -199,27 +212,26 @@
             </tr>
     </table>
     <BR><BR><BR>
-    <h4>Catatan</h4>
+    <h4>CATATAN</h4>
     <ol>
-        <li>Kode TLP (Traffic Light Protocol) dipakai untuk mengklasifikasikan sensitivitas informasi, supaya jelas
+        <li>Kode TLP (Traffic Light Protocol) dipakai untuk mengklasifikasikan sensitifitas informasi, supaya jelas
             sejauh mana informasi boleh dibagikan.
-            <b>Kode TLP:GREEN berarti boleh dibagikan di dalam komunitas/sektor (misalnya antar instansi pemerintah),
-                tapi tidak untuk publik luas.</b>
+            TLP:GREEN = Pengungkapan terbatas, penerima dapat menyebarkan ini dalam komunitasnya.
+            Sumber dapat menggunakan TLP:GREEN ketika informasi berguna untuk meningkatkan kesadaran dalam
+            komunitas mereka yang lebih luas. Penerima dapat berbagi informasi TLP:GREEN dengan rekan dan
+            organisasi mitra dalam komunitas mereka, tetapi tidak melalui saluran yang dapat diakses publik.
+            Informasi TLP:GREEN tidak boleh dibagikan di luar komunitas. Jika "komunitas" tidak ditentukan,
+            asumsikan komunitas keamanan/pertahanan siber.
         </li>
-        <li><b>PERISAI</b> adalah sistem elektronik untuk melakukan <b>PE</b>ngelolaan <b>RIS</b>iko <b>A</b>set
+        <li>PERISAI adalah sistem elektronik untuk melakukan <b>PE</b>ngelolaan <b>RIS</b>iko <b>A</b>set
             <b>I</b>nformasi di lingkup Pemerintah Provinsi Bali. PERISAI dikelola oleh
             Dinas Kominfos Provinsi Bali (Contact: Bidang Persandian)
         </li>
-        <li>Aset dalam PERISAI adalah <strong>ASET INFORMASI yang mendukung kinerja organisasi dalam menjalakan proses
-                bisnis/layanannya.</strong>
-        </li>
-        <li>SE adalah sistem elektronik yaitu dalam PERISAI adalah <strong>aset dengan klasifikasi [PL] Perangkat
-                Lunak.</strong> Contoh SE adalah
-            website, aplikasi
-            berbasis web, mobile, sistem operasi dan utility.</li>
-        <li>Semua informasi tentang aset ini dapat berubah sesuai dengan review dan pemutahiran data PERISAI <b>yang
-                dilakukan minimal sekali setahun oleh Pemilik Risiko. Pemutahiran akan dilakukan serempak, menunggu
-                informasi dari Diskominfos Prov Bali.</b> </li>
+        <li>SE adalah Sistem Elektronik yaitu dalam PERISAI adalah ASET INFORMASI dengan klasifikasi [PL] Perangkat
+            Lunak.</li>
+        <li>Semua informasi tentang aset ini dapat berubah sesuai dengan reviu dan pemutahiran data PERISAI yang
+            dilakukan minimal sekali setahun oleh Pemilik Risiko. Pemutahiran akan dilakukan serempak, menunggu
+            jadwal dari Diskominfos Prov Bali. </li>
 
     </ol>
 </body>

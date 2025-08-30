@@ -224,24 +224,27 @@ Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd|bidang'
 
 //============= Start of OPD ===========================
 
-Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd'])->prefix('opd/ptkka')->name('opd.ptkka.')->group(function () {
+Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd'])
+    ->prefix('opd/ptkka')
+    ->name('opd.ptkka.')
+    ->group(function () {
+        Route::post('/{session}/fungsi/{fungsi}/simpan', [PtkkaController::class, 'simpanPerFungsi'])->name('simpanPerFungsi');
+        Route::get('/export/pdf/{session:uid}', [PtkkaController::class, 'exportPDF'])
+            ->name('exportPDF');
+        Route::get('/', [PtkkaController::class, 'indexPtkka'])->name('index');
+        Route::get('/riwayat/{aset:uuid}', [PtkkaController::class, 'riwayat'])
+            ->name('riwayat');
+        Route::post('/{aset:uuid}/store', [PtkkaController::class, 'store'])->name('store');
+        Route::get('/{session:uid}/detail', [PtkkaController::class, 'showDetail'])->name('detail');
+        Route::delete('/{session:uid}', [PtkkaController::class, 'destroy'])->name('destroy');
+        Route::post('/jawaban', [PtkkaController::class, 'simpanJawaban'])->name('jawaban.simpan');
+        Route::post('/{session:uid}/simpan', [PtkkaController::class, 'simpan'])->name('simpan');
 
-    //Route::middleware(['auth', RoleMiddleware::class . ':opd'])->group(function () {
-    //  Route::prefix('ptkka')->group(function () {
 
-    Route::get('/', [PtkkaController::class, 'indexPtkka'])->name('index');
-    Route::get('/riwayat/{aset}', [PtkkaController::class, 'riwayat'])->name('riwayat');
-    Route::post('/{aset}/store', [PtkkaController::class, 'store'])->name('store');
-    Route::delete('/{session}', [PtkkaController::class, 'destroy'])->name('destroy');
-    Route::get('/{session}/detail', [PtkkaController::class, 'showDetail'])->name('detail');
-    Route::post('/jawaban', [PtkkaController::class, 'simpanJawaban'])->name('jawaban.simpan');
-    Route::post('/{id}/simpan', [PtkkaController::class, 'simpan'])->name('simpan');
-    Route::post('/{session}/fungsi/{fungsi}/simpan', [PtkkaController::class, 'simpanPerFungsi'])->name('simpanPerFungsi');
-    Route::post('/{session}/ajukan-verifikasi', [PtkkaController::class, 'ajukanVerifikasi'])->name('ajukanverifikasi');
-    Route::get('/export/pdf/{id}', [PtkkaController::class, 'exportPDF'])->name('exportPDF');
-});
+        // Route::post('/{id}/simpan', [PtkkaController::class, 'simpan'])->name('simpan');
 
-
+        Route::post('/{session}/ajukan-verifikasi', [PtkkaController::class, 'ajukanVerifikasi'])->name('ajukanverifikasi');
+    });
 
 Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd'])
     ->prefix('opd/aset')
@@ -259,7 +262,6 @@ Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd'])
             ->name('create');
         Route::post('/klasifikasi/{klasifikasiaset}', [AsetController::class, 'store'])
             ->name('store');
-        // ====== Rute yang spesifik ke SATU aset (pakai UUID) ======
         Route::get('/{aset:uuid}/pdf', [AsetController::class, 'pdf'])
             ->middleware('can:view,aset')
             ->name('pdf');
@@ -273,20 +275,6 @@ Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd'])
             ->middleware('can:delete,aset')
             ->name('destroy');
     });
-
-// Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd'])->prefix('opd/kategorise')->name('opd.kategorise.')->group(function () {
-//     Route::put('/{aset}', [KategoriSeController::class, 'update'])->name('update');
-//     Route::get('/export/rekap/{kategori}', [KategoriSeController::class, 'exportRekapKategoriPdf'])->name('export_rekap_kategori');
-//     Route::get('/', [KategoriSeController::class, 'index'])->name('index');
-//     Route::get('/{aset}/edit', [KategoriSeController::class, 'edit'])->name('edit');
-//     Route::get('/export/pdf/{id}', [KategoriSeController::class, 'exportPdf'])->name('exportPdf');
-//     Route::get('/kategori/{kategori}', [KategoriSeController::class, 'show'])->name('show');
-//     Route::get('/export/rekap', [KategoriSeController::class, 'exportRekapPdf'])->name('export_rekap');
-
-//     Route::post('/sync-previous', [KategoriSeController::class, 'syncFromPrevious'])
-//         ->name('sync_previous');
-// });
-
 
 Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd'])
     ->prefix('opd/kategorise')
@@ -305,16 +293,9 @@ Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd'])
         Route::get('/{aset}/edit', [KategoriSeController::class, 'edit'])
             ->where('aset', '[0-9a-fA-F-]+')
             ->name('edit');
-
         Route::put('/{aset}', [KategoriSeController::class, 'update'])
             ->where('aset', '[0-9a-fA-F-]+')
             ->name('update');
-
-
-        // Lain-lain
-
-
-
         Route::post('/sync-previous', [KategoriSeController::class, 'syncFromPrevious'])->name('sync_previous');
     });
 

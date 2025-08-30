@@ -14,6 +14,7 @@
             @if ($kunci === 'locked')
                 <i class="fas fa-lock text-danger ml-1" title="Terkunci"></i>
             @endif
+            :: {{ strtoupper($namaOpd ?? '-') }}
         </span>
     </li>
 @endsection
@@ -41,18 +42,13 @@
             <a href="{{ route('opd.ptkka.index') }}" class="btn btn-secondary mb-3 me-2">
                 <i class="fas fa-arrow-left"></i> Kembali
             </a>
-            <form action="{{ route('opd.ptkka.store', $aset->id) }}" method="POST" class="d-inline">
+            <form action="{{ route('opd.ptkka.store', $aset) }}" method="POST" class="d-inline">
                 @csrf
-                <button type="button" class="btn btn-primary mb-3"" data-toggle="modal"
+                <button type="button" class="btn btn-primary mb-3" data-toggle="modal"
                     data-target="#modalKategori{{ $aset->id }}">
                     <i class="fas fa-plus"></i> Tambah PTKKA
                 </button>
             </form>
-
-
-
-
-
 
 
             <table class="table table-bordered" id="ptkkaTable">
@@ -125,14 +121,14 @@
                             </td>
                             <td>
                                 @if ($session->status === 0 || $session->status === 3)
-                                    <a href="{{ route('opd.ptkka.detail', $session->id) }}" class="btn btn-warning btn-sm"
+                                    <a href="{{ route('opd.ptkka.detail', $session) }}" class="btn btn-warning btn-sm"
                                         title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
                                 @endif
 
                                 @if ($session->status === 0)
-                                    <form action="{{ route('opd.ptkka.destroy', $session->id) }}" method="POST"
+                                    <form action="{{ route('opd.ptkka.destroy', $session) }}" method="POST"
                                         class="d-inline" onsubmit="return confirm('Yakin ingin menghapus sesi PTKKA ini?')">
                                         @csrf @method('DELETE')
                                         <button class="btn btn-danger btn-sm" title="Hapus">
@@ -142,7 +138,7 @@
                                 @endif
 
                                 @if ($session->status === 4)
-                                    <a href="{{ route('bidang.ptkka.exportPDF', $session->id) }}"
+                                    <a href="{{ route('bidang.ptkka.exportPDF', $session) }}"
                                         class="btn btn-primary btn-sm" title="Unduh PDF">
                                         <i class="fas fa-file-pdf"></i>
                                     </a>
@@ -162,17 +158,17 @@
             <div class="modal fade" id="modalKategori{{ $aset->id }}" tabindex="-1" role="dialog"
                 aria-labelledby="modalKategoriLabel" aria-hidden="true">
                 <div class="modal-dialog" role="document">
-                    <form method="POST" action="{{ route('opd.ptkka.store', $aset->id) }}">
+                    <form method="POST" action="{{ route('opd.ptkka.store', $aset) }}">
                         @csrf
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h5 class="modal-title" id="modalKategoriLabel">Pilih Standard </h5>
+                                <h5 class="modal-title" id="modalKategoriLabel">Pilih Standar </h5>
                                 <button type="button" class="close" data-dismiss="modal" aria-label="Tutup">
                                     <span aria-hidden="true">&times;</span>
                                 </button>
                             </div>
                             <div class="modal-body">
-                                <p>PTKKA pada <strong>{{ $aset->nama_aset }}</strong> menggunakan standard </p>
+                                <p>PTKKA pada <strong>{{ $aset->nama_aset }}</strong> menggunakan standar : </p>
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="standar_kategori_id"
                                         id="web{{ $aset->id }}" value="2" checked>

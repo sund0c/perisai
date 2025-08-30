@@ -23,7 +23,6 @@ class KategoriSeController extends Controller
 
     public function __construct()
     {
-        //$this->authorizeResource(KategoriSe::class, 'kategorise');
         $this->authorizeResource(Aset::class, 'aset');
     }
 
@@ -436,6 +435,7 @@ class KategoriSeController extends Controller
     public function exportPdf(Aset $aset) // ← dibinding via UUID
     {
         $this->authorize('view', $aset);
+        $namaOpd = auth()->user()->opd->namaopd ?? '-';
 
         $periodeAktifId = \App\Models\Periode::where('status', 'open')->value('id');
         if (! $periodeAktifId || (int)$aset->periode_id !== (int)$periodeAktifId) {
@@ -478,7 +478,8 @@ class KategoriSeController extends Controller
             'rangeSes',
             'kategoriLabel',
             'warna',
-            'skor'
+            'skor',
+            'namaOpd',
         ))
             ->setPaper('a4', 'portrait');
 

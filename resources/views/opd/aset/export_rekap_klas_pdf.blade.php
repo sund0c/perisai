@@ -87,7 +87,7 @@
             margin-top: -5px;
             line-height: 1.2;
             font-size: 0.9em;
-            margin-right: 100px;
+            margin-right: 0px;
             /* ruang kosong supaya teks turun & tidak timpa gambar */
         }
 
@@ -121,6 +121,40 @@
 
 <body>
     <div class="header">
+        <table width="100%" style="border:none;">
+            <tr>
+                <!-- KIRI: judul + subs (tetap) -->
+                <td style="vertical-align: top;border:none;">
+                    <h2 style="margin:0;">Daftar Aset Informasi per Klasifikasi :: Tahun {{ $tahunAktifGlobal ?? '-' }}
+                    </h2>
+                    <h3 style="margin:0;">Pemilik Risiko: {{ strtoupper($namaOpd) }}</h3>
+
+                    <div class="subs" style="margin-top:2px;">
+                        Pemilik Risiko bertanggungjawab terhadap proses bisnis/layanannya dengan cara pengelolaan aset
+                        yaitu dari
+                        mulai melakukan Pengukuran Nilai Aset, Kategorisasi SE termasuk pemenuhan standar, Pemetaan
+                        Risiko, Analisa
+                        Risiko, pembuatan Rencana Tindak Lanjut dan implementasi mitigasi risiko, sampai menjadi
+                        <i>Lead Auditee</i> dalam Audit Keamanan
+                    </div>
+                    <h3 style="line-height:1; margin-bottom:0;">
+                        Klasifikasi Aset : {{ $klasifikasi->klasifikasiaset }}
+                    </h3>
+                </td>
+
+                <!-- KANAN: dua logo sejajar -->
+                <td style="width: 100px; vertical-align: top; text-align: right; white-space: nowrap;border:none;">
+                    <img src="{{ public_path('images/logobaliprovcsirt.png') }}" alt="Logo"
+                        style="height:70px; vertical-align: top; margin-right:0px;">
+                    <img src="{{ public_path('images/tlp/tlp_teaser_amber.jpg') }}" alt="TLP:AMBER"
+                        style="height:70px; vertical-align: top;">
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    {{--
+    <div class="header">
         <img src="{{ public_path('images/tlp/tlp_teaser_amber.png') }}" alt="TLP:AMBER+STRICT" class="tlp">
 
         <h2>Daftar Aset Informasi per Klasifikasi :: Tahun {{ $tahunAktifGlobal ?? '-' }}</h2>
@@ -132,17 +166,16 @@
             Risiko,
             pembuatan Rencana Tindak Lanjut dan implementasi mitigasi risiko, sampai menjadi <i>Lead Auditee</i> dalam
             Audit Keamanan
-            {{-- {{ $subs->pluck('subklasifikasiaset')->implode(', ') ?: '-' }} --}}
         </div>
         <h3 style="line-height:1; margin-bottom:0;">
             Klasifikasi Aset : {{ $klasifikasi->klasifikasiaset }}
         </h3>
-
-        {{--
+  </div> --}}
+    {{--
         <div class="subs">
             {{ $subs->pluck('subklasifikasiaset')->implode(', ') ?: '-' }}
         </div> --}}
-    </div>
+
 
     <table>
         <thead>
@@ -182,18 +215,23 @@
     <ol>
         <li>Kode TLP (Traffic Light Protocol) dipakai untuk mengklasifikasikan sensitivitas informasi, supaya jelas
             sejauh mana informasi boleh dibagikan.
-            <b>Kode TLP:AMBER berarti boleh dibagikan untuk komunitas tertentu sesuai kebutuhan.</b>
+            TLP:AMBER = Pengungkapan terbatas, penerima hanya dapat menyebarkan ini berdasarkan kebutuhan untuk
+            mengetahuinya
+            dalam organisasi dan kliennya.Sumber dapat menggunakan TLP:AMBER ketika informasi memerlukan dukungan
+            untuk ditindaklanjuti secara
+            efektif, namun membawa risiko terhadap privasi, reputasi, atau operasi jika dibagikan di luar organisasi
+            yang terlibat. Penerima
+            dapat membagikan informasi TLP:AMBER dengan anggota organisasi mereka sendiri dan kliennya, tetapi hanya
+            berdasarkan kebutuhan untuk mengetahui guna melindungi organisasi mereka dan kliennya serta mencegah
+            kerugian lebih lanjut.
         </li>
-        <li><b>PERISAI</b> adalah sistem elektronik untuk melakukan <b>PE</b>ngelolaan <b>RIS</b>iko <b>A</b>set
+        <li>PERISAI adalah sistem elektronik untuk melakukan <b>PE</b>ngelolaan <b>RIS</b>iko <b>A</b>set
             <b>I</b>nformasi di lingkup Pemerintah Provinsi Bali. PERISAI dikelola oleh
             Dinas Kominfos Provinsi Bali (Contact: Bidang Persandian)
         </li>
-        <li>Aset dalam PERISAI adalah <strong>ASET INFORMASI yang mendukung kinerja organisasi dalam menjalakan proses
-                bisnis/layanannya.</strong>
-        </li>
-        <li>Semua informasi tentang aset ini dapat berubah sesuai dengan review dan pemutahiran data PERISAI <b>yang
-                dilakukan minimal sekali setahun oleh Pemilik Aset. Pemutahiran akan dilakukan serempak, menunggu
-                informasi dari Diskominfos Prov Bali.</b> </li>
+        <li>Semua informasi tentang aset ini dapat berubah sesuai dengan review dan pemutahiran data PERISAI yang
+            dilakukan minimal sekali setahun oleh Pemilik Aset. Pemutahiran akan dilakukan serempak, menunggu
+            jadwal dari Diskominfos Prov Bali. </li>
     </ol>
 
 </body>

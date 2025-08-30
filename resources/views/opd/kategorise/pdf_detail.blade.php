@@ -143,13 +143,12 @@
         }
 
         @page {
-            margin: 200px 50px 70px 50px;
+            margin: 190px 50px 70px 50px;
         }
-
 
         .header {
             position: fixed;
-            top: -150px;
+            top: -160px;
             left: 0px;
             right: 5px;
             text-align: left;
@@ -166,7 +165,7 @@
             margin-top: -5px;
             line-height: 1.2;
             font-size: 0.9em;
-            margin-right: 100px;
+            margin-right: 0px;
             /* ruang kosong supaya teks turun & tidak timpa gambar */
         }
 
@@ -174,6 +173,7 @@
         .header h3 {
             margin: 6px 0;
         }
+
 
         .matik-list ul {
             margin: 0;
@@ -200,24 +200,36 @@
 
 <body>
     <div class="header">
-        <img src="{{ public_path('images/tlp/tlp_teaser_amber_strict.png') }}" alt="TLP:AMBER+STRICT" class="tlp">
-        {{-- <p style="font-weight:bold; color:#FFBF00; margin:0;">TLP:AMBER+STRICT</p> --}}
-        <h2>Rekap Kategori SE ({{ strtoupper($kategoriLabel) }}) :: Tahun {{ $tahunAktifGlobal ?? '-' }}</h2>
-        <h3>Pemilik Risiko: {{ strtoupper($aset->opd->namaopd) }}</h3>
+        <table width="100%" style="border:none;">
+            <tr>
+                <!-- KIRI: judul + subs (tetap) -->
+                <td style="vertical-align: top;border:none;">
+                    <h2>Rekap Kategori SE :: Tahun {{ $tahunAktifGlobal ?? '-' }}</h2>
+                    <h3>Pemilik Risiko: {{ strtoupper($namaOpd) }}</h3>
 
-        <div class="subs">
-            Pemilik Risiko bertanggungjawab terhadap proses bisnis/layanannya dengan cara pengelolaan aset yaitu dari
-            mulai
-            melakukan Pengukuran Nilai Aset, Kategorisasi SE termasuk pemenuhan standar, Pemetaan Risiko, Analisa
-            Risiko,
-            pembuatan Rencana Tindak Lanjut dan implementasi mitigasi risiko, sampai menjadi <i>Lead Auditee</i> dalam
-            Audit Keamanan
-            {{-- {{ $subs->pluck('subklasifikasiaset')->implode(', ') ?: '-' }} --}}
-        </div>
-        <h3></h3>
+                    <div class="subs">
+                        Pemilik Risiko bertanggungjawab terhadap proses bisnis/layanannya dengan cara pengelolaan aset
+                        yaitu dari
+                        mulai melakukan Pengukuran Nilai Aset, Kategorisasi SE termasuk pemenuhan standar, Pemetaan
+                        Risiko, Analisa
+                        Risiko, pembuatan Rencana Tindak Lanjut dan implementasi mitigasi risiko, sampai menjadi
+                        <i>Lead Auditee</i> dalam Audit Keamanan
+                    </div>
+                </td>
+
+                <!-- KANAN: dua logo sejajar -->
+                <td style="width: 100px; vertical-align: top; text-align: right; white-space: nowrap;border:none;">
+                    <img src="{{ public_path('images/logobaliprovcsirt.png') }}" alt="Logo"
+                        style="height:70px; vertical-align: top; margin-right:0px;">
+                    <img src="{{ public_path('images/tlp/tlp_teaser_amber_strict.jpg') }}" alt="TLP:GREEN"
+                        style="height:70px; vertical-align: top;">
+                </td>
+            </tr>
+        </table>
         <p><strong>Nama Aset: {{ $aset->nama_aset }}</strong></p>
         <p><strong>Subklasifikasi:</strong> {{ $aset->subklasifikasiaset->subklasifikasiaset ?? '-' }}</p>
     </div>
+
 
 
 
@@ -264,29 +276,31 @@
             {{ strtoupper($kategoriLabel) }} (Skor:{{ $skor }})</strong>
 
     </p>
-    <BR><BR><BR>
-    <h4>Catatan</h4>
+    <BR><BR>
+    <h4>CATATAN</h4>
     <ol>
         <li>Kode TLP (Traffic Light Protocol) dipakai untuk mengklasifikasikan sensitifitas informasi, supaya jelas
             sejauh mana informasi boleh dibagikan.
-            <b>Kode TLP:AMBER+STRICT berarti berisi informasi cukup sensitif. Hanya untuk internal organisasi penerima,
-                tidak boleh
-                keluar.</b>
+            TLP:AMBER+STRICT berarti berisi informasi cukup sensitif. Hanya untuk internal organisasi penerima,
+            tidak boleh
+            keluar.
         </li>
-        <li><b>PERISAI</b> adalah sistem elektronik untuk melakukan <b>PE</b>ngelolaan <b>RIS</b>iko <b>A</b>set
+        <li>PERISAI adalah sistem elektronik untuk melakukan <b>PE</b>ngelolaan <b>RIS</b>iko <b>A</b>set
             <b>I</b>nformasi di lingkup Pemerintah Provinsi Bali. PERISAI dikelola oleh
             Dinas Kominfos Provinsi Bali (Contact: Bidang Persandian)
         </li>
-        <li>Aset dalam PERISAI adalah <strong>ASET INFORMASI yang mendukung kinerja organisasi dalam menjalakan proses
-                bisnis/layanannya.</strong>
-        </li>
-        <li>SE adalah sistem elektronik yaitu dalam PERISAI adalah <strong>aset dengan klasifikasi [PL] Perangkat
+        <li>SE adalah sistem elektronik yaitu dalam PERISAI adalah Aset Informasi dengan klasifikasi [PL] Perangkat
+            Lunak.</li>
+        <li>Semua informasi tentang aset ini dapat berubah sesuai dengan reviu dan pemutahiran data PERISAI yang
+            dilakukan minimal sekali setahun oleh Pemilik Risiko. Pemutahiran akan dilakukan serempak, menunggu
+            jadwal dari Diskominfos Prov Bali. </li>
+        {{-- <li>SE adalah sistem elektronik yaitu dalam PERISAI adalah <strong>aset dengan klasifikasi [PL] Perangkat
                 Lunak.</strong> Contoh SE adalah
             website, aplikasi
             berbasis web, mobile, sistem operasi dan utility.</li>
         <li>Semua informasi tentang aset ini dapat berubah sesuai dengan review dan pemutahiran data PERISAI <b>yang
                 dilakukan minimal sekali setahun oleh Pemilik Risiko. Pemutahiran akan dilakukan serempak, menunggu
-                informasi dari Diskominfos Prov Bali.</b> </li>
+                informasi dari Diskominfos Prov Bali.</b> </li> --}}
     </ol>
 </body>
 

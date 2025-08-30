@@ -179,15 +179,16 @@
 
                     @php
                         $jawabanText = match ($jawaban->jawaban ?? null) {
-                            2 => 'DITERAPKAN SELURUHNYA',
-                            1 => 'DITERAPKAN SEBAGIAN',
-                            0 => 'TIDAK DITERAPKAN',
+                            3 => 'DITERAPKAN SELURUHNYA',
+                            2 => 'DITERAPKAN SEBAGIAN',
+                            1 => 'TIDAK DITERAPKAN',
+                            0 => 'TIDAK RELEVAN (Tidak ada fitur yang membutuhkan Standar ini)',
                             default => '-',
                         };
                     @endphp
 
                     <p style="margin: 0;"><strong>Jawaban Pemilik Aset</strong></p>
-                    <p style="margin-top: 0; margin-bottom: 10px;">{{ $jawabanText }}</p>
+                    <p style="margin-top: 0; margin-bottom: 10px;">{{ $jawaban->jawaban }} / {{ $jawabanText }}</p>
 
                     <p style="margin: 0;"><strong>Penjelasan Pemilik Aset</strong></p>
                     <p style="margin-top: 0; margin-bottom: 10px;">{{ $jawaban->penjelasanopd ?? '-' }}</p>

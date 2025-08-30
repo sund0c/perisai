@@ -109,7 +109,7 @@
             margin-top: -5px;
             line-height: 1.2;
             font-size: 0.9em;
-            margin-right: 100px;
+            margin-right: 0px;
             /* ruang kosong supaya teks turun & tidak timpa gambar */
         }
 
@@ -143,6 +143,37 @@
 
 <body>
     <div class="header">
+        <table width="100%" style="border:none;">
+            <tr>
+                <!-- KIRI: judul + subs (tetap) -->
+                <td style="vertical-align: top;border:none;">
+                    <h2 style="margin:0;">Informasi dan Nilai Aset Informasi :: Tahun {{ $tahunAktifGlobal ?? '-' }}
+                    </h2>
+                    <h3 style="margin:0;">Pemilik Risiko: {{ strtoupper($namaOpd) }}</h3>
+
+                    <div class="subs" style="margin-top:2px;">
+                        Pemilik Risiko bertanggungjawab terhadap proses bisnis/layanannya dengan cara pengelolaan aset
+                        yaitu dari
+                        mulai melakukan Pengukuran Nilai Aset, Kategorisasi SE termasuk pemenuhan standar, Pemetaan
+                        Risiko, Analisa
+                        Risiko, pembuatan Rencana Tindak Lanjut dan implementasi mitigasi risiko, sampai menjadi
+                        <i>Lead Auditee</i> dalam Audit Keamanan
+                    </div>
+                </td>
+
+                <!-- KANAN: dua logo sejajar -->
+                <td style="width: 100px; vertical-align: top; text-align: right; white-space: nowrap;border:none;">
+                    <img src="{{ public_path('images/logobaliprovcsirt.png') }}" alt="Logo"
+                        style="height:70px; vertical-align: top; margin-right:0px;">
+                    <img src="{{ public_path('images/tlp/tlp_teaser_amber_strict.jpg') }}" alt="TLP:AMBER+STRICT"
+                        style="height:70px; vertical-align: top;">
+                </td>
+            </tr>
+        </table>
+    </div>
+
+
+    {{-- <div class="header">
         <img src="{{ public_path('images/tlp/tlp_teaser_amber_strict.png') }}" alt="TLP:AMBER+STRICT" class="tlp">
         <h2>Informasi dan Nilai Aset Informasi - Tahun {{ $tahunAktifGlobal ?? '-' }}</h2>
         <h3>
@@ -154,10 +185,10 @@
             Risiko,
             pembuatan Rencana Tindak Lanjut dan implementasi mitigasi risiko, sampai menjadi <i>Lead Auditee</i> dalam
             Audit Keamanan
-            {{-- {{ $subs->pluck('subklasifikasiaset')->implode(', ') ?: '-' }} --}}
+
         </div>
 
-    </div>
+    </div> --}}
     {{--
     @foreach ($fieldList as $field)
         @includeIf('opd.aset.fields.' . $field, ['aset' => $aset])
@@ -221,20 +252,20 @@
     <ol>
         <li>Kode TLP (Traffic Light Protocol) dipakai untuk mengklasifikasikan sensitifitas informasi, supaya jelas
             sejauh mana informasi boleh dibagikan.
-            <b>Kode TLP:AMBER+STRICT berarti berisi informasi cukup sensitif. Hanya untuk internal organisasi penerima,
-                tidak boleh
-                keluar.</b>
+            Kode TLP:AMBER+STRICT berarti berisi informasi cukup sensitif. Hanya untuk internal organisasi penerima,
+            tidak boleh
+            keluar.
         </li>
-        <li><b>PERISAI</b> adalah sistem elektronik untuk melakukan <b>PE</b>ngelolaan <b>RIS</b>iko <b>A</b>set
+        <li>PERISAI adalah sistem elektronik untuk melakukan <b>PE</b>ngelolaan <b>RIS</b>iko <b>A</b>set
             <b>I</b>nformasi di lingkup Pemerintah Provinsi Bali. PERISAI dikelola oleh
             Dinas Kominfos Provinsi Bali (Contact: Bidang Persandian)
         </li>
-        <li>Aset dalam PERISAI adalah <strong>ASET INFORMASI yang mendukung kinerja organisasi dalam menjalakan proses
+        {{-- <li>Aset dalam PERISAI adalah <strong>ASET INFORMASI yang mendukung kinerja organisasi dalam menjalakan proses
                 bisnis/layanannya.</strong>
-        </li>
-        <li>Semua informasi tentang aset ini dapat berubah sesuai dengan review dan pemutahiran data PERISAI <b>yang
-                dilakukan minimal sekali setahun oleh Pemilik Aset. Pemutahiran akan dilakukan serempak, menunggu
-                informasi dari Diskominfos Prov Bali.</b> </li>
+        </li> --}}
+        <li>Semua informasi tentang aset ini dapat berubah sesuai dengan review dan pemutahiran data PERISAI yang
+            dilakukan minimal sekali setahun oleh Pemilik Aset. Pemutahiran akan dilakukan serempak, menunggu
+            informasi dari Diskominfos Prov Bali. </li>
     </ol>
 
 </body>

@@ -80,10 +80,19 @@
 
                                         $warna = $range->warna_hexa ?? '#999';
                                         $label = $range->nilai_akhir_aset ?? 'TIDAK DIKETAHUI';
+                                        // Default warna teks = hitam
+                                        $warnaTeks = '#000';
+
+                                        // Jika background merah, ganti teks jadi putih
+                                        if (in_array(strtolower($warna), ['#ff0000', '#dc3545', '#e3342f'])) {
+                                            $warnaTeks = '#fff';
+                                        }
 
                                         echo '<span class="badge" style="background-color: ' .
                                             $warna .
-                                            '; color: #fff;">' .
+                                            '; color: ' .
+                                            $warnaTeks .
+                                            ';">' .
                                             $skor .
                                             ' (' .
                                             strtoupper($label) .

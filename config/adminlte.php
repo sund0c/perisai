@@ -314,7 +314,7 @@ return [
         [
             'text' => 'Dashboard',
             'route' => 'dashboard', // pakai named route kalau ada
-            'icon'  => 'fas fa-fw fa-tachometer-alt',
+            'icon'  => 'fas fa-fw fa-home',
         ],
 
         // ===== BIDANG =====
@@ -347,19 +347,19 @@ return [
         [
             'text' => 'Aset',
             'route' => 'opd.aset.index',
-            'icon'  => 'fas fa-fw fa-box',
+            'icon'  => 'fas fa-fw fa-server',
             'can'   => 'is-opd',
         ],
         [
             'text' => 'Kategori SE',
             'route' => 'opd.kategorise.index',
-            'icon'  => 'fas fa-fw fa-box',
+            'icon'  => 'fas fa-fw fa-tags',
             'can'   => 'is-opd',
         ],
         [
             'text' => 'PTKKA',
             'route' => 'opd.ptkka.index',
-            'icon'  => 'fas fa-clipboard-check',
+            'icon'  => 'fas fa-fw fa-clipboard-list',
             'can'   => 'is-opd',
         ],
 

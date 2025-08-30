@@ -6,7 +6,7 @@
     <title>Export PDF</title>
     <style>
         @page {
-            margin: 60px 30px;
+            margin: 170px 50px 70px 50px;
         }
 
         body {
@@ -50,9 +50,35 @@
         }
 
         @page {
-            size: A4 portrait;
-            margin: 60px 30px 70px 30px;
-            /* top right bottom left */
+            margin: 170px 50px 70px 50px;
+        }
+
+        .header {
+            position: fixed;
+            top: -140px;
+            left: 0px;
+            right: 5px;
+            text-align: left;
+        }
+
+        .header img.tlp {
+            position: absolute;
+            top: 0;
+            right: -30;
+            width: 150px;
+        }
+
+        .header .subs {
+            margin-top: -5px;
+            line-height: 1.2;
+            font-size: 0.9em;
+            margin-right: 0px;
+            /* ruang kosong supaya teks turun & tidak timpa gambar */
+        }
+
+        .header h2,
+        .header h3 {
+            margin: 6px 0;
         }
     </style>
 </head>
@@ -76,6 +102,120 @@
         $tanggalPengajuan = $session->created_at ? $session->created_at->format('d F Y') : '-';
     @endphp
 
+
+    <div class="header">
+        <table width="100%" style="border:none;">
+            <tr>
+                <!-- KIRI: judul + subs (tetap) -->
+                <td style="vertical-align: top;border:none;">
+                    <h2>Tingkat Kepatuhan Keamanan Aplikasi :: Tahun {{ $tahunAktifGlobal ?? '-' }}</h2>
+                    <h3>Pemilik Risiko: {{ strtoupper($namaOpd) }}<br>
+                        Nama Aset: {{ $session->aset->nama_aset }}</h3>
+                    <div class="subs">
+                        @if (isset($kategoriLabel[$session->standar_kategori_id]))
+                            <span class="text-uppercase">Standar
+                                {{ $kategoriLabel[$session->standar_kategori_id] }}
+                            </span>
+                        @endif / Tgl Mulai Pengisian : {{ $tanggalPengajuan }}</br>
+                        {{-- Total Skor Kepatuhan: {{ $totalSkor }} = <strong>Kategori
+                            {{ $kategoriKepatuhan }} ({{ $persentase }}%)</strong> --}}
+                        </p>
+                </td>
+
+                <!-- KANAN: dua logo sejajar -->
+                <td style="width: 100px; vertical-align: top; text-align: right; white-space: nowrap;border:none;">
+                    <img src="{{ public_path('images/logobaliprovcsirt.png') }}" alt="Logo"
+                        style="height:70px; vertical-align: top; margin-right:0px;">
+                    <img src="{{ public_path('images/tlp/tlp_teaser_amber_strict.jpg') }}" alt="TLP:GREEN"
+                        style="height:70px; vertical-align: top;">
+                </td>
+            </tr>
+        </table>
+        {{-- <p><strong>Subklasifikasi:</strong> {{ $aset->subklasifikasiaset->subklasifikasiaset ?? '-' }}</p> --}}
+        <hr>
+    </div>
+
+
+    {{-- ==================== RINGKASAN NILAI PER FUNGSI ==================== --}}
+    <h3 style="margin: 0 0 6px 0;">Ringkasan Skor per Aspek</h3>
+
+    <table width="100%" cellspacing="0" cellpadding="6" border="1"
+        style="border-collapse: collapse; margin-bottom: 12px;">
+        <thead>
+            <tr>
+                <th rowspan="2" class="text-center align-middle">ASPEK</th>
+                <th colspan="2" class="text-center">JUMLAH REKOMENDASI</th>
+                <th rowspan="2" class="text-center align-middle" style="width:15%;">SKOR PENERAPAN SEMENTARA</th>
+            </tr>
+            <tr>
+                <th class="text-center" style="width:15%;">STANDAR</th>
+                <th class="text-center" style="width:15%;">DIGUNAKAN</th>
+            </tr>
+        </thead>
+
+        @php
+            $skorPerFungsi = $skorPerFungsi ?? [];
+            $totRekom = 0;
+            $totDipakai = 0;
+            $totSkor = 0;
+            $semuaTerisi = true; // jadi false jika ada aspek dengan 'belum' > 0
+        @endphp
+
+        <tbody>
+            @forelse ($skorPerFungsi as $row)
+                @php
+                    $total = (int) ($row['jumlah_rekomendasi_total'] ?? 0);
+                    $dipakai = (int) ($row['jumlah_rekomendasi_dipakai'] ?? 0);
+                    $skor = (int) ($row['skor_total'] ?? 0);
+                    $belum = (int) ($row['jumlah_rekomendasi_belum'] ?? 0);
+                    $hasBelum = $belum > 0;
+
+                    $totRekom += $total;
+                    $totDipakai += $dipakai;
+                    $totSkor += $skor;
+
+                    if ($hasBelum) {
+                        $semuaTerisi = false;
+                    }
+
+                    // Dipakai: tampil "-" hanya bila semuanya belum diisi (dipakai==0 dan ada 'belum')
+                    $dipakaiDisplay = $hasBelum && $dipakai === 0 ? 'BELUM DIISI' : $dipakai;
+
+                    // Skor: jika masih ada 'belum' di aspek ini, tampil "-"
+                    $skorDisplay = $hasBelum ? 'BELUM DIISI' : $skor;
+                @endphp
+                <tr>
+                    <td>{{ chr(65 + $loop->index) }}.
+                        {{ $row['fungsi_nama'] ?? 'Fungsi #' . ($row['fungsi_id'] ?? $loop->iteration) }}</td>
+                    <td align="center">{{ $total }}</td>
+                    <td align="center">{{ $dipakaiDisplay }}</td>
+                    <td align="center">{{ $skorDisplay }}</td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="4" align="center">Belum ada data.</td>
+                </tr>
+            @endforelse
+        </tbody>
+
+        @if (!empty($skorPerFungsi))
+            <tfoot>
+                <tr>
+                    <th align="right">TOTAL</th>
+                    <th align="center">{{ $totRekom }}</th>
+                    <th align="center">{{ $semuaTerisi ? $totDipakai : '-' }}</th>
+                    <th align="center">{{ $semuaTerisi ? $totSkor : '-' }}</th>
+                </tr>
+            </tfoot>
+        @endif
+
+
+    </table>
+
+    <br>
+    {{-- ================== /RINGKASAN NILAI PER FUNGSI ================== --}}
+
+    {{--
     <h2 style="margin: 0;">{{ $session->aset->nama_aset ?? 'N/A' }} :: {{ $namaOpd }}</h2>
     <p style="margin: 0;">UID: {{ $session->uid }} @if (isset($kategoriLabel[$session->standar_kategori_id]))
             &nbsp;&middot;&nbsp;<span class="text-uppercase">[
@@ -87,9 +227,9 @@
 
     <p>Total Skor Kepatuhan: {{ $totalSkor }} = <strong>Kategori
             {{ $kategoriKepatuhan }} ({{ $persentase }}%)</strong>
-    </p>
+    </p> --}}
 
-    <hr>
+
 
     @foreach ($fungsiStandars as $fungsi)
         <h2>{{ chr(64 + $loop->iteration) }}. {{ $fungsi->nama }}</h2>
@@ -113,20 +253,21 @@
 
                     @php
                         $jawabanText = match ($jawaban->jawaban ?? null) {
-                            2 => 'DITERAPKAN SELURUHNYA',
-                            1 => 'DITERAPKAN SEBAGIAN',
-                            0 => 'TIDAK DITERAPKAN',
+                            3 => 'DITERAPKAN SELURUHNYA',
+                            2 => 'DITERAPKAN SEBAGIAN',
+                            1 => 'TIDAK DITERAPKAN',
+                            0 => 'TIDAK RELEVAN (Tidak ada fitur yang membutuhkan Standar ini)',
                             default => '-',
                         };
                     @endphp
 
-                    <p style="margin: 0;"><strong>Jawaban Pemilik Aset</strong></p>
+                    <p style="margin: 0;"><strong>Status Penerapan: </strong></p>
                     <p style="margin-top: 0; margin-bottom: 10px;">{{ $jawabanText }}</p>
 
-                    <p style="margin: 0;"><strong>Penjelasan Pemilik Aset</strong></p>
+                    <p style="margin: 0;"><strong>Penjelasan:</strong></p>
                     <p style="margin-top: 0; margin-bottom: 10px;">{{ $jawaban->penjelasanopd ?? '-' }}</p>
 
-                    <p style="margin: 0;"><strong>Link Bukti</strong></p>
+                    <p style="margin: 0;"><strong>Link Bukti Dukung:</strong></p>
                     @if (!empty($jawaban->linkbuktidukung))
                         <p style="margin-top: 0; margin-bottom: 10px;">
                             <a href="{{ $jawaban->linkbuktidukung }}" target="_self"
@@ -165,7 +306,24 @@
 
 
 
+    <BR><BR>
+    <h4>CATATAN</h4>
+    <ol>
+        <li>Kode TLP (Traffic Light Protocol) dipakai untuk mengklasifikasikan sensitifitas informasi, supaya jelas
+            sejauh mana informasi boleh dibagikan.
+            TLP:AMBER+STRICT berarti berisi informasi cukup sensitif. Hanya untuk internal organisasi penerima,
+            tidak boleh
+            keluar.
+        </li>
+        <li>PERISAI adalah sistem elektronik untuk melakukan <b>PE</b>ngelolaan <b>RIS</b>iko <b>A</b>set
+            <b>I</b>nformasi di lingkup Pemerintah Provinsi Bali. PERISAI dikelola oleh
+            Dinas Kominfos Provinsi Bali (Contact: Bidang Persandian)
+        </li>
+        <li>Semua informasi tentang aset ini dapat berubah sesuai dengan reviu dan pemutahiran data PERISAI yang
+            dilakukan minimal sekali setahun oleh Pemilik Risiko. Pemutahiran akan dilakukan serempak, menunggu
+            jadwal dari Diskominfos Prov Bali. </li>
 
+    </ol>
 </body>
 
 </html>
