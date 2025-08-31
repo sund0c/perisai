@@ -9,10 +9,11 @@
 @section('content_top_nav_left')
     <li class="nav-item d-none d-sm-inline-block">
         <span class="nav-link font-weight-bold">
-            Tahun Aktif: {{ $tahunAktifGlobal ?? '-' }}
-            @if ($kunci === 'locked')
+            Tahun Aktif {{ $tahunAktifGlobal ?? '-' }}
+            @if (($kunci ?? null) === 'locked')
                 <i class="fas fa-lock text-danger ml-1" title="Terkunci"></i>
             @endif
+            :: {{ strtoupper($namaOpd ?? '-') }}
         </span>
     </li>
 @endsection

@@ -82,9 +82,9 @@ Route::middleware(['SSOBrokerMiddleware'])->group(function () {
     Route::get('/dashboard', function () {
 
         $role = auth()->user()->getRoleNames()->first() ?? 'guest';
-
+        $namaOpd = auth()->user()->opd->namaopd ?? '-';
         return match ($role) {
-            'opd' => view('opd.dashboard'),
+            'opd' => view('opd.dashboard', compact('namaOpd')),
             'admin' => view('admin.dashboard'),
             'bidang' => view('bidang.dashboard'),
             default => abort(403)
