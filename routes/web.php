@@ -54,7 +54,7 @@ Route::middleware('guest')->group(function () {
     Route::post('reset-password', [NewPasswordController::class, 'store'])->name('password.store');
 });
 
-Route::middleware('SSOBrokerMiddleware', 'spatie_role_or_permission:admin|opd|bidang')->group(function () {
+Route::middleware('SSOBrokerMiddleware', 'spatie_role_or_permission:admin|opd|bidang', 'prevent-back-history')->group(function () {
     Route::get('verify-email', EmailVerificationPromptController::class)->name('verification.notice');
     Route::get('verify-email/{id}/{hash}', VerifyEmailController::class)->middleware(['signed', 'throttle:6,1'])->name('verification.verify');
     Route::post('email/verification-notification', [EmailVerificationNotificationController::class, 'store'])->middleware('throttle:6,1')->name('verification.send');
@@ -74,7 +74,7 @@ Route::get('authData/{authData}', 'App\Http\Controllers\SSOBrokerController@auth
 Route::get('exit/{sessionId}', 'App\Http\Controllers\SSOBrokerController@logout')->name('exit');
 Route::get('logout', 'App\Http\Controllers\SSOBrokerController@logout')->name('logout.get');
 
-Route::middleware(['SSOBrokerMiddleware'])->group(function () {
+Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:admin|opd|bidang', 'prevent-back-history'])->group(function () {
     Route::get('/', function () {
         return redirect('/dashboard');
     });
@@ -92,7 +92,7 @@ Route::middleware(['SSOBrokerMiddleware'])->group(function () {
     })->name('dashboard');
 });
 
-Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:admin'])->group(function () {
+Route::middleware(['SSOBrokerMiddleware', 'prevent-back-history', 'spatie_role_or_permission:admin'])->group(function () {
 
     Route::prefix('opd')->group(function () {
         Route::get('/', [OpdController::class, 'index'])->name('opd.index');
@@ -177,7 +177,7 @@ Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:admin'])->g
 });
 
 
-Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:admin|bidang'])->group(function () {
+Route::middleware(['SSOBrokerMiddleware', 'prevent-back-history', 'spatie_role_or_permission:admin|bidang'])->group(function () {
     Route::resource('periodes', PeriodeController::class);
     Route::post('periodes/{periode}/activate', [PeriodeController::class, 'activate'])
         ->name('periodes.activate');
@@ -185,7 +185,7 @@ Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:admin|bidan
 
 //============= Start of BIDANG ===========================
 
-Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:bidang',])->prefix('bidang/aset')->name('bidang.aset.')->group(function () {
+Route::middleware(['SSOBrokerMiddleware', 'prevent-back-history', 'spatie_role_or_permission:bidang',])->prefix('bidang/aset')->name('bidang.aset.')->group(function () {
     Route::get('/', [BidangAsetController::class, 'index'])->name('index');
     Route::get('/export/rekap', [BidangAsetController::class, 'exportRekapPdf'])->name('export_rekap');
     Route::get('/klasifikasi/{id}', [BidangAsetController::class, 'showByKlasifikasi'])->name('show_by_klasifikasi');
@@ -193,7 +193,7 @@ Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:bidang',])-
     Route::get('/{id}/pdf', [BidangAsetController::class, 'pdf'])->name('pdf');
 });
 
-Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:bidang'])->prefix('bidang/kategorise')->name('bidang.kategorise.')->group(function () {
+Route::middleware(['SSOBrokerMiddleware', 'prevent-back-history', 'spatie_role_or_permission:bidang'])->prefix('bidang/kategorise')->name('bidang.kategorise.')->group(function () {
     Route::get('/export/rekap/{kategori}', [BidangKategoriSeController::class, 'exportRekapKategoriPdf'])->name('export_rekap_kategori');
     Route::get('/', [BidangKategoriSeController::class, 'index'])->name('index');
     Route::get('/kategori/{kategori}', [BidangKategoriSeController::class, 'show'])->name('show');
@@ -201,7 +201,7 @@ Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:bidang'])->
     Route::get('/export/pdf/{id}', [BidangKategoriSeController::class, 'exportPdf'])->name('exportPdf');
 });
 
-Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:bidang'])->prefix('bidang/ptkka')->name('bidang.ptkka.')->group(function () {
+Route::middleware(['SSOBrokerMiddleware', 'prevent-back-history', 'spatie_role_or_permission:bidang'])->prefix('bidang/ptkka')->name('bidang.ptkka.')->group(function () {
     Route::get('/', [BidangPtkkaController::class, 'indexPtkkaBidang'])->name('index');
     Route::post('/{session}/ajukan-verifikasi', [BidangPtkkaController::class, 'ajukanVerifikasi'])->name('ajukanverifikasi');
     Route::get('/export/pdfpengajuan', [BidangPtkkaController::class, 'pengajuanPDF'])->name('pengajuanPDF');
@@ -214,7 +214,7 @@ Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:bidang'])->
     Route::get('/riwayat/{aset}', [BidangPtkkaController::class, 'riwayat'])->name('riwayat');
 });
 
-Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd|bidang'])->prefix('bidang/ptkka')->name('bidang.ptkka.')->group(function () {
+Route::middleware(['SSOBrokerMiddleware', 'prevent-back-history', 'spatie_role_or_permission:opd|bidang'])->prefix('bidang/ptkka')->name('bidang.ptkka.')->group(function () {
     Route::get('/export/pdf/{id}', [BidangPtkkaController::class, 'exportPDF'])->name('exportPDF');
 });
 
@@ -224,7 +224,7 @@ Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd|bidang'
 
 //============= Start of OPD ===========================
 
-Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd'])
+Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd', 'prevent-back-history'])
     ->prefix('opd/ptkka')
     ->name('opd.ptkka.')
     ->group(function () {
@@ -246,7 +246,7 @@ Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd'])
         Route::post('/{session}/ajukan-verifikasi', [PtkkaController::class, 'ajukanVerifikasi'])->name('ajukanverifikasi');
     });
 
-Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd'])
+Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd', 'prevent-back-history'])
     ->prefix('opd/aset')
     ->name('opd.aset.')
     ->group(function () {
@@ -276,7 +276,7 @@ Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd'])
             ->name('destroy');
     });
 
-Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd'])
+Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd', 'prevent-back-history'])
     ->prefix('opd/kategorise')
     ->name('opd.kategorise.')
     ->group(function () {
@@ -301,7 +301,7 @@ Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd'])
 
 //============= End of OPD ===========================
 
-Route::middleware('SSOBrokerMiddleware', 'spatie_role_or_permission:admin|opd|bidang')->group(function () {
+Route::middleware('SSOBrokerMiddleware', 'prevent-back-history', 'spatie_role_or_permission:admin|opd|bidang')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

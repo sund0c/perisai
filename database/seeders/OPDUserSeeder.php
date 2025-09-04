@@ -21,7 +21,6 @@ class OPDUserSeeder extends Seeder
         User::create([
             'name' => 'Nama user di Inspektorat',
             'email' => 'inspektorat@baliprov.go.id',
-            'password' => Hash::make('Password123@'),
             'role' => 'opd',
             'opd_id' => $inspektorat->id,
         ]);
@@ -29,7 +28,6 @@ class OPDUserSeeder extends Seeder
         User::create([
             'name' => 'Nama user di Diskominfos',
             'email' => 'diskominfos@baliprov.go.id',
-            'password' => Hash::make('Password123@'),
             'role' => 'opd',
             'opd_id' => $diskominfos->id,
         ]);
@@ -37,7 +35,6 @@ class OPDUserSeeder extends Seeder
         User::create([
             'name' => 'Nama staf Bidang 4',
             'email' => 'persandian@baliprov.go.id',
-            'password' => Hash::make('Password123@'),
             'role' => 'bidang',
             'opd_id' => $diskominfos->id,
         ]);
@@ -45,7 +42,6 @@ class OPDUserSeeder extends Seeder
         User::create([
             'name' => 'Nama admin Sistem',
             'email' => 'admin@baliprov.go.id',
-            'password' => Hash::make('Password123@'),
             'role' => 'admin',
             'opd_id' => $diskominfos->id,
         ]);

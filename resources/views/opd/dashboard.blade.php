@@ -90,3 +90,15 @@
 
     </div>
 @endsection
+
+<script>
+    // Reload jika halaman dipulihkan dari BFCache (Back/Forward)
+    window.addEventListener('pageshow', function(e) {
+        if (e.persisted || (performance.getEntriesByType('navigation')[0]?.type === 'back_forward')) {
+            location.reload();
+        }
+    });
+
+    // Safari/Firefox lama: handler unload kosong ini mematikan BFCache
+    window.addEventListener('unload', function() {});
+</script>

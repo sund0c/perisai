@@ -32,6 +32,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'spatie_role' => SpatieRoleMiddleware::class,
             'spatie_permission' => PermissionMiddleware::class,
             'spatie_role_or_permission' => RoleOrPermissionMiddleware::class,
+            'prevent-back-history' => \App\Http\Middleware\PreventBackHistory::class,
+
         ]);
 
         // (opsional) kalau mau tambahkan global middleware atau group, taruh di sini
