@@ -246,7 +246,7 @@ Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd', 'prev
         Route::post('/{session}/ajukan-verifikasi', [PtkkaController::class, 'ajukanVerifikasi'])->name('ajukanverifikasi');
     });
 
-Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd', 'prevent-back-history'])
+Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd|admin', 'prevent-back-history'])
     ->prefix('opd/aset')
     ->name('opd.aset.')
     ->group(function () {
@@ -276,7 +276,7 @@ Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd', 'prev
             ->name('destroy');
     });
 
-Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd', 'prevent-back-history'])
+Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd|admin', 'prevent-back-history'])
     ->prefix('opd/kategorise')
     ->name('opd.kategorise.')
     ->group(function () {

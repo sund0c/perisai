@@ -34,7 +34,7 @@ class BidangAsetController extends Controller
             'asets as jumlah_aset' => function ($query) use ($periodeAktifId) {
                 $query->where('periode_id', $periodeAktifId);
             }
-        ])->get();
+        ])->orderBy('klasifikasiaset')->get();
 
         // 3) Siapkan total global
         $totalTinggi = 0;
@@ -86,13 +86,15 @@ class BidangAsetController extends Controller
 
         // 5) Karena ini agregat lintas OPD:
         $namaOpd = 'SEMUA OPD';
+        $ranges = RangeAset::select('nilai_akhir_aset', 'deskripsi')->orderBy('nilai_atas')->get();
 
         return view('bidang.aset.index', compact(
-            'klasifikasis',
+           'klasifikasis',
             'namaOpd',
             'totalTinggi',
             'totalSedang',
             'totalRendah',
+            'ranges'
         ));
     }
 
@@ -106,12 +108,31 @@ class BidangAsetController extends Controller
 
         // Pastikan klasifikasi ada
         $klasifikasi = KlasifikasiAset::findOrFail($id);
+        $subs  = $klasifikasi->subklasifikasi;
 
         // Ambil aset untuk SEMUA OPD pada periode aktif, sekaligus relasi subklasifikasi
         $asets = Aset::where('klasifikasiaset_id', $id)
             ->where('periode_id', $periodeAktifId)
             ->with('subklasifikasiaset')
             ->get(['id', 'kode_aset', 'nama_aset', 'subklasifikasiaset_id', 'kerahasiaan', 'integritas', 'ketersediaan', 'keaslian', 'kenirsangkalan']);
+
+
+ $asets = Aset::where('klasifikasiaset_id', $id)
+        ->where('periode_id', $periodeAktifId)
+        ->with([
+            'subklasifikasiaset', // sesuaikan nama kolom
+            'opd:id,namaopd',
+        ])
+        ->get([
+            'id',
+            'opd_id', // PENTING: harus di-select agar relasi opd() terikat
+            'kode_aset',
+            'nama_aset',
+            'subklasifikasiaset_id',
+            'kerahasiaan', 'integritas', 'ketersediaan', 'keaslian', 'kenirsangkalan'
+        ]);
+
+
 
         // Ambil range sekali (hemat query)
         $ranges = RangeAset::orderBy('nilai_bawah')->get();
@@ -134,8 +155,8 @@ class BidangAsetController extends Controller
         }
 
         // Karena lintas OPD, labelnya diset generik
-        $namaOpd = 'SEMUA OPD';
-        return view('bidang.aset.show_by_klasifikasi', compact('klasifikasi', 'asets', 'namaOpd'));
+        //$namaOpd = 'SEMUA OPD';
+        return view('bidang.aset.show_by_klasifikasi', compact('klasifikasi', 'asets','subs'));
     }
 
     public function exportRekapPdf()
@@ -197,19 +218,29 @@ class BidangAsetController extends Controller
 
         // Karena lintas OPD
         $namaOpd = 'SEMUA OPD';
+        $ranges = RangeAset::select('nilai_akhir_aset', 'deskripsi')->orderBy('nilai_atas')->get();
+        $namaOpd = auth()->user()->opd->namaopd ?? '-';
 
-        $pdf = PDF::loadView('bidang.aset.export_rekap_pdf', compact('klasifikasis', 'namaOpd'))
+        $pdf = PDF::loadView('bidang.aset.export_rekap_pdf', compact('klasifikasis', 'namaOpd', 'ranges'))
             ->setPaper('A4', 'portrait');
 
-        $pdf->getDomPDF()->getCanvas()->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
-            $text = "PERISAI :: PERSANDIAN DISKOMINFOS PROV BALI";
-            $font = $fontMetrics->getFont('Helvetica', 'normal');
-            $size = 9;
-            $width = $canvas->get_width();
-            $height = $canvas->get_height();
+   $dompdf = $pdf->getDomPDF();
+        $dompdf->render();
+
+        $canvas = $dompdf->getCanvas();
+        $fontMetrics = $dompdf->getFontMetrics();        // <- ambil dari DOMPDF, bukan canvas
+        $font = $fontMetrics->getFont('Helvetica', 'normal'); // atau 'DejaVu Sans' bila perlu
+        $size = 9;
+
+        $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) use ($font, $size) {
+            $text = "PERISAI :: Hal {$pageNumber} dari {$pageCount}";
+            $w    = $canvas->get_width();
+            $h    = $canvas->get_height();
+
             $textWidth = $fontMetrics->getTextWidth($text, $font, $size);
-            $x = ($width - $textWidth) / 2;
-            $y = $height - 30;
+            $x = ($w - $textWidth) / 2;
+            $y = $h - 30; // 30px dari bawah (pastikan margin bawah cukup)
+
             $canvas->text($x, $y, $text, $font, $size);
         });
         return $pdf->download('asettikpemprovbali_' . date('Ymd_His') . '.pdf');
@@ -226,13 +257,17 @@ class BidangAsetController extends Controller
 
         // Pastikan klasifikasi ada
         $klasifikasi = KlasifikasiAset::findOrFail($id);
+                $subs  = $klasifikasi->subklasifikasi;
+
 
         // Ambil semua aset pada klasifikasi ini & periode aktif (tanpa filter OPD)
         $asets = Aset::where('klasifikasiaset_id', $id)
             ->where('periode_id', $periodeAktifId)
-            ->with('subklasifikasiaset') // tambah relasi lain kalau perlu di view
+            ->with('subklasifikasiaset',
+            'opd:id,namaopd') // tambah relasi lain kalau perlu di view
             ->get([
                 'id',
+                'opd_id', // PENTING: tanpa ini relasi opd() tidak bisa dipetakan
                 'kode_aset',
                 'nama_aset',
                 'subklasifikasiaset_id',
@@ -263,24 +298,25 @@ class BidangAsetController extends Controller
         $namaOpd = 'SEMUA OPD';
 
         // Buat PDF
-        $pdf = PDF::loadView('bidang.aset.export_rekap_klas_pdf', compact('klasifikasi', 'asets', 'namaOpd'))
+        $pdf = PDF::loadView('bidang.aset.export_rekap_klas_pdf', compact('klasifikasi', 'asets', 'namaOpd','subs'))
             ->setPaper([0, 0, 595.28, 841.89], 'portrait'); // A4 dalam points
-
-        // Render dulu biar page count tersedia
-        $dompdf = $pdf->getDomPDF();
+   $dompdf = $pdf->getDomPDF();
         $dompdf->render();
 
-        // Footer
         $canvas = $dompdf->getCanvas();
-        $fontMetrics = $dompdf->getFontMetrics();
-        $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
-            $text = "PERISAI :: Halaman $pageNumber dari $pageCount";
-            $font = $fontMetrics->getFont('Helvetica', 'normal');
-            $size = 9;
-            $width = $canvas->get_width();
+        $fontMetrics = $dompdf->getFontMetrics();        // <- ambil dari DOMPDF, bukan canvas
+        $font = $fontMetrics->getFont('Helvetica', 'normal'); // atau 'DejaVu Sans' bila perlu
+        $size = 9;
+
+        $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) use ($font, $size) {
+            $text = "PERISAI :: Hal {$pageNumber} dari {$pageCount}";
+            $w    = $canvas->get_width();
+            $h    = $canvas->get_height();
+
             $textWidth = $fontMetrics->getTextWidth($text, $font, $size);
-            $x = ($width - $textWidth) / 2;
-            $y = 820; // posisi bawah halaman A4 portrait
+            $x = ($w - $textWidth) / 2;
+            $y = $h - 30; // 30px dari bawah (pastikan margin bawah cukup)
+
             $canvas->text($x, $y, $text, $font, $size);
         });
 
@@ -306,6 +342,10 @@ class BidangAsetController extends Controller
         $hiddenFields = ['opd_id', 'klasifikasiaset_id', 'periode_id',  'kategori_se'];
         $fieldList = array_values(array_diff($fieldList, $hiddenFields));
 
+           $ranges = RangeAset::select('nilai_akhir_aset', 'deskripsi')
+            ->orderBy('nilai_atas')
+            ->get();
+
         // Hitung nilai keamanan informasi
         $total = (int)$aset->kerahasiaan
             + (int)$aset->integritas
@@ -324,23 +364,26 @@ class BidangAsetController extends Controller
         $namaOpd = $aset->opd->namaopd ?? '—';
 
         // Buat PDF + footer (render → page_script)
-        $pdf = PDF::loadView('bidang.aset.pdf', compact('aset', 'namaOpd', 'klasifikasi', 'fieldList', 'subklasifikasis'))
+        $pdf = PDF::loadView('bidang.aset.pdf', compact('aset', 'namaOpd', 'klasifikasi', 'fieldList', 'subklasifikasis','ranges'))
             ->setPaper([0, 0, 595.28, 841.89], 'portrait'); // A4 in points
 
-        $dompdf = $pdf->getDomPDF();
-        $dompdf->render(); // penting: render dulu untuk dapat page count
+           $dompdf = $pdf->getDomPDF();
+        $dompdf->render();
 
         $canvas = $dompdf->getCanvas();
-        $fontMetrics = $dompdf->getFontMetrics();
-        $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
-            //$text = "PERISAI :: Halaman $pageNumber dari $pageCount";
-            $text = "PERISAI :: PERSANDIAN DISKOMINFOS PROV BALI";
-            $font = $fontMetrics->getFont('Helvetica', 'normal');
-            $size = 9;
-            $width = $canvas->get_width();
+        $fontMetrics = $dompdf->getFontMetrics();        // <- ambil dari DOMPDF, bukan canvas
+        $font = $fontMetrics->getFont('Helvetica', 'normal'); // atau 'DejaVu Sans' bila perlu
+        $size = 9;
+
+        $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) use ($font, $size) {
+            $text = "PERISAI :: Hal {$pageNumber} dari {$pageCount}";
+            $w    = $canvas->get_width();
+            $h    = $canvas->get_height();
+
             $textWidth = $fontMetrics->getTextWidth($text, $font, $size);
-            $x = ($width - $textWidth) / 2;
-            $y = 820; // posisi bawah A4 portrait
+            $x = ($w - $textWidth) / 2;
+            $y = $h - 30; // 30px dari bawah (pastikan margin bawah cukup)
+
             $canvas->text($x, $y, $text, $font, $size);
         });
 

@@ -370,6 +370,12 @@ return [
             'icon'  => 'fas fa-fw fa-box',
             'can'   => 'is-admin',
         ],
+                [
+            'text' => 'Kategori SE',
+            'route' => 'bidang.kategorise.index',
+            'icon'  => 'fas fa-fw fa-box',
+            'can'   => 'is-admin',
+        ],
         [
             'text' => 'OPD',
             'route' => 'opd.index',

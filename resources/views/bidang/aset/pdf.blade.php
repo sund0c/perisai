@@ -84,20 +84,93 @@
         .value {
             width: 60%;
         }
+
+        @page {
+            margin: 160px 50px 70px 50px;
+        }
+
+
+        .header {
+            position: fixed;
+            top: -110px;
+            left: 0px;
+            right: 0px;
+            text-align: left;
+        }
+
+        .header img.tlp {
+            position: absolute;
+            top: 0;
+            right: -30;
+            width: 150px;
+        }
+
+        .header .subs {
+            margin-top: -5px;
+            line-height: 1.2;
+            font-size: 0.9em;
+            margin-right: 0px;
+            /* ruang kosong supaya teks turun & tidak timpa gambar */
+        }
+
+        .header h2,
+        .header h3 {
+            margin: 6px 0;
+        }
+
+        .matik-list ul {
+            margin: 0;
+            padding-left: 1.2rem;
+            /* default untuk nested */
+        }
+
+        /* level pertama */
+        .matik-list>ul {
+            padding-left: 1em;
+            /* mepet kiri */
+            list-style-type: disc;
+            /* bullet bulat */
+        }
+
+        /* level kedua */
+        .matik-list>ul>li>ul {
+            padding-left: 1.5rem;
+            list-style-type: square;
+            font-size: 0.8em;
+        }
     </style>
 </head>
 
 <body>
-    <h1>
-        <center>RAHASIA</center>
-    </h1><BR>
-    <h2>Informasi Detil Aset TIK - Tahun {{ $tahunAktifGlobal ?? '-' }}</h2>
-    <h3>Pemerintah Provinsi Bali</h3>
+    <div class="header">
+        <table width="100%" style="border:none;">
+            <tr>
+                <!-- KIRI: judul + subs (tetap) -->
+                <td style="vertical-align: top;border:none;">
+                    <h2 style="margin:0;">Informasi dan Nilai Aset Informasi :: Tahun {{ $tahunAktifGlobal ?? '-' }}
+                    </h2>
+                    <h3 style="margin:0;">Pemilik Risiko: {{ strtoupper($namaOpd) }}</h3>
 
-    {{--
-    @foreach ($fieldList as $field)
-        @includeIf('opd.aset.fields.' . $field, ['aset' => $aset])
-    @endforeach --}}
+                    <div class="subs" style="margin-top:2px;">
+                        Pemilik Risiko bertanggungjawab terhadap proses bisnis/layanannya dengan cara pengelolaan aset
+                        yaitu dari
+                        mulai melakukan Pengukuran Nilai Aset, Kategorisasi SE termasuk pemenuhan standar, Pemetaan
+                        Risiko, Analisa
+                        Risiko, pembuatan Rencana Tindak Lanjut dan implementasi mitigasi risiko, sampai menjadi
+                        <i>Lead Auditee</i> dalam Audit Keamanan
+                    </div>
+                </td>
+
+                <!-- KANAN: dua logo sejajar -->
+                <td style="width: 100px; vertical-align: top; text-align: right; white-space: nowrap;border:none;">
+                    <img src="{{ public_path('images/logobaliprovcsirt.png') }}" alt="Logo"
+                        style="height:70px; vertical-align: top; margin-right:0px;">
+                    <img src="{{ public_path('images/tlp/tlp_teaser_amber_strict.jpg') }}" alt="TLP:AMBER+STRICT"
+                        style="height:70px; vertical-align: top;">
+                </td>
+            </tr>
+        </table>
+    </div>
 
 
     <table>
@@ -118,13 +191,40 @@
             <td class="label">NILAI ASET</td>
             <td class="value"><strong>{{ $aset->nilai_akhir_aset }}</strong></td>
         </tr>
-    </table><BR><BR><BR>
-    <h4>Catatan</h4>
+    </table>
+    <BR>
+    <h4>A. KETERANGAN SUB KLASIFIKASI ASET</h4>
+    <div class="matik-list" style="font-size:0.9em">
+        <ul>
+            <li><strong>{{ optional($aset->subklasifikasiaset)->subklasifikasiaset ?? '-' }}</strong> :
+                {{ optional($aset->subklasifikasiaset)->penjelasan ?? '-' }}</li>
+
+        </ul>
+    </div> <BR>
+    <h4>B. KETERANGAN NILAI ASET</h4>
     <ol>
-        <li>Dokumen informasi Aset ini adalah bersifat <b>RAHASIA</b>.</li>
-        <li>Musnahkan jika dokumen ini sudah selesai digunakan.</li>
-        <li>Semua informasi tentang aset ini dapat berubah sesuai dengan review dan pemutahiran data PERISAI <b>yang
-                dilakukan sekali setahun oleh Pemilik Aset.</b> </li>
+        @foreach ($ranges as $range)
+            <li><b>{{ $range->nilai_akhir_aset }} :</b> {{ $range->deskripsi }}</li>
+        @endforeach
+    </ol><BR>
+    <h4>C. CATATAN LAIN</h4>
+    <ol>
+        <li>Kode TLP (Traffic Light Protocol) dipakai untuk mengklasifikasikan sensitifitas informasi, supaya jelas
+            sejauh mana informasi boleh dibagikan.
+            Kode TLP:AMBER+STRICT berarti berisi informasi cukup sensitif. Hanya untuk internal organisasi penerima,
+            tidak boleh
+            keluar.
+        </li>
+        <li>PERISAI adalah sistem elektronik untuk melakukan <b>PE</b>ngelolaan <b>RIS</b>iko <b>A</b>set
+            <b>I</b>nformasi di lingkup Pemerintah Provinsi Bali. PERISAI dikelola oleh
+            Dinas Kominfos Provinsi Bali (Contact: Bidang Persandian)
+        </li>
+        {{-- <li>Aset dalam PERISAI adalah <strong>ASET INFORMASI yang mendukung kinerja organisasi dalam menjalakan proses
+                bisnis/layanannya.</strong>
+        </li> --}}
+        <li>Semua informasi tentang aset ini dapat berubah sesuai dengan review dan pemutahiran data PERISAI yang
+            dilakukan minimal sekali setahun oleh Pemilik Aset. Pemutahiran akan dilakukan serempak, menunggu
+            informasi dari Diskominfos Prov Bali. </li>
     </ol>
 
 </body>
