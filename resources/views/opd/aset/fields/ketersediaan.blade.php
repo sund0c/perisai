@@ -1,5 +1,5 @@
 <div class="form-group">
-    <label for="ketersediaan">Ketersediaan (Dampak jika aset tidak tersedia)</label>
+    <label for="ketersediaan">Ketersediaan</label>
     <select name="ketersediaan" id="ketersediaan" class="form-control" required>
         <option value="">Pilih</option>
         <option value="1" {{ old('ketersediaan', $aset->ketersediaan ?? '') == '1' ? 'selected' : '' }}>

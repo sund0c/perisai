@@ -1,5 +1,5 @@
 <div class="form-group">
-    <label for="integritas">Integritas (Dampak jika aset berubah secara ilegal)</label>
+    <label for="integritas">Integritas</label>
     <select name="integritas" id="integritas" class="form-control" required>
         <option value="">Pilih</option>
         <option value="1" {{ old('integritas', $aset->integritas ?? '') == '1' ? 'selected' : '' }}>

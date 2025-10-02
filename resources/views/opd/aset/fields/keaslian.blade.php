@@ -1,5 +1,5 @@
 <div class="form-group">
-    <label for="keaslian">Keaslian (Memastikan keaslian aset)</label>
+    <label for="keaslian">Keaslian</label>
     <select name="keaslian" id="keaslian" class="form-control" required>
         <option value="">Pilih</option>
         <option value="1" {{ old('keaslian', $aset->keaslian ?? '') == '1' ? 'selected' : '' }}>

@@ -1,5 +1,5 @@
 <div class="form-group">
-    <label for="kerahasiaan">Kerahasiaan (Dampak jika bocor)</label>
+    <label for="kerahasiaan">Kerahasiaan</label>
     <select name="kerahasiaan" id="kerahasiaan" class="form-control" required>
         <option value="">Pilih</option>
         <option value="1" {{ old('kerahasiaan', $aset->kerahasiaan ?? '') == '1' ? 'selected' : '' }}>

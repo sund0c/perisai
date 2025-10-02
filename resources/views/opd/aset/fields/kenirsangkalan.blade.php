@@ -1,5 +1,5 @@
 <div class="form-group">
-    <label for="kenirsangkalan">Kenirsangkalan (Memastikan siapa pembuat/menyetujui/masuk/dll aset)</label>
+    <label for="kenirsangkalan">Kenirsangkalan</label>
     <select name="kenirsangkalan" id="kenirsangkalan" class="form-control" required>
         <option value="">Pilih</option>
         <option value="1" {{ old('kenirsangkalan', $aset->kenirsangkalan ?? '') == '1' ? 'selected' : '' }}>
