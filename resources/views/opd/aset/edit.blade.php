@@ -43,8 +43,15 @@
                 @method('PUT')
 
                 {{-- Field dinamis --}}
-                @foreach ($fieldList as $field)
+                {{-- @foreach ($fieldList as $field)
                     @includeIf('opd.aset.fields.' . $field, ['aset' => $aset])
+                @endforeach --}}
+
+                @foreach ($fieldList as $field)
+                    @includeIf('opd.aset.fields.' . $field, [
+                        'options' => $fieldOptions,
+                        'aset' => $aset,
+                    ])
                 @endforeach
 
                 <button type="submit" class="btn btn-sm btn-primary">Simpan</button>

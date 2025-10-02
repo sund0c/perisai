@@ -45,10 +45,18 @@
                 @csrf
 
                 {{-- Field dinamis --}}
-                @foreach ($fieldList as $field)
+                {{-- @foreach ($fieldList as $field)
                     @includeIf('opd.aset.fields.' . $field)
-                @endforeach
+                @endforeach --}}
 
+
+
+                @foreach ($fieldList as $field)
+                    @includeIf('opd.aset.fields.' . $field, [
+                        'options' => $fieldOptions,
+                        'aset' => $aset ?? null, // pada create boleh null
+                    ])
+                @endforeach
 
                 <button type="submit" class="btn btn-primary">Simpan</button>
                 <a href="{{ route('opd.aset.show_by_klasifikasi', $klasifikasi->id) }}" class="btn btn-secondary">Batal</a>

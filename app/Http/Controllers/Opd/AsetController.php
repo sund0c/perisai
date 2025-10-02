@@ -21,6 +21,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Arr;
 
 class AsetController extends Controller
 {
@@ -29,6 +30,21 @@ class AsetController extends Controller
     {
         // Otomatis otorisasi semua method resource berbasis Policy Aset
         $this->authorizeResource(Aset::class, 'aset');
+    }
+
+
+
+    private function fieldOptionsByKlasifikasi(string $klasifikasi, array $fields): array
+    {
+        $map = config('aset_fields');
+        $out = [];
+
+        foreach ($fields as $field) {
+            $all = Arr::get($map, $field, []);
+            $specific = Arr::get($all, $klasifikasi);
+            $out[$field] = $specific ?: Arr::get($all, '_DEFAULT_', []);
+        }
+        return $out;
     }
 
     public function index()
@@ -148,6 +164,27 @@ class AsetController extends Controller
         return view('opd.aset.show_by_klasifikasi', compact('klasifikasi', 'asets', 'namaOpd', 'subs'));
     }
 
+    // public function create($klasifikasiId)
+    // {
+    //     $klasifikasi = KlasifikasiAset::findOrFail($klasifikasiId);
+    //     $subklasifikasis = SubKlasifikasiAset::where('klasifikasi_aset_id', $klasifikasiId)->get();
+
+    //     // Ambil semua field yang dikonfigurasi untuk ditampilkan
+    //     $fieldList = $klasifikasi->tampilan_field_aset;
+    //     if (!is_array($fieldList)) {
+    //         $fieldList = json_decode($fieldList, true) ?? [];
+    //     }
+
+    //     // Hapus field yang seharusnya disembunyikan karena otomatis
+    //     $hiddenFields = ['opd_id', 'klasifikasiaset_id', 'periode_id', 'kode_aset', 'kategori_se'];
+    //     $fieldList = array_diff($fieldList, $hiddenFields);
+
+    //     $namaOpd = auth()->user()->opd->namaopd ?? '-';
+
+
+    //     return view('opd.aset.create', compact('klasifikasi', 'subklasifikasis', 'fieldList', 'namaOpd'));
+    // }
+
     public function create($klasifikasiId)
     {
         $klasifikasi = KlasifikasiAset::findOrFail($klasifikasiId);
@@ -159,15 +196,27 @@ class AsetController extends Controller
             $fieldList = json_decode($fieldList, true) ?? [];
         }
 
-        // Hapus field yang seharusnya disembunyikan karena otomatis
+        // Sembunyikan field otomatis
         $hiddenFields = ['opd_id', 'klasifikasiaset_id', 'periode_id', 'kode_aset', 'kategori_se'];
-        $fieldList = array_diff($fieldList, $hiddenFields);
+        $fieldList = array_values(array_diff($fieldList, $hiddenFields));
 
         $namaOpd = auth()->user()->opd->namaopd ?? '-';
 
+        // ⬇️ Ambil opsi per-klasifikasi untuk semua field dinamis
+        // perhatikan: nama properti klasifikasi yang dipakai di config
+        $namaKlas = $klasifikasi->klasifikasiaset; // contoh: 'DATA & INFORMASI' / 'PERANGKAT LUNAK' / dst
+        $fieldOptions = $this->fieldOptionsByKlasifikasi($namaKlas, $fieldList);
 
-        return view('opd.aset.create', compact('klasifikasi', 'subklasifikasis', 'fieldList', 'namaOpd'));
+        return view('opd.aset.create', compact(
+            'klasifikasi',
+            'subklasifikasis',
+            'fieldList',
+            'namaOpd',
+            'fieldOptions'
+        ));
     }
+
+
 
     public function store(Request $request, KlasifikasiAset $klasifikasiaset)
     {
@@ -284,29 +333,70 @@ class AsetController extends Controller
     }
 
 
+    // public function edit(Aset $aset)
+    // {
+    //     // Akses hanya untuk pemilik OPD (lihat AsetPolicy@update)
+    //     $this->authorize('update', $aset);
+
+    //     // Ambil relasi yang dibutuhkan (lebih hemat query)
+    //     $aset->load(['klasifikasi.subklasifikasi', 'subklasifikasiaset']);
+
+    //     $klasifikasi       = $aset->klasifikasi;
+    //     $subklasifikasis   = $klasifikasi->subklasifikasi; // dari relasi, tidak perlu query manual
+
+    //     // Field list bisa tersimpan sebagai JSON di DB → pastikan array
+    //     $fieldListRaw = $klasifikasi->tampilan_field_aset;
+    //     $fieldList    = is_array($fieldListRaw) ? $fieldListRaw : (json_decode($fieldListRaw ?? '[]', true) ?: []);
+
+    //     // Saring field yang tidak perlu diedit
+    //     $hiddenFields = ['opd_id', 'klasifikasiaset_id', 'periode_id', 'kode_aset', 'kategori_se'];
+    //     $fieldList    = array_values(array_diff($fieldList, $hiddenFields));
+
+    //     $namaOpd = auth()->user()->opd->namaopd ?? '-';
+
+    //     return view('opd.aset.edit', compact('aset', 'namaOpd', 'klasifikasi', 'fieldList', 'subklasifikasis'));
+    // }
+
     public function edit(Aset $aset)
     {
-        // Akses hanya untuk pemilik OPD (lihat AsetPolicy@update)
         $this->authorize('update', $aset);
 
-        // Ambil relasi yang dibutuhkan (lebih hemat query)
         $aset->load(['klasifikasi.subklasifikasi', 'subklasifikasiaset']);
 
-        $klasifikasi       = $aset->klasifikasi;
-        $subklasifikasis   = $klasifikasi->subklasifikasi; // dari relasi, tidak perlu query manual
+        $klasifikasi     = $aset->klasifikasi;
+        $subklasifikasis = $klasifikasi->subklasifikasi;
 
-        // Field list bisa tersimpan sebagai JSON di DB → pastikan array
+        // Field list dari DB → array
         $fieldListRaw = $klasifikasi->tampilan_field_aset;
         $fieldList    = is_array($fieldListRaw) ? $fieldListRaw : (json_decode($fieldListRaw ?? '[]', true) ?: []);
 
-        // Saring field yang tidak perlu diedit
+        // Sembunyikan field otomatis
         $hiddenFields = ['opd_id', 'klasifikasiaset_id', 'periode_id', 'kode_aset', 'kategori_se'];
         $fieldList    = array_values(array_diff($fieldList, $hiddenFields));
 
         $namaOpd = auth()->user()->opd->namaopd ?? '-';
 
-        return view('opd.aset.edit', compact('aset', 'namaOpd', 'klasifikasi', 'fieldList', 'subklasifikasis'));
+        // === Tambahan penting: ambil opsi per-klasifikasi (sama seperti create)
+        $namaKlas     = $klasifikasi->klasifikasiaset; // pastikan sesuai key di config
+        $fieldOptions = $this->fieldOptionsByKlasifikasi($namaKlas, $fieldList);
+
+        // Fail-safe: kalau kosong, pakai _DEFAULT_
+        foreach ($fieldList as $f) {
+            if (empty($fieldOptions[$f])) {
+                $fieldOptions[$f] = config("aset_fields.$f._DEFAULT_", []);
+            }
+        }
+
+        return view('opd.aset.edit', compact(
+            'aset',
+            'namaOpd',
+            'klasifikasi',
+            'fieldList',
+            'subklasifikasis',
+            'fieldOptions'   // ← KIRIM KE VIEW
+        ));
     }
+
 
     public function update(Request $request, Aset $aset)
     {

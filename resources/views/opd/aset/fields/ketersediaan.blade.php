@@ -1,4 +1,4 @@
-<div class="form-group">
+{{-- <div class="form-group">
     <label for="ketersediaan">Ketersediaan</label>
     <select name="ketersediaan" id="ketersediaan" class="form-control" required>
         <option value="">Pilih</option>
@@ -11,5 +11,19 @@
         <option value="3" {{ old('ketersediaan', $aset->ketersediaan ?? '') == '3' ? 'selected' : '' }}>
             Sangat Kritikal (membahayakan,tuntutan hukum dll)
         </option>
+    </select>
+</div> --}}
+
+<div class="form-group">
+    <label for="ketersediaan">Ketersediaan (Seberapa penting memastikan aset selalu dapat diakses saat
+        dibutuhkan?)</label>
+    <select name="ketersediaan" id="ketersediaan" class="form-control" required>
+        <option value="">Pilih</option>
+        @foreach ($options['ketersediaan'] ?? [] as $opt)
+            <option value="{{ $opt['value'] }}"
+                {{ (string) old('ketersediaan', $aset->ketersediaan ?? '') === (string) $opt['value'] ? 'selected' : '' }}>
+                {{ $opt['label'] }}
+            </option>
+        @endforeach
     </select>
 </div>
