@@ -38,9 +38,8 @@
         padding: 0;
         }
 
-        h3 {
-            margin-bottom: 10px;
-        }
+
+
 
         h4 {
             margin-bottom: 2px;
@@ -62,12 +61,87 @@
         .underline {
             text-decoration: underline;
         }
+
+        @page {
+            margin: 170px 50px 70px 50px;
+        }
+
+        .header {
+            position: fixed;
+            top: -120px;
+            left: 0px;
+            right: 5px;
+            text-align: left;
+        }
+
+        .header img.tlp {
+            position: absolute;
+            top: 0;
+            right: -30;
+            width: 150px;
+        }
+
+        .header .subs {
+            margin-top: -5px;
+            line-height: 1.2;
+            font-size: 0.9em;
+            margin-right: 0px;
+            /* ruang kosong supaya teks turun & tidak timpa gambar */
+        }
+
+        .header h2,
+        .header h3 {
+            margin: 6px 0;
+        }
+
+
+        .matik-list ul {
+            margin: 0;
+            padding-left: 1.2rem;
+            /* default untuk nested */
+        }
+
+        /* level pertama */
+        .matik-list>ul {
+            padding-left: 1em;
+            /* mepet kiri */
+            list-style-type: disc;
+            /* bullet bulat */
+        }
+
+        /* level kedua */
+        .matik-list>ul>li>ul {
+            padding-left: 1.5rem;
+            list-style-type: square;
+            font-size: 0.8em;
+        }
     </style>
 </head>
 
 <body>
-    <h2>SE Kategori {{ strtoupper($kategori) }} :: Tahun {{ $tahunAktifGlobal ?? '-' }}</h2>
-    <h3>Pemerintah Provinsi Bali</h3>
+    <div class="header">
+        <table width="100%" style="border:none;">
+            <tr>
+                <!-- KIRI: judul + subs (tetap) -->
+                <td style="vertical-align: top;border:none;">
+                    <h2>Rekap Kategori SE ({{ strtoupper($kategori) }}) :: Tahun {{ $tahunAktifGlobal ?? '-' }}</h2>
+                    <h3>Pemerintah Provinsi Bali</h3>
+
+
+                </td>
+
+                <!-- KANAN: dua logo sejajar -->
+                <td style="width: 100px; vertical-align: top; text-align: right; white-space: nowrap;border:none;">
+                    <img src="{{ public_path('images/logobaliprovcsirt.png') }}" alt="Logo"
+                        style="height:70px; vertical-align: top; margin-right:0px;">
+                    <img src="{{ public_path('images/tlp/tlp_teaser_green.jpg') }}" alt="TLP:GREEN"
+                        style="height:70px; vertical-align: top;">
+                </td>
+            </tr>
+        </table>
+    </div>
+
+
     <table class="table table-bordered text-center" style="width:100%">
         <thead class="font-weight-bold">
             <tr>
@@ -84,7 +158,7 @@
                     <td>{{ $aset->kode_aset }}</td>
                     <td>{{ $aset->nama_aset }}</td>
                     <td>{{ $aset->subklasifikasiaset->subklasifikasiaset ?? '-' }}</td>
-                    <td>{{ $aset->lokasi }}</td>
+                    <td>{{ $aset->opd->namaopd }}</td>
                     <td>
                         {{-- {{ $aset->kategoriSe->skor_total ?? 'BELUM DINILAI' }} --}}
                         @php
@@ -119,18 +193,26 @@
     <BR><BR><BR>
     <h4>Catatan</h4>
     <ol>
-        <li><b>PERISAI</b> adalah sistem elektronik untuk melakukan <span class="underline">PEngelolaan RISiko Aset
-                Informasi,</span> dikelola oleh
-            Bidang
-            Persandian Dinas Kominfos Provinsi Bali</li>
-        <li>Yang dimaksud dengan <b>Aset</b> dalam PERISAI adalah <span class="underline">khusus aset yang terkait
-                dengan pelindungan data dan keamanan informasi.</span>
+        <li>Kode TLP (Traffic Light Protocol) dipakai untuk mengklasifikasikan sensitifitas informasi, supaya jelas
+            sejauh mana informasi boleh dibagikan.
+            TLP:GREEN = Pengungkapan terbatas, penerima dapat menyebarkan ini dalam komunitasnya.
+            Sumber dapat menggunakan TLP:GREEN ketika informasi berguna untuk meningkatkan kesadaran dalam
+            komunitas mereka yang lebih luas. Penerima dapat berbagi informasi TLP:GREEN dengan rekan dan
+            organisasi mitra dalam komunitas mereka, tetapi tidak melalui saluran yang dapat diakses publik.
+            Informasi TLP:GREEN tidak boleh dibagikan di luar komunitas. Jika "komunitas" tidak ditentukan,
+            asumsikan komunitas keamanan/pertahanan siber.
         </li>
-        <li>Periode pemutahiran data PERISAI <b>wajib dilakukan sekali setahun oleh Pemilik Aset.</b> </li>
+        <li>PERISAI adalah sistem elektronik untuk melakukan <b>PE</b>ngelolaan <b>RIS</b>iko <b>A</b>set
+            <b>I</b>nformasi di lingkup Pemerintah Provinsi Bali. PERISAI dikelola oleh
+            Dinas Kominfos Provinsi Bali (Contact: Bidang Persandian)
+        </li>
         <li>SE adalah sistem elektronik yaitu dalam PERISAI adalah <strong>aset dengan klasifikasi [PL] Perangkat
                 Lunak.</strong> Contoh SE adalah
             website, aplikasi
             berbasis web, mobile, sistem operasi dan utility.</li>
+        <li>Semua informasi tentang aset ini dapat berubah sesuai dengan reviu dan pemutahiran data PERISAI yang
+            dilakukan minimal sekali setahun oleh Pemilik Risiko. Pemutahiran akan dilakukan serempak, menunggu
+            jadwal dari Diskominfos Prov Bali. </li>
     </ol>
 </body>
 

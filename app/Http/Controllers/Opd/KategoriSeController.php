@@ -39,13 +39,25 @@ class KategoriSeController extends Controller
             abort(409, 'Tidak ada periode yang berstatus open.');
         }
 
-        $asetPL = Aset::whereHas('klasifikasi', function ($q) {
-            $q->where('klasifikasiaset', 'PERANGKAT LUNAK');
-        })
-            ->where('opd_id', $userOpdId)
-            ->where('periode_id', $periodeAktifId) // ← filter periode aktif
-            ->with('kategoriSe')
-            ->get();
+        // $asetPL = Aset::whereHas('klasifikasi', function ($q) {
+        //     $q->where('klasifikasiaset', 'PERANGKAT LUNAK');
+        // })
+        //     ->where('opd_id', $userOpdId)
+        //     ->where('periode_id', $periodeAktifId) // ← filter periode aktif
+        //     ->with('kategoriSe')
+        //     ->get();
+
+$asetPL = Aset::whereHas('subklasifikasiaset', function ($q) {
+        $q->whereIn('subklasifikasiaset', [
+            'Aplikasi berbasis Website',
+            'Aplikasi berbasis Mobile',
+        ]);
+    })
+    ->where('opd_id', $userOpdId)
+    ->where('periode_id', $periodeAktifId)   // filter periode aktif
+    ->with(['kategoriSe', 'subklasifikasiaset']) // sekalian eager load subklas
+    ->get();
+
 
         // Ambil semua range kategori dari tabel range_ses
         $rangeSes = RangeSe::all();
@@ -131,13 +143,24 @@ class KategoriSeController extends Controller
             // bebas: bisa redirect balik dengan flash message juga
             abort(409, 'Tidak ada periode yang berstatus open.');
         }
-        $asetPL = Aset::whereHas('klasifikasi', function ($q) {
-            $q->where('klasifikasiaset', 'PERANGKAT LUNAK');
-        })
-            ->where('opd_id', $userOpdId)
-            ->where('periode_id', $periodeAktifId) // ← filter periode aktif
-            ->with('kategoriSe')
-            ->get();
+        // $asetPL = Aset::whereHas('klasifikasi', function ($q) {
+        //     $q->where('klasifikasiaset', 'PERANGKAT LUNAK');
+        // })
+        //     ->where('opd_id', $userOpdId)
+        //     ->where('periode_id', $periodeAktifId) // ← filter periode aktif
+        //     ->with('kategoriSe')
+        //     ->get();
+
+$asetPL = Aset::whereHas('subklasifikasiaset', function ($q) {
+        $q->whereIn('subklasifikasiaset', [
+            'Aplikasi berbasis Website',
+            'Aplikasi berbasis Mobile',
+        ]);
+    })
+    ->where('opd_id', $userOpdId)
+    ->where('periode_id', $periodeAktifId)   // filter periode aktif
+    ->with(['kategoriSe', 'subklasifikasiaset']) // sekalian eager load subklas
+    ->get();
 
         $rangeSes = RangeSe::all();
         // Normalisasi helper
@@ -231,11 +254,27 @@ class KategoriSeController extends Controller
         // Ambil semua range dari DB
         $range = RangeSe::whereRaw('LOWER(nilai_akhir_aset) = ?', [strtolower($kategori)])->first();
 
-        $query = Aset::whereHas('klasifikasi', function ($q) {
-            $q->where('klasifikasiaset', 'PERANGKAT LUNAK');
-        })
-            ->where('opd_id', $userOpdId)
-            ->with(['subklasifikasiaset', 'kategoriSe']);
+        // $query = Aset::whereHas('klasifikasi', function ($q) {
+        //     $q->where('klasifikasiaset', 'PERANGKAT LUNAK');
+        // })
+        //     ->where('opd_id', $userOpdId)
+        //     ->with(['subklasifikasiaset', 'kategoriSe']);
+
+$query = Aset::query()
+    ->where('opd_id', $userOpdId)
+    // ->where('periode_id', $periodeAktifId) // aktifkan jika perlu filter periode
+    ->whereHas('subklasifikasiaset', function ($q) {
+        $q->whereIn('subklasifikasiaset', [
+            'Aplikasi berbasis Website',
+            'Aplikasi berbasis Mobile',
+        ]);
+    })
+    ->with([
+        'subklasifikasiaset:id,subklasifikasiaset,klasifikasi_aset_id',
+        'kategoriSe:id,aset_id,skor_total,jawaban',
+    ]);
+
+
 
         if ($range) {
             // Jika ada skor total, filter berdasarkan range
@@ -405,11 +444,26 @@ class KategoriSeController extends Controller
         }
 
         // base query: aset perangkat lunak milik OPD & periode aktif
-        $query = Aset::query()
-            ->where('opd_id', $userOpdId)
-            ->where('periode_id', $periodeAktifId)
-            ->whereHas('klasifikasi', fn($q) => $q->where('klasifikasiaset', 'PERANGKAT LUNAK'))
-            ->with('kategoriSe:id,aset_id,skor_total,jawaban'); // cukup field penting
+        // $query = Aset::query()
+        //     ->where('opd_id', $userOpdId)
+        //     ->where('periode_id', $periodeAktifId)
+        //     ->whereHas('klasifikasi', fn($q) => $q->where('klasifikasiaset', 'PERANGKAT LUNAK'))
+        //     ->with('kategoriSe:id,aset_id,skor_total,jawaban'); // cukup field penting
+
+   $query = Aset::query()
+        ->where('opd_id', $userOpdId)
+        ->where('periode_id', $periodeAktifId)
+        ->whereHas('subklasifikasiaset', function ($q) {
+            $q->whereIn('subklasifikasiaset', [
+                'Aplikasi berbasis Website',
+                'Aplikasi berbasis Mobile',
+            ]);
+        })
+        ->with([
+            'kategoriSe:id,aset_id,skor_total,jawaban',
+            'subklasifikasiaset:id,subklasifikasiaset,klasifikasi_aset_id'
+        ]);
+
 
         // filter kategori
         if ($kategori === 'belum') {

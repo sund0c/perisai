@@ -10,6 +10,7 @@ use App\Models\RangeSe;
 use App\Models\IndikatorKategoriSe;
 //use Illuminate\Http\Request;
 use PDF;
+use App\Models\Periode;
 
 // use App\Models\KlasifikasiAset;
 // use App\Models\Periode;
@@ -22,11 +23,28 @@ class BidangKategoriSeController extends Controller
         $namaOpd = 'SEMUA OPD';
 
         // Ambil semua aset dengan klasifikasi PERANGKAT LUNAK dari seluruh OPD
-        $asetPL = Aset::whereHas('klasifikasi', function ($q) {
-            $q->where('klasifikasiaset', 'PERANGKAT LUNAK');
-        })
-            ->with('kategoriSe') // agar skor_total tersedia tanpa N+1
-            ->get();
+        // $asetPL = Aset::whereHas('klasifikasi', function ($q) {
+        //     $q->where('klasifikasiaset', 'PERANGKAT LUNAK');
+        // })
+        //     ->with('kategoriSe') // agar skor_total tersedia tanpa N+1
+        //     ->get();
+
+   $periodeAktifId = Periode::where('status', 'open')->value('id');
+        if (!$periodeAktifId) {
+            // bebas: bisa redirect balik dengan flash message juga
+            abort(409, 'Tidak ada periode yang berstatus open.');
+        }
+$asetPL = Aset::whereHas('subklasifikasiaset', function ($q) {
+        $q->whereIn('subklasifikasiaset', [
+            'Aplikasi berbasis Website',
+            'Aplikasi berbasis Mobile',
+        ]);
+    })
+    ->where('periode_id', $periodeAktifId)   // filter periode aktif
+    ->with(['kategoriSe', 'subklasifikasiaset']) // sekalian eager load subklas
+    ->get();
+
+
 
         // Ambil semua range kategori SE
         $rangeSes = RangeSe::all();
@@ -81,16 +99,35 @@ class BidangKategoriSeController extends Controller
     {
         $namaOpd = 'SEMUA OPD';
         $kategori = strtolower($kategori); // 'tinggi' | 'sedang' | 'rendah' | 'belum' | 'total'
-
+        $periodeAktifId = Periode::where('status', 'open')->value('id');
+        if (! $periodeAktifId) {
+            abort(409, 'Tidak ada periode yang berstatus open.');
+        }
         $range = null;
         if (in_array($kategori, ['tinggi', 'sedang', 'rendah'])) {
             $range = RangeSe::whereRaw('LOWER(nilai_akhir_aset) = ?', [$kategori])->first();
         }
 
-        $query = Aset::whereHas('klasifikasi', function ($q) {
-            $q->where('klasifikasiaset', 'PERANGKAT LUNAK');
+        // $query = Aset::whereHas('klasifikasi', function ($q) {
+        //     $q->where('klasifikasiaset', 'PERANGKAT LUNAK');
+        // })
+        //     ->with(['subklasifikasiaset', 'kategoriSe', 'opd']); // tambah opd jika ingin ditampilkan di view
+
+
+   $query = Aset::query()
+        ->where('periode_id', $periodeAktifId)
+        ->whereHas('subklasifikasiaset', function ($q) {
+            $q->whereIn('subklasifikasiaset', [
+                'Aplikasi berbasis Website',
+                'Aplikasi berbasis Mobile',
+            ]);
         })
-            ->with(['subklasifikasiaset', 'kategoriSe', 'opd']); // tambah opd jika ingin ditampilkan di view
+        ->with([
+            'kategoriSe:id,aset_id,skor_total,jawaban',
+            'subklasifikasiaset:id,subklasifikasiaset,klasifikasi_aset_id','opd'
+        ]);
+
+
 
         if ($range) {
             $query->whereHas('kategoriSe', function ($q) use ($range) {
@@ -162,21 +199,15 @@ class BidangKategoriSeController extends Controller
         ))
             ->setPaper([0, 0, 595.28, 841.89], 'portrait');
 
-        // Render dulu agar page count tersedia
-        $dompdf = $pdf->getDomPDF();
-        $dompdf->render();
-
-        // Footer terpusat di bawah
-        $canvas = $dompdf->getCanvas();
-        $fontMetrics = $dompdf->getFontMetrics();
-        $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
-            $text = "PERISAI :: PERSANDIAN DISKOMINFOS PROV BALI";
+       $pdf->getDomPDF()->getCanvas()->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
+            $text = "PERISAI  :: Page $pageNumber of $pageCount";
             $font = $fontMetrics->getFont('Helvetica', 'normal');
             $size = 9;
             $width = $canvas->get_width();
+            $height = $canvas->get_height();
             $textWidth = $fontMetrics->getTextWidth($text, $font, $size);
             $x = ($width - $textWidth) / 2;
-            $y = 820; // posisi bawah halaman A4 (portrait)
+            $y = $height - 30;
             $canvas->text($x, $y, $text, $font, $size);
         });
 
@@ -201,11 +232,31 @@ class BidangKategoriSeController extends Controller
         }
 
         // Query aset PERANGKAT LUNAK dari seluruh OPD
-        $query = Aset::whereHas('klasifikasi', function ($q) {
-            $q->where('klasifikasiaset', 'PERANGKAT LUNAK');
-        })
-            // ->where('periode_id', $periodeAktifId) // aktifkan jika perlu filter periode
-            ->with(['subklasifikasiaset', 'kategoriSe', 'opd']);
+        // $query = Aset::whereHas('klasifikasi', function ($q) {
+        //     $q->where('klasifikasiaset', 'PERANGKAT LUNAK');
+        // })
+        //     // ->where('periode_id', $periodeAktifId) // aktifkan jika perlu filter periode
+        //     ->with(['subklasifikasiaset', 'kategoriSe', 'opd']);
+
+          $periodeAktifId = Periode::where('status', 'open')->value('id');
+        if (! $periodeAktifId) {
+            abort(409, 'Tidak ada periode yang berstatus open.');
+        }
+
+$query = Aset::query()
+    ->where('periode_id', $periodeAktifId) // aktifkan jika perlu filter periode
+    ->whereHas('subklasifikasiaset', function ($q) {
+        $q->whereIn('subklasifikasiaset', [
+            'Aplikasi berbasis Website',
+            'Aplikasi berbasis Mobile',
+        ]);
+    })
+    ->with([
+        'subklasifikasiaset:id,subklasifikasiaset,klasifikasi_aset_id',
+        'kategoriSe:id,aset_id,skor_total,jawaban','opd'
+    ]);
+
+
 
         if ($range) {
             // Filter berdasarkan skor_total sesuai range kategori
@@ -227,24 +278,17 @@ class BidangKategoriSeController extends Controller
         $pdf = PDF::loadView('bidang.kategorise.export_rekap_kategori_pdf', compact('data', 'kategori', 'namaOpd', 'rangeSes'))
             ->setPaper([0, 0, 595.28, 841.89], 'portrait');
 
-        // Render dulu agar page count tersedia
-        $dompdf = $pdf->getDomPDF();
-        $dompdf->render();
-
-        // Footer terpusat di bawah
-        $canvas = $dompdf->getCanvas();
-        $fontMetrics = $dompdf->getFontMetrics();
-        $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
-            $text = "PERISAI :: Halaman $pageNumber dari $pageCount";
+        $pdf->getDomPDF()->getCanvas()->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
+            $text = "PERISAI  :: Page $pageNumber of $pageCount";
             $font = $fontMetrics->getFont('Helvetica', 'normal');
             $size = 9;
             $width = $canvas->get_width();
+            $height = $canvas->get_height();
             $textWidth = $fontMetrics->getTextWidth($text, $font, $size);
             $x = ($width - $textWidth) / 2;
-            $y = 820; // posisi bawah halaman A4 (portrait)
+            $y = $height - 30;
             $canvas->text($x, $y, $text, $font, $size);
         });
-
         return $pdf->download('kategorisepernilai_' . date('Ymd_His') . '.pdf');
     }
 
@@ -275,15 +319,15 @@ class BidangKategoriSeController extends Controller
             'skor'
         ))
             ->setPaper('A4', 'potrait');
-        $pdf->getDomPDF()->getCanvas()->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
-            $text = "PERISAI :: PERSANDIAN DISKOMINFOS PROV BALI";
+    $pdf->getDomPDF()->getCanvas()->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
+            $text = "PERISAI  :: Page $pageNumber of $pageCount";
             $font = $fontMetrics->getFont('Helvetica', 'normal');
             $size = 9;
             $width = $canvas->get_width();
             $height = $canvas->get_height();
             $textWidth = $fontMetrics->getTextWidth($text, $font, $size);
-            $x = ($width - $textWidth) / 2; // Center horizontally
-            $y = $height - 30; // 30 px from bottom
+            $x = ($width - $textWidth) / 2;
+            $y = $height - 30;
             $canvas->text($x, $y, $text, $font, $size);
         });
         return $pdf->download('penilaiankategorise_' . date('Ymd_His') . '.pdf');
