@@ -15,8 +15,7 @@
 </div> --}}
 
 <div class="form-group">
-    <label for="kenirsangkalan">Kenirsangkalan (Seberapa penting membuktikan siapa yang membuat/mengubah/mengesahkan
-        aset, agar tidak bisa disangkal?)</label>
+    <label for="kenirsangkalan">Kenirsangkalan</label>
     <select name="kenirsangkalan" id="kenirsangkalan" class="form-control" required>
         <option value="">Pilih</option>
         @foreach ($options['kenirsangkalan'] ?? [] as $opt)

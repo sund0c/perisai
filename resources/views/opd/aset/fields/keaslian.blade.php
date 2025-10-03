@@ -15,7 +15,7 @@
 </div> --}}
 
 <div class="form-group">
-    <label for="keaslian">Keaslian (Seberapa penting membuktikan bahwa aset adalah versi asli dan sah?)</label>
+    <label for="keaslian">Keaslian</label>
     <select name="keaslian" id="keaslian" class="form-control" required>
         <option value="">Pilih</option>
         @foreach ($options['keaslian'] ?? [] as $opt)
