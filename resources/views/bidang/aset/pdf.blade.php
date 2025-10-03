@@ -184,7 +184,18 @@
             @endphp
             <tr>
                 <td class="label">{{ $label }}</td>
-                <td class="value">{{ $value }}</td>
+                @php
+    $labels = [
+        1 => 'Tidak Signifikan',
+        2 => 'Penting',
+        3 => 'Sangat Penting'
+    ];
+@endphp
+
+<td class="value">
+    {{ $labels[$value] ?? $value }}
+</td>
+
             </tr>
         @endforeach
         <tr>

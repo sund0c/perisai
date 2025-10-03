@@ -221,12 +221,18 @@
                         {{ $label }}
                     @endif
                 </td>
-                <td class="value">
-                    {{ $value }}
-                    @if (array_key_exists($field, $ciaaaMap))
-                        <span class="text-muted"> dari 3</span>
-                    @endif
-                </td>
+@php
+    $labels = [
+        1 => 'Tidak Signifikan',
+        2 => 'Penting',
+        3 => 'Sangat Penting'
+    ];
+@endphp
+
+<td class="value">
+    {{ $labels[$value] ?? $value }}
+</td>
+
             </tr>
         @endforeach
         <tr>
