@@ -14,8 +14,8 @@ return [
             ['value' => '3', 'label' => 'Sangat Penting: Menyimpan data pribadi spesifik UU PDP atau informasi dikecualikan UU KIP'],
         ],
         'Perangkat Keras' => [
-            ['value' => '1', 'label' => 'Tidak signifikan: Tidak menyimpan data kedinasan'],
-            ['value' => '2', 'label' => 'Penting: Mengandung data kedinasan'],
+            ['value' => '1', 'label' => 'Tidak signifikan: Tidak menyimpan data'],
+            ['value' => '2', 'label' => 'Penting: Mengandung data kedinasan, tidak mengandung data pribadi spesifik UU PDP atau informasi dikecualikan UU KIP'],
             ['value' => '3', 'label' => 'Sangat Penting: Mengandung data pribadi spesifik UU PDP atau informasi dikecualikan UU KIP'],
         ],
         'Sarana Pendukung' => [
@@ -60,9 +60,9 @@ return [
 
         ],
         'Perangkat Keras' => [
-            ['value' => '1', 'label' => 'Tidak signifikan'],
-            ['value' => '2', 'label' => 'Penting: Digunakan harian, ada alternatif'],
-            ['value' => '3', 'label' => 'Sangat Penting: Bisa menghentikan layanan jika terganggu'],
+            ['value' => '1', 'label' => 'Tidak signifikan: Toleransi donwtime bisa lebih dari 1x24 jam'],
+            ['value' => '2', 'label' => 'Penting: Toleransi downtime maksimal 1x24 jam'],
+            ['value' => '3', 'label' => 'Sangat Penting: Tidak boleh ada downtime'],
         ],
         'Sarana Pendukung' => [
             ['value' => '1', 'label' => 'Tidak signifikan: Toleransi ketidaktersediaan bisa lebih dari 1x24 jam'],
