@@ -21,7 +21,8 @@ class DataPribadiMaster extends Model
     protected $fillable = [
         'tipe',
         'kode',
-        'deskripsi'
+        'deskripsi',
+        'status'
     ];
 
     /**
@@ -41,5 +42,15 @@ class DataPribadiMaster extends Model
     public static function getTipeOptions(): array
     {
         return ['spesifik', 'umum'];
+    }
+
+    /**
+     * Get all possible values for status enum
+     *
+     * @return array
+     */
+    public static function getStatusOptions(): array
+    {
+        return ['aktif', 'nonaktif'];
     }
 }
