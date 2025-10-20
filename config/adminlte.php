@@ -356,12 +356,13 @@ return [
             'icon'  => 'fas fa-fw fa-tags',
             'can'   => 'is-opd',
         ],
-        [
-            'text' => 'PTKKA',
-            'route' => 'opd.ptkka.index',
-            'icon'  => 'fas fa-fw fa-clipboard-list',
-            'can'   => 'is-opd',
-        ],
+        // UPDATED: hide ptkka
+        // [
+        //     'text' => 'PTKKA',
+        //     'route' => 'opd.ptkka.index',
+        //     'icon'  => 'fas fa-fw fa-clipboard-list',
+        //     'can'   => 'is-opd',
+        // ],
 
         // ===== ADMIN =====
         [

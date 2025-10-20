@@ -223,28 +223,28 @@ Route::middleware(['SSOBrokerMiddleware', 'prevent-back-history', 'spatie_role_o
 
 
 //============= Start of OPD ===========================
+// UPDATED: hide ptkka
+// Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd', 'prevent-back-history'])
+//     ->prefix('opd/ptkka')
+//     ->name('opd.ptkka.')
+//     ->group(function () {
+//         Route::post('/{session}/fungsi/{fungsi}/simpan', [PtkkaController::class, 'simpanPerFungsi'])->name('simpanPerFungsi');
+//         Route::get('/export/pdf/{session:uid}', [PtkkaController::class, 'exportPDF'])
+//             ->name('exportPDF');
+//         Route::get('/', [PtkkaController::class, 'indexPtkka'])->name('index');
+//         Route::get('/riwayat/{aset:uuid}', [PtkkaController::class, 'riwayat'])
+//             ->name('riwayat');
+//         Route::post('/{aset:uuid}/store', [PtkkaController::class, 'store'])->name('store');
+//         Route::get('/{session:uid}/detail', [PtkkaController::class, 'showDetail'])->name('detail');
+//         Route::delete('/{session:uid}', [PtkkaController::class, 'destroy'])->name('destroy');
+//         Route::post('/jawaban', [PtkkaController::class, 'simpanJawaban'])->name('jawaban.simpan');
+//         Route::post('/{session:uid}/simpan', [PtkkaController::class, 'simpan'])->name('simpan');
 
-Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd', 'prevent-back-history'])
-    ->prefix('opd/ptkka')
-    ->name('opd.ptkka.')
-    ->group(function () {
-        Route::post('/{session}/fungsi/{fungsi}/simpan', [PtkkaController::class, 'simpanPerFungsi'])->name('simpanPerFungsi');
-        Route::get('/export/pdf/{session:uid}', [PtkkaController::class, 'exportPDF'])
-            ->name('exportPDF');
-        Route::get('/', [PtkkaController::class, 'indexPtkka'])->name('index');
-        Route::get('/riwayat/{aset:uuid}', [PtkkaController::class, 'riwayat'])
-            ->name('riwayat');
-        Route::post('/{aset:uuid}/store', [PtkkaController::class, 'store'])->name('store');
-        Route::get('/{session:uid}/detail', [PtkkaController::class, 'showDetail'])->name('detail');
-        Route::delete('/{session:uid}', [PtkkaController::class, 'destroy'])->name('destroy');
-        Route::post('/jawaban', [PtkkaController::class, 'simpanJawaban'])->name('jawaban.simpan');
-        Route::post('/{session:uid}/simpan', [PtkkaController::class, 'simpan'])->name('simpan');
 
+//         // Route::post('/{id}/simpan', [PtkkaController::class, 'simpan'])->name('simpan');
 
-        // Route::post('/{id}/simpan', [PtkkaController::class, 'simpan'])->name('simpan');
-
-        Route::post('/{session}/ajukan-verifikasi', [PtkkaController::class, 'ajukanVerifikasi'])->name('ajukanverifikasi');
-    });
+//         Route::post('/{session}/ajukan-verifikasi', [PtkkaController::class, 'ajukanVerifikasi'])->name('ajukanverifikasi');
+//     });
 
 Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd|admin', 'prevent-back-history'])
     ->prefix('opd/aset')

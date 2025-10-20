@@ -70,7 +70,7 @@ class UserService
                 "email" => $sso_user->email,
                 "role" => $role,
             ]);
-            #UPDATE:: sync role for change the role.
+ 	    #UPDATE:: sync role for change the role
             $user->syncRoles([$role]);
             // $user->assignRole($role);
             return true;
