@@ -156,16 +156,12 @@
     
     <script>
         $(document).ready(function() {
-            console.log('Document ready, jQuery version:', $.fn.jquery);
-            console.log('Checking if Selectize is available...');
-            
+ 
             // Tunggu sampai Selectize benar-benar tersedia
             function waitForSelectize(callback, maxRetries = 30) {
                 if (typeof $.fn.selectize !== 'undefined') {
-                    console.log('Selectize is available!');
                     callback();
                 } else if (maxRetries > 0) {
-                    console.log('Selectize not yet available, retrying... (' + maxRetries + ' attempts left)');
                     setTimeout(function() {
                         waitForSelectize(callback, maxRetries - 1);
                     }, 200);
@@ -175,18 +171,14 @@
             }
             
             waitForSelectize(function() {
-                console.log('Starting selectize keterangan initialization...');
                 
                 // Cari select untuk keterangan indikator I6
                 const $keteranganSelect = $('.selectize-keterangan');
-                console.log('Found selectize keterangan elements:', $keteranganSelect.length);
                 
                 if ($keteranganSelect.length > 0) {
-                    console.log('Processing selectize keterangan element...');
                     
                     // Ambil data yang sudah dipilih sebelumnya
                     const selectedData = JSON.parse($keteranganSelect.attr('data-selected') || '[]');
-                    console.log('Selected keterangan data:', selectedData);
                     
                     // Fetch data pribadi dari API
                     $.ajax({
@@ -194,7 +186,6 @@
                         type: 'GET',
                         dataType: 'json',
                         success: function(apiData) {
-                            console.log('API response for keterangan:', apiData);
                             
                             let options = [];
                             let items = [];
@@ -213,10 +204,7 @@
                                     }
                                 });
                             }
-                            
-                            console.log('Options prepared for keterangan:', options);
-                            console.log('Items to select for keterangan:', items);
-                            
+                                                       
                             try {
                                 // Inisialisasi Selectize untuk input text (akan menghasilkan comma-separated string)
                                 const selectizeInstance = $keteranganSelect.selectize({
@@ -234,32 +222,25 @@
                                     hideSelected: true,
                                     maxItems: null, // Unlimited items
                                     onItemAdd: function(value, $item) {
-                                        console.log('Keterangan tag added:', value);
                                         // Update input value sebagai comma-separated string
                                         const values = this.getValue();
                                         const stringValue = Array.isArray(values) ? values.join(', ') : values;
                                         this.$input[0].value = stringValue;
-                                        console.log('Input value updated on add:', stringValue);
                                     },
                                     onItemRemove: function(value) {
-                                        console.log('Keterangan tag removed:', value);
                                         // Update input value sebagai comma-separated string
                                         const values = this.getValue();
                                         const stringValue = Array.isArray(values) ? values.join(', ') : values;
                                         this.$input[0].value = stringValue;
-                                        console.log('Input value updated on remove:', stringValue);
                                     },
                                     onInitialize: function() {
-                                        console.log('Selectize initialized with items:', this.items);
                                         // Set initial value sebagai comma-separated string
                                         const values = this.getValue();
                                         const stringValue = Array.isArray(values) ? values.join(', ') : values;
                                         this.$input[0].value = stringValue;
-                                        console.log('Initial input value set:', stringValue);
                                     }
                                 });
                                 
-                                console.log('Selectize keterangan initialized successfully');
                                 
                             } catch (error) {
                                 console.error('Error initializing Selectize keterangan:', error);
