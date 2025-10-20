@@ -70,7 +70,9 @@ class UserService
                 "email" => $sso_user->email,
                 "role" => $role,
             ]);
-            $user->assignRole($role);
+            #UPDATE:: sync role for change the role.
+            $user->syncRoles([$role]);
+            // $user->assignRole($role);
             return true;
         }
         
@@ -81,7 +83,9 @@ class UserService
                 "email" => $sso_user->email,
                 "role" => $role,
             ]);
-            $user->assignRole($role);
+            #UPDATE:: sync role for change the role.
+            $user->syncRoles([$role]);
+            // $user->assignRole($role);
             return true;
         }
 
@@ -101,7 +105,9 @@ class UserService
         $user_data['role'] = $role;
         $user_data['opd_id'] = $opd_id;
         $user = User::create($user_data);
-        $user->assignRole($role);
+        #UPDATE:: sync role for change the role.
+        $user->syncRoles([$role]);
+        // $user->assignRole($role);
         if (!Auth::check()) {
             Auth::loginUsingId($user->id);
         }
