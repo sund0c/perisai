@@ -10,6 +10,7 @@ use App\Models\KategoriSe;
 use App\Models\RangeSe;
 use App\Models\IndikatorKategoriSe;
 use PDF;
+use App\Services\PdfFooter;
 use Illuminate\Support\Facades\DB;
 
 use Illuminate\Database\QueryException;
@@ -230,19 +231,7 @@ $asetPL = Aset::whereHas('subklasifikasiaset', function ($q) {
 
         $pdf = PDF::loadView('opd.kategorise.export_rekap_pdf', compact('strategis', 'tinggi', 'rendah', 'belum', 'total', 'namaOpd', 'kategoriMeta'))
             ->setPaper('A4', 'portrait');
-
-        $pdf->getDomPDF()->getCanvas()->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
-            $text = "PERISAI  :: Page $pageNumber of $pageCount";
-            $font = $fontMetrics->getFont('Helvetica', 'normal');
-            $size = 9;
-            $width = $canvas->get_width();
-            $height = $canvas->get_height();
-            $textWidth = $fontMetrics->getTextWidth($text, $font, $size);
-            $x = ($width - $textWidth) / 2;
-            $y = $height - 30;
-            $canvas->text($x, $y, $text, $font, $size);
-        });
-
+        PdfFooter::add_default($pdf);
         return $pdf->download('rekap_kategorise_' . date('Ymd_His') . '.pdf');
     }
 
@@ -294,17 +283,7 @@ $query = Aset::query()
 
         $pdf = PDF::loadView('opd.kategorise.export_rekap_kategori_pdf', compact('data', 'kategori', 'namaOpd', 'rangeSes'))
             ->setPaper('A4', 'potrait');
-        $pdf->getDomPDF()->getCanvas()->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
-            $text = "PERISAI  :: Page $pageNumber of $pageCount";
-            $font = $fontMetrics->getFont('Helvetica', 'normal');
-            $size = 9;
-            $width = $canvas->get_width();
-            $height = $canvas->get_height();
-            $textWidth = $fontMetrics->getTextWidth($text, $font, $size);
-            $x = ($width - $textWidth) / 2; // Center horizontally
-            $y = $height - 30; // 30 px from bottom
-            $canvas->text($x, $y, $text, $font, $size);
-        });
+        PdfFooter::add_default($pdf);
         return $pdf->download('kategorise_pernilai_' . date('Ymd_His') . '.pdf');
     }
 
@@ -536,20 +515,7 @@ $query = Aset::query()
             'namaOpd',
         ))
             ->setPaper('a4', 'portrait');
-
-        // 8) Footer halaman
-        $pdf->getDomPDF()->getCanvas()->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
-            $text = "PERISAI  :: Page $pageNumber of $pageCount";
-            $font = $fontMetrics->getFont('Helvetica', 'normal');
-            $size = 9;
-            $width = $canvas->get_width();
-            $height = $canvas->get_height();
-            $textWidth = $fontMetrics->getTextWidth($text, $font, $size);
-            $x = ($width - $textWidth) / 2;
-            $y = $height - 30;
-            $canvas->text($x, $y, $text, $font, $size);
-        });
-
+        PdfFooter::add_default($pdf);
         return $pdf->download('penilaian_kategori_se_' . now()->format('Ymd_His') . '.pdf');
     }
 

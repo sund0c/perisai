@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\IndikatorKategoriSe;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\PdfFooter;
 
 
 class IndikatorKategoriSeController extends Controller
@@ -86,17 +87,7 @@ class IndikatorKategoriSeController extends Controller
         $indikator = IndikatorKategoriSe::all();
         $pdf = Pdf::loadView('admin.indikatorkategorise.export_pdf', compact('indikator'))
             ->setPaper('A4', 'potrait');
-        $pdf->getDomPDF()->getCanvas()->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
-            $text = "PERISAI  :: Page $pageNumber of $pageCount";
-            $font = $fontMetrics->getFont('Helvetica', 'normal');
-            $size = 9;
-            $width = $canvas->get_width();
-            $height = $canvas->get_height();
-            $textWidth = $fontMetrics->getTextWidth($text, $font, $size);
-            $x = ($width - $textWidth) / 2; // Center horizontally
-            $y = $height - 30; // 30 px from bottom
-            $canvas->text($x, $y, $text, $font, $size);
-        });
+        PdfFooter::add_default($pdf);
         return $pdf->download('indikator_kategorise.pdf');
     }
 }

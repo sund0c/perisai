@@ -8,6 +8,7 @@ use App\Models\StandarIndikator;
 use App\Models\FungsiStandar;
 use Illuminate\Http\Request;
 use PDF;
+use App\Services\PdfFooter;
 
 
 class SkController extends Controller
@@ -29,17 +30,7 @@ class SkController extends Controller
         $pdf = PDF::loadView('admin.sk.kategoripdf', compact('kategoris', 'namaOpd'))
             ->setPaper('A4', 'portrait');
 
-        $pdf->getDomPDF()->getCanvas()->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
-            $text = "PERISAI  :: Page $pageNumber of $pageCount";
-            $font = $fontMetrics->getFont('Helvetica', 'normal');
-            $size = 9;
-            $width = $canvas->get_width();
-            $height = $canvas->get_height();
-            $textWidth = $fontMetrics->getTextWidth($text, $font, $size);
-            $x = ($width - $textWidth) / 2;
-            $y = $height - 30;
-            $canvas->text($x, $y, $text, $font, $size);
-        });
+        PdfFooter::add_default($pdf);
 
         return $pdf->download('kategoripdf' . date('Ymd_His') . '.pdf');
     }
@@ -107,17 +98,7 @@ class SkController extends Controller
         $pdf = PDF::loadView('admin.sk.fungsipdf', compact('namaOpd', 'kategori', 'fungsiStandar'))
             ->setPaper('A4', 'portrait');
 
-        $pdf->getDomPDF()->getCanvas()->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
-            $text = "PERISAI  :: Page $pageNumber of $pageCount";
-            $font = $fontMetrics->getFont('Helvetica', 'normal');
-            $size = 9;
-            $width = $canvas->get_width();
-            $height = $canvas->get_height();
-            $textWidth = $fontMetrics->getTextWidth($text, $font, $size);
-            $x = ($width - $textWidth) / 2;
-            $y = $height - 30;
-            $canvas->text($x, $y, $text, $font, $size);
-        });
+        PdfFooter::add_default($pdf);
 
         return $pdf->download('fungsipdf' . date('Ymd_His') . '.pdf');
     }
@@ -198,17 +179,7 @@ class SkController extends Controller
         $pdf = PDF::loadView('admin.sk.indikatorpdf', compact('namaOpd', 'indikators', 'fungsiStandar'))
             ->setPaper('A4', 'portrait');
 
-        $pdf->getDomPDF()->getCanvas()->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
-            $text = "PERISAI  :: Page $pageNumber of $pageCount";
-            $font = $fontMetrics->getFont('Helvetica', 'normal');
-            $size = 9;
-            $width = $canvas->get_width();
-            $height = $canvas->get_height();
-            $textWidth = $fontMetrics->getTextWidth($text, $font, $size);
-            $x = ($width - $textWidth) / 2;
-            $y = $height - 30;
-            $canvas->text($x, $y, $text, $font, $size);
-        });
+        PdfFooter::add_default($pdf);
 
         return $pdf->download('indikatorpdf' . date('Ymd_His') . '.pdf');
     }
@@ -293,17 +264,7 @@ class SkController extends Controller
         $pdf = PDF::loadView('admin.sk.rekomendasipdf', compact('namaOpd', 'indikator', 'rekomendasis', 'fungsiStandar'))
             ->setPaper('A4', 'portrait');
 
-        $pdf->getDomPDF()->getCanvas()->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
-            $text = "PERISAI  :: Page $pageNumber of $pageCount";
-            $font = $fontMetrics->getFont('Helvetica', 'normal');
-            $size = 9;
-            $width = $canvas->get_width();
-            $height = $canvas->get_height();
-            $textWidth = $fontMetrics->getTextWidth($text, $font, $size);
-            $x = ($width - $textWidth) / 2;
-            $y = $height - 30;
-            $canvas->text($x, $y, $text, $font, $size);
-        });
+        PdfFooter::add_default($pdf);
 
         return $pdf->download('rekomendasipdf' . date('Ymd_His') . '.pdf');
     }

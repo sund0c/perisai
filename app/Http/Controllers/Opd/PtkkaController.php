@@ -15,6 +15,7 @@ use App\Models\RekomendasiStandard;
 use App\Models\PtkkaJawaban;
 use App\Models\Periode;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\PdfFooter;
 use Illuminate\Support\Facades\DB;
 
 class PtkkaController extends Controller
@@ -657,22 +658,7 @@ class PtkkaController extends Controller
             'skorPerFungsi' // <— tambahan untuk view
         ))->setPaper([0, 0, 595.28, 841.89], 'portrait');
 
-        $dompdf = $pdf->getDomPDF();
-        $dompdf->render();
-
-        $canvas = $dompdf->getCanvas();
-        $fontMetrics = $dompdf->getFontMetrics();
-        $canvas->page_script(function ($pageNumber, $pageCount) use ($canvas, $fontMetrics) {
-            $text = "PERISAI :: Halaman $pageNumber dari $pageCount";
-            $font = $fontMetrics->getFont('Helvetica', 'normal');
-            $size = 9;
-            $width = $canvas->get_width();
-            $textWidth = $fontMetrics->getTextWidth($text, $font, $size);
-            $x = ($width - $textWidth) / 2;
-            $y = 820;
-            $canvas->text($x, $y, $text, $font, $size);
-        });
-
+        PdfFooter::add_default($pdf);
         return $pdf->download('ptkka-' . $session->uid . '.pdf');
     }
 

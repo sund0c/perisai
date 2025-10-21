@@ -13,6 +13,7 @@ use App\Models\SubKlasifikasiAset;
 use App\Models\KonfigurasiField;
 use Illuminate\Http\Request;
 use PDF;
+use App\Services\PdfFooter;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Dompdf\FontMetrics;
@@ -568,25 +569,7 @@ class AsetController extends Controller
 
         $pdf = PDF::loadView('opd.aset.export_rekap_pdf', compact('klasifikasis', 'namaOpd', 'ranges'))
             ->setPaper('A4', 'portrait');
-        $dompdf = $pdf->getDomPDF();
-        $dompdf->render();
-
-        $canvas = $dompdf->getCanvas();
-        $fontMetrics = $dompdf->getFontMetrics();        // <- ambil dari DOMPDF, bukan canvas
-        $font = $fontMetrics->getFont('Helvetica', 'normal'); // atau 'DejaVu Sans' bila perlu
-        $size = 9;
-
-        $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) use ($font, $size) {
-            $text = "PERISAI :: Hal {$pageNumber} dari {$pageCount}";
-            $w    = $canvas->get_width();
-            $h    = $canvas->get_height();
-
-            $textWidth = $fontMetrics->getTextWidth($text, $font, $size);
-            $x = ($w - $textWidth) / 2;
-            $y = $h - 30; // 30px dari bawah (pastikan margin bawah cukup)
-
-            $canvas->text($x, $y, $text, $font, $size);
-        });
+        PdfFooter::add_default($pdf);
 
         return $pdf->download('rekapaset_' . date('YmdHis') . '.pdf');
     }
@@ -615,25 +598,7 @@ class AsetController extends Controller
         $pdf = Pdf::loadView('opd.aset.export_rekap_klas_pdf', compact('klasifikasi', 'asets', 'namaOpd', 'subs'))
             ->setPaper('A4', 'portrait');
 
-        $dompdf = $pdf->getDomPDF();
-        $dompdf->render();
-
-        $canvas = $dompdf->getCanvas();
-        $fontMetrics = $dompdf->getFontMetrics();        // <- ambil dari DOMPDF, bukan canvas
-        $font = $fontMetrics->getFont('Helvetica', 'normal'); // atau 'DejaVu Sans' bila perlu
-        $size = 9;
-
-        $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) use ($font, $size) {
-            $text = "PERISAI :: Hal {$pageNumber} dari {$pageCount}";
-            $w    = $canvas->get_width();
-            $h    = $canvas->get_height();
-
-            $textWidth = $fontMetrics->getTextWidth($text, $font, $size);
-            $x = ($w - $textWidth) / 2;
-            $y = $h - 30; // 30px dari bawah (pastikan margin bawah cukup)
-
-            $canvas->text($x, $y, $text, $font, $size);
-        });
+        PdfFooter::add_default($pdf);
         $filename = 'rekapasetklas_' . now()->format('YmdHis') . '.pdf';
         return $pdf->download($filename);
     }
@@ -686,25 +651,7 @@ class AsetController extends Controller
             'ranges'
         ))->setPaper('A4', 'portrait'); // 'portrait' (bukan 'potrait')
 
-        $dompdf = $pdf->getDomPDF();
-        $dompdf->render();
-
-        $canvas = $dompdf->getCanvas();
-        $fontMetrics = $dompdf->getFontMetrics();        // <- ambil dari DOMPDF, bukan canvas
-        $font = $fontMetrics->getFont('Helvetica', 'normal'); // atau 'DejaVu Sans' bila perlu
-        $size = 9;
-
-        $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) use ($font, $size) {
-            $text = "PERISAI :: Hal {$pageNumber} dari {$pageCount}";
-            $w    = $canvas->get_width();
-            $h    = $canvas->get_height();
-
-            $textWidth = $fontMetrics->getTextWidth($text, $font, $size);
-            $x = ($w - $textWidth) / 2;
-            $y = $h - 30; // 30px dari bawah (pastikan margin bawah cukup)
-
-            $canvas->text($x, $y, $text, $font, $size);
-        });
+        PdfFooter::add_default($pdf);
 
         return $pdf->download('nilaiaset_' . strtolower(str_replace('-', '', $aset->kode_aset)) . '_' . date('YmdHis') . '.pdf');
     }

@@ -11,6 +11,7 @@ use App\Models\KlasifikasiAset;
 use App\Models\Periode;
 use App\Models\SubKlasifikasiAset;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\PdfFooter;
 
 class BidangAsetController extends Controller
 {
@@ -224,25 +225,8 @@ class BidangAsetController extends Controller
         $pdf = PDF::loadView('bidang.aset.export_rekap_pdf', compact('klasifikasis', 'namaOpd', 'ranges'))
             ->setPaper('A4', 'portrait');
 
-   $dompdf = $pdf->getDomPDF();
-        $dompdf->render();
-
-        $canvas = $dompdf->getCanvas();
-        $fontMetrics = $dompdf->getFontMetrics();        // <- ambil dari DOMPDF, bukan canvas
-        $font = $fontMetrics->getFont('Helvetica', 'normal'); // atau 'DejaVu Sans' bila perlu
-        $size = 9;
-
-        $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) use ($font, $size) {
-            $text = "PERISAI :: Hal {$pageNumber} dari {$pageCount}";
-            $w    = $canvas->get_width();
-            $h    = $canvas->get_height();
-
-            $textWidth = $fontMetrics->getTextWidth($text, $font, $size);
-            $x = ($w - $textWidth) / 2;
-            $y = $h - 30; // 30px dari bawah (pastikan margin bawah cukup)
-
-            $canvas->text($x, $y, $text, $font, $size);
-        });
+        // Use centralized footer
+        PdfFooter::add_default($pdf);
         return $pdf->download('asettikpemprovbali_' . date('Ymd_His') . '.pdf');
     }
 
@@ -300,25 +284,7 @@ class BidangAsetController extends Controller
         // Buat PDF
         $pdf = PDF::loadView('bidang.aset.export_rekap_klas_pdf', compact('klasifikasi', 'asets', 'namaOpd','subs'))
             ->setPaper([0, 0, 595.28, 841.89], 'portrait'); // A4 dalam points
-   $dompdf = $pdf->getDomPDF();
-        $dompdf->render();
-
-        $canvas = $dompdf->getCanvas();
-        $fontMetrics = $dompdf->getFontMetrics();        // <- ambil dari DOMPDF, bukan canvas
-        $font = $fontMetrics->getFont('Helvetica', 'normal'); // atau 'DejaVu Sans' bila perlu
-        $size = 9;
-
-        $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) use ($font, $size) {
-            $text = "PERISAI :: Hal {$pageNumber} dari {$pageCount}";
-            $w    = $canvas->get_width();
-            $h    = $canvas->get_height();
-
-            $textWidth = $fontMetrics->getTextWidth($text, $font, $size);
-            $x = ($w - $textWidth) / 2;
-            $y = $h - 30; // 30px dari bawah (pastikan margin bawah cukup)
-
-            $canvas->text($x, $y, $text, $font, $size);
-        });
+        PdfFooter::add_default($pdf);
 
         return $pdf->download('asettikperklas_' . date('Ymd_His') . '.pdf');
     }
@@ -367,25 +333,7 @@ class BidangAsetController extends Controller
         $pdf = PDF::loadView('bidang.aset.pdf', compact('aset', 'namaOpd', 'klasifikasi', 'fieldList', 'subklasifikasis','ranges'))
             ->setPaper([0, 0, 595.28, 841.89], 'portrait'); // A4 in points
 
-           $dompdf = $pdf->getDomPDF();
-        $dompdf->render();
-
-        $canvas = $dompdf->getCanvas();
-        $fontMetrics = $dompdf->getFontMetrics();        // <- ambil dari DOMPDF, bukan canvas
-        $font = $fontMetrics->getFont('Helvetica', 'normal'); // atau 'DejaVu Sans' bila perlu
-        $size = 9;
-
-        $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) use ($font, $size) {
-            $text = "PERISAI :: Hal {$pageNumber} dari {$pageCount}";
-            $w    = $canvas->get_width();
-            $h    = $canvas->get_height();
-
-            $textWidth = $fontMetrics->getTextWidth($text, $font, $size);
-            $x = ($w - $textWidth) / 2;
-            $y = $h - 30; // 30px dari bawah (pastikan margin bawah cukup)
-
-            $canvas->text($x, $y, $text, $font, $size);
-        });
+        PdfFooter::add_default($pdf);
 
         return $pdf->download('detilaset_' . date('Ymd_His') . '.pdf');
     }

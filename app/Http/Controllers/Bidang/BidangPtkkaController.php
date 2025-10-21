@@ -14,6 +14,7 @@ use App\Models\FungsiStandar;
 use App\Models\StandarIndikator;
 use App\Models\PtkkaJawaban;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\PdfFooter;
 use Illuminate\Support\Carbon;
 
 class BidangPtkkaController extends Controller
@@ -263,23 +264,7 @@ class BidangPtkkaController extends Controller
         ])
             ->setPaper('A4', 'landscape');
 
-        // Render dulu agar page count tersedia
-        $dompdf = $pdf->getDomPDF();
-        $dompdf->render();
-
-        // Footer terpusat di bawah
-        $canvas = $dompdf->getCanvas();
-        $fontMetrics = $dompdf->getFontMetrics();
-        $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
-            $text = "PERISAI :: Halaman $pageNumber dari $pageCount";
-            $font = $fontMetrics->getFont('Helvetica', 'normal');
-            $size = 9;
-            $width = $canvas->get_width();
-            $textWidth = $fontMetrics->getTextWidth($text, $font, $size);
-            $x = ($width - $textWidth) / 2;
-            $y = 575;
-            $canvas->text($x, $y, $text, $font, $size);
-        });
+        PdfFooter::add_default($pdf);
         return $pdf->download('ptkka_pengajuan_' . date('Ymd_His') . '.pdf');
     }
 
@@ -327,25 +312,7 @@ class BidangPtkkaController extends Controller
         ])
             ->setPaper('A4', 'landscape');
 
-        // render dulu supaya page count tersedia
-        $dompdf = $pdf->getDomPDF();
-        $dompdf->render();
-
-        // footer terpusat (dinamis mengikuti orientasi)
-        $canvas = $dompdf->getCanvas();
-        $fontMetrics = $dompdf->getFontMetrics();
-        $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
-            $text = "PERISAI :: Halaman $pageNumber dari $pageCount";
-            $font = $fontMetrics->getFont('Helvetica', 'normal');
-            $size = 9;
-            $width = $canvas->get_width();
-            $height = $canvas->get_height();
-            $textWidth = $fontMetrics->getTextWidth($text, $font, $size);
-            $x = ($width - $textWidth) / 2;
-            $y = $height - 20; // 20pt dari bawah (aman untuk portrait/landscape)
-            $canvas->text($x, $y, $text, $font, $size);
-        });
-
+        PdfFooter::add_default($pdf);
         return $pdf->download('ptkka_progress_' . date('Ymd_His') . '.pdf');
     }
 
@@ -416,25 +383,7 @@ class BidangPtkkaController extends Controller
         $pdf = Pdf::loadView('bidang.ptkka..export_closing_pdf', compact('rows', 'generatedAt'))
             ->setPaper('A4', 'landscape');
 
-        // render dulu supaya page count tersedia
-        $dompdf = $pdf->getDomPDF();
-        $dompdf->render();
-
-        // footer terpusat (dinamis mengikuti orientasi)
-        $canvas = $dompdf->getCanvas();
-        $fontMetrics = $dompdf->getFontMetrics();
-        $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
-            $text = "PERISAI :: Halaman $pageNumber dari $pageCount";
-            $font = $fontMetrics->getFont('Helvetica', 'normal');
-            $size = 9;
-            $width = $canvas->get_width();
-            $height = $canvas->get_height();
-            $textWidth = $fontMetrics->getTextWidth($text, $font, $size);
-            $x = ($width - $textWidth) / 2;
-            $y = $height - 20; // 20pt dari bawah (aman untuk portrait/landscape)
-            $canvas->text($x, $y, $text, $font, $size);
-        });
-
+        PdfFooter::add_default($pdf);
         return $pdf->download('ptkkapemprovbali_' . now()->format('Ymd-His') . '.pdf');
     }
 
@@ -775,24 +724,7 @@ class BidangPtkkaController extends Controller
         ))
             ->setPaper([0, 0, 595.28, 841.89], 'portrait'); // A4 in points
 
-        // Call render first to make sure page count is available
-        $dompdf = $pdf->getDomPDF();
-        $dompdf->render();
-
-        // Footer and page script
-        $canvas = $dompdf->getCanvas();
-        $fontMetrics = $dompdf->getFontMetrics();
-        $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
-            $text = "PERISAI :: Halaman $pageNumber dari $pageCount";
-            $font = $fontMetrics->getFont('Helvetica', 'normal');
-            $size = 9;
-            $width = $canvas->get_width();
-            $textWidth = $fontMetrics->getTextWidth($text, $font, $size);
-            $x = ($width - $textWidth) / 2;
-            $y = 820; // posisi bawah halaman A4
-            $canvas->text($x, $y, $text, $font, $size);
-        });
-
+        PdfFooter::add_default($pdf);
         return $pdf->download('ptkka-' . $session->uid . '.pdf');
     }
 
@@ -903,24 +835,7 @@ class BidangPtkkaController extends Controller
         ))
             ->setPaper([0, 0, 595.28, 841.89], 'portrait'); // A4 in points
 
-        // Render dulu supaya page count tersedia
-        $dompdf = $pdf->getDomPDF();
-        $dompdf->render();
-
-        // Footer halaman
-        $canvas = $dompdf->getCanvas();
-        $fontMetrics = $dompdf->getFontMetrics();
-        $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
-            $text = "PERISAI :: Halaman $pageNumber dari $pageCount";
-            $font = $fontMetrics->getFont('Helvetica', 'normal');
-            $size = 9;
-            $width = $canvas->get_width();
-            $textWidth = $fontMetrics->getTextWidth($text, $font, $size);
-            $x = ($width - $textWidth) / 2;
-            $y = 820; // posisi bawah halaman A4
-            $canvas->text($x, $y, $text, $font, $size);
-        });
-
+        PdfFooter::add_default($pdf);
         return $pdf->stream('ptkka-' . $session->uid . '.pdf');
     }
 }

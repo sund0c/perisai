@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\KlasifikasiAset;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\PdfFooter;
 use Illuminate\Support\Facades\Schema;
 
 
@@ -57,17 +58,7 @@ class KlasifikasiAsetController extends Controller
         $klasifikasis = KlasifikasiAset::with('subklasifikasi')->get();
         $pdf = Pdf::loadView('klasifikasiaset.export_pdf', compact('klasifikasis'))
             ->setPaper('A4', 'potrait');
-        $pdf->getDomPDF()->getCanvas()->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
-            $text = "PERISAI  :: Page $pageNumber of $pageCount";
-            $font = $fontMetrics->getFont('Helvetica', 'normal');
-            $size = 9;
-            $width = $canvas->get_width();
-            $height = $canvas->get_height();
-            $textWidth = $fontMetrics->getTextWidth($text, $font, $size);
-            $x = ($width - $textWidth) / 2; // Center horizontally
-            $y = $height - 30; // 30 px from bottom
-            $canvas->text($x, $y, $text, $font, $size);
-        });
+        PdfFooter::add_default($pdf);
         return $pdf->download('klasifikasi_aset.pdf');
     }
 

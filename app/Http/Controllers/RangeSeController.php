@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\RangeSe;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\PdfFooter;
 
 class RangeSeController extends Controller
 {
@@ -78,17 +79,7 @@ class RangeSeController extends Controller
         $rangeSes = RangeSe::all();
         $pdf = Pdf::loadView('admin.range_se.export_pdf', compact('rangeSes'))
             ->setPaper('A4', 'potrait');
-        $pdf->getDomPDF()->getCanvas()->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
-            $text = "PERISAI  :: Page $pageNumber of $pageCount";
-            $font = $fontMetrics->getFont('Helvetica', 'normal');
-            $size = 9;
-            $width = $canvas->get_width();
-            $height = $canvas->get_height();
-            $textWidth = $fontMetrics->getTextWidth($text, $font, $size);
-            $x = ($width - $textWidth) / 2; // Center horizontally
-            $y = $height - 30; // 30 px from bottom
-            $canvas->text($x, $y, $text, $font, $size);
-        });
+        PdfFooter::add_default($pdf);
         return $pdf->download('range_se.pdf');
     }
 }
