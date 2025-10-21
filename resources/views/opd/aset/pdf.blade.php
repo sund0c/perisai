@@ -240,14 +240,40 @@
             <td class="value"><strong>{{ $aset->nilai_akhir_aset }}</strong></td>
         </tr>
     </table><BR><BR><BR>
-    <h4>Catatan</h4>
-    <ol>
-        <li>Dokumen informasi Aset ini adalah bersifat <b>RAHASIA</b>.</li>
-        <li>Musnahkan jika dokumen ini sudah selesai digunakan.</li>
-        <li>Semua informasi tentang aset ini dapat berubah sesuai dengan review dan pemutahiran data PERISAI <b>yang
-                dilakukan sekali setahun oleh Pemilik Aset.</b> </li>
-    </ol>
 
+    <h4>A. KETERANGAN SUB KLASIFIKASI ASET</h4>
+    <div class="matik-list" style="font-size:0.9em">
+        <ul>
+            <li><strong>{{ optional($aset->subklasifikasiaset)->subklasifikasiaset ?? '-' }}</strong> :
+                {{ optional($aset->subklasifikasiaset)->penjelasan ?? '-' }}</li>
+
+        </ul>
+    </div> <BR>
+    <h4>B. KETERANGAN NILAI ASET</h4>
+    <ol>
+        @foreach ($ranges as $range)
+            <li><b>{{ $range->nilai_akhir_aset }} :</b> {{ $range->deskripsi }}</li>
+        @endforeach
+    </ol><BR>
+    <h4>C. CATATAN LAIN</h4>
+    <ol>
+        <li>Kode TLP (Traffic Light Protocol) dipakai untuk mengklasifikasikan sensitifitas informasi, supaya jelas
+            sejauh mana informasi boleh dibagikan.
+            Kode TLP:AMBER+STRICT berarti berisi informasi cukup sensitif. Hanya untuk internal organisasi penerima,
+            tidak boleh
+            keluar.
+        </li>
+        <li>PERISAI adalah sistem elektronik untuk melakukan <b>PE</b>ngelolaan <b>RIS</b>iko <b>A</b>set
+            <b>I</b>nformasi di lingkup Pemerintah Provinsi Bali. PERISAI dikelola oleh
+            Dinas Kominfos Provinsi Bali (Contact: Bidang Persandian)
+        </li>
+        {{-- <li>Aset dalam PERISAI adalah <strong>ASET INFORMASI yang mendukung kinerja organisasi dalam menjalakan proses
+                bisnis/layanannya.</strong>
+        </li> --}}
+        <li>Semua informasi tentang aset ini dapat berubah sesuai dengan review dan pemutahiran data PERISAI yang
+            dilakukan minimal sekali setahun oleh Pemilik Aset. Pemutahiran akan dilakukan serempak, menunggu
+            informasi dari Diskominfos Prov Bali. </li>
+    </ol>
 </body>
 
 </html>
