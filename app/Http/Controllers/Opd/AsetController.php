@@ -569,7 +569,7 @@ class AsetController extends Controller
 
         $pdf = PDF::loadView('opd.aset.export_rekap_pdf', compact('klasifikasis', 'namaOpd', 'ranges'))
             ->setPaper('A4', 'portrait');
-        PdfFooter::add_default($pdf);
+    PdfFooter::add_right_corner_footer($pdf);
 
         return $pdf->download('rekapaset_' . date('YmdHis') . '.pdf');
     }
@@ -598,7 +598,7 @@ class AsetController extends Controller
         $pdf = Pdf::loadView('opd.aset.export_rekap_klas_pdf', compact('klasifikasi', 'asets', 'namaOpd', 'subs'))
             ->setPaper('A4', 'portrait');
 
-        PdfFooter::add_default($pdf);
+    PdfFooter::add_right_corner_footer($pdf);
         $filename = 'rekapasetklas_' . now()->format('YmdHis') . '.pdf';
         return $pdf->download($filename);
     }
@@ -651,7 +651,7 @@ class AsetController extends Controller
             'ranges'
         ))->setPaper('A4', 'portrait'); // 'portrait' (bukan 'potrait')
 
-        PdfFooter::add_default($pdf);
+    PdfFooter::add_right_corner_footer($pdf);
 
         return $pdf->download('nilaiaset_' . strtolower(str_replace('-', '', $aset->kode_aset)) . '_' . date('YmdHis') . '.pdf');
     }

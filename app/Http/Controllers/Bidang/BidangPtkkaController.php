@@ -264,7 +264,7 @@ class BidangPtkkaController extends Controller
         ])
             ->setPaper('A4', 'landscape');
 
-        PdfFooter::add_default($pdf);
+    PdfFooter::add_right_corner_footer($pdf);
         return $pdf->download('ptkka_pengajuan_' . date('Ymd_His') . '.pdf');
     }
 
@@ -312,7 +312,7 @@ class BidangPtkkaController extends Controller
         ])
             ->setPaper('A4', 'landscape');
 
-        PdfFooter::add_default($pdf);
+    PdfFooter::add_right_corner_footer($pdf);
         return $pdf->download('ptkka_progress_' . date('Ymd_His') . '.pdf');
     }
 
@@ -383,7 +383,7 @@ class BidangPtkkaController extends Controller
         $pdf = Pdf::loadView('bidang.ptkka..export_closing_pdf', compact('rows', 'generatedAt'))
             ->setPaper('A4', 'landscape');
 
-        PdfFooter::add_default($pdf);
+    PdfFooter::add_right_corner_footer($pdf);
         return $pdf->download('ptkkapemprovbali_' . now()->format('Ymd-His') . '.pdf');
     }
 
@@ -724,7 +724,7 @@ class BidangPtkkaController extends Controller
         ))
             ->setPaper([0, 0, 595.28, 841.89], 'portrait'); // A4 in points
 
-        PdfFooter::add_default($pdf);
+    PdfFooter::add_right_corner_footer($pdf);
         return $pdf->download('ptkka-' . $session->uid . '.pdf');
     }
 
@@ -835,7 +835,7 @@ class BidangPtkkaController extends Controller
         ))
             ->setPaper([0, 0, 595.28, 841.89], 'portrait'); // A4 in points
 
-        PdfFooter::add_default($pdf);
+    PdfFooter::add_right_corner_footer($pdf);
         return $pdf->stream('ptkka-' . $session->uid . '.pdf');
     }
 }

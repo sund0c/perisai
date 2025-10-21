@@ -226,7 +226,7 @@ class BidangAsetController extends Controller
             ->setPaper('A4', 'portrait');
 
         // Use centralized footer
-        PdfFooter::add_default($pdf);
+    PdfFooter::add_right_corner_footer($pdf);
         return $pdf->download('asettikpemprovbali_' . date('Ymd_His') . '.pdf');
     }
 
@@ -284,7 +284,7 @@ class BidangAsetController extends Controller
         // Buat PDF
         $pdf = PDF::loadView('bidang.aset.export_rekap_klas_pdf', compact('klasifikasi', 'asets', 'namaOpd','subs'))
             ->setPaper([0, 0, 595.28, 841.89], 'portrait'); // A4 dalam points
-        PdfFooter::add_default($pdf);
+    PdfFooter::add_right_corner_footer($pdf);
 
         return $pdf->download('asettikperklas_' . date('Ymd_His') . '.pdf');
     }
@@ -333,7 +333,7 @@ class BidangAsetController extends Controller
         $pdf = PDF::loadView('bidang.aset.pdf', compact('aset', 'namaOpd', 'klasifikasi', 'fieldList', 'subklasifikasis','ranges'))
             ->setPaper([0, 0, 595.28, 841.89], 'portrait'); // A4 in points
 
-        PdfFooter::add_default($pdf);
+    PdfFooter::add_right_corner_footer($pdf);
 
         return $pdf->download('detilaset_' . date('Ymd_His') . '.pdf');
     }

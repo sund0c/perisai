@@ -79,7 +79,7 @@ class RangeAsetController extends Controller
         $rangeAsets = RangeAset::all();
         $pdf = Pdf::loadView('range_aset.export_pdf', compact('rangeAsets'))
             ->setPaper('A4', 'potrait');
-        PdfFooter::add_default($pdf);
+    PdfFooter::add_right_corner_footer($pdf);
         return $pdf->download('range_aset.pdf');
     }
 }

@@ -231,7 +231,7 @@ $asetPL = Aset::whereHas('subklasifikasiaset', function ($q) {
 
         $pdf = PDF::loadView('opd.kategorise.export_rekap_pdf', compact('strategis', 'tinggi', 'rendah', 'belum', 'total', 'namaOpd', 'kategoriMeta'))
             ->setPaper('A4', 'portrait');
-        PdfFooter::add_default($pdf);
+    PdfFooter::add_right_corner_footer($pdf);
         return $pdf->download('rekap_kategorise_' . date('Ymd_His') . '.pdf');
     }
 
@@ -283,7 +283,7 @@ $query = Aset::query()
 
         $pdf = PDF::loadView('opd.kategorise.export_rekap_kategori_pdf', compact('data', 'kategori', 'namaOpd', 'rangeSes'))
             ->setPaper('A4', 'potrait');
-        PdfFooter::add_default($pdf);
+    PdfFooter::add_right_corner_footer($pdf);
         return $pdf->download('kategorise_pernilai_' . date('Ymd_His') . '.pdf');
     }
 
@@ -515,7 +515,7 @@ $query = Aset::query()
             'namaOpd',
         ))
             ->setPaper('a4', 'portrait');
-        PdfFooter::add_default($pdf);
+    PdfFooter::add_right_corner_footer($pdf);
         return $pdf->download('penilaian_kategori_se_' . now()->format('Ymd_His') . '.pdf');
     }
 

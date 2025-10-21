@@ -658,7 +658,7 @@ class PtkkaController extends Controller
             'skorPerFungsi' // <— tambahan untuk view
         ))->setPaper([0, 0, 595.28, 841.89], 'portrait');
 
-        PdfFooter::add_default($pdf);
+    PdfFooter::add_right_corner_footer($pdf);
         return $pdf->download('ptkka-' . $session->uid . '.pdf');
     }
 

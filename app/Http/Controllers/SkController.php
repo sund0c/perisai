@@ -30,7 +30,7 @@ class SkController extends Controller
         $pdf = PDF::loadView('admin.sk.kategoripdf', compact('kategoris', 'namaOpd'))
             ->setPaper('A4', 'portrait');
 
-        PdfFooter::add_default($pdf);
+    PdfFooter::add_right_corner_footer($pdf);
 
         return $pdf->download('kategoripdf' . date('Ymd_His') . '.pdf');
     }
@@ -98,7 +98,7 @@ class SkController extends Controller
         $pdf = PDF::loadView('admin.sk.fungsipdf', compact('namaOpd', 'kategori', 'fungsiStandar'))
             ->setPaper('A4', 'portrait');
 
-        PdfFooter::add_default($pdf);
+    PdfFooter::add_right_corner_footer($pdf);
 
         return $pdf->download('fungsipdf' . date('Ymd_His') . '.pdf');
     }
@@ -179,7 +179,7 @@ class SkController extends Controller
         $pdf = PDF::loadView('admin.sk.indikatorpdf', compact('namaOpd', 'indikators', 'fungsiStandar'))
             ->setPaper('A4', 'portrait');
 
-        PdfFooter::add_default($pdf);
+    PdfFooter::add_right_corner_footer($pdf);
 
         return $pdf->download('indikatorpdf' . date('Ymd_His') . '.pdf');
     }
@@ -264,7 +264,7 @@ class SkController extends Controller
         $pdf = PDF::loadView('admin.sk.rekomendasipdf', compact('namaOpd', 'indikator', 'rekomendasis', 'fungsiStandar'))
             ->setPaper('A4', 'portrait');
 
-        PdfFooter::add_default($pdf);
+    PdfFooter::add_right_corner_footer($pdf);
 
         return $pdf->download('rekomendasipdf' . date('Ymd_His') . '.pdf');
     }

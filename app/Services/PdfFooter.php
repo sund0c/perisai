@@ -21,7 +21,7 @@ class PdfFooter
      *
      * @return void
      */
-    public static function add($pdf, array $opts = [])
+    public static function add_right_corner_footer($pdf, array $opts = [])
     {
         $title = $opts['title'] ?? 'PERISAI';
         $pagePrefix = $opts['pagePrefix'] ?? 'Hal';

@@ -199,7 +199,7 @@ $asetPL = Aset::whereHas('subklasifikasiaset', function ($q) {
             'namaOpd'
         ))
             ->setPaper([0, 0, 595.28, 841.89], 'portrait');
-        PdfFooter::add_default($pdf);
+    PdfFooter::add_right_corner_footer($pdf);
         return $pdf->download('kategorisepemprovbali_' . date('Ymd_His') . '.pdf');
     }
 
@@ -266,7 +266,7 @@ $query = Aset::query()
         // Buat PDF: A4 (points) + footer via render → page_script
         $pdf = PDF::loadView('bidang.kategorise.export_rekap_kategori_pdf', compact('data', 'kategori', 'namaOpd', 'rangeSes'))
             ->setPaper([0, 0, 595.28, 841.89], 'portrait');
-        PdfFooter::add_default($pdf);
+    PdfFooter::add_right_corner_footer($pdf);
         return $pdf->download('kategorisepernilai_' . date('Ymd_His') . '.pdf');
     }
 
@@ -297,7 +297,7 @@ $query = Aset::query()
             'skor'
         ))
             ->setPaper('A4', 'potrait');
-        PdfFooter::add_default($pdf);
+    PdfFooter::add_right_corner_footer($pdf);
         return $pdf->download('penilaiankategorise_' . date('Ymd_His') . '.pdf');
     }
 }

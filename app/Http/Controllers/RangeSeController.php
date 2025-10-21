@@ -79,7 +79,7 @@ class RangeSeController extends Controller
         $rangeSes = RangeSe::all();
         $pdf = Pdf::loadView('admin.range_se.export_pdf', compact('rangeSes'))
             ->setPaper('A4', 'potrait');
-        PdfFooter::add_default($pdf);
+    PdfFooter::add_right_corner_footer($pdf);
         return $pdf->download('range_se.pdf');
     }
 }

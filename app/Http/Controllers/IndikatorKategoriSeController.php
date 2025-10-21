@@ -87,7 +87,7 @@ class IndikatorKategoriSeController extends Controller
         $indikator = IndikatorKategoriSe::all();
         $pdf = Pdf::loadView('admin.indikatorkategorise.export_pdf', compact('indikator'))
             ->setPaper('A4', 'potrait');
-        PdfFooter::add_default($pdf);
+    PdfFooter::add_right_corner_footer($pdf);
         return $pdf->download('indikator_kategorise.pdf');
     }
 }

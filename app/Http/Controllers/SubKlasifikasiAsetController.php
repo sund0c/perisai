@@ -83,7 +83,7 @@ class SubKlasifikasiAsetController extends Controller
         //$klasifikasis = KlasifikasiAset::with('subklasifikasi')->get();
         $pdf = Pdf::loadView('admin.subklasifikasiaset.export_pdf', compact('klasifikasis', 'subklasifikasi'))
             ->setPaper('A4', 'potrait');
-        PdfFooter::add_default($pdf);
+    PdfFooter::add_right_corner_footer($pdf);
         return $pdf->download('subklasifikasi_aset.pdf');
     }
 }

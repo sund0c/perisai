@@ -149,7 +149,8 @@
         </table>
     </div>
 
-    <table>
+     <!-- Add space for bottom -->
+    <table style="margin-top: -10px;">
         <thead>
             <tr>
                 <th style="width:auto;text-align: center;"rowspan="2">KLASIFIKASI ASET</th>
