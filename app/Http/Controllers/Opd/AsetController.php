@@ -286,26 +286,11 @@ class AsetController extends Controller
 
         try {
             $aset = DB::transaction(function () use ($validated, $prefix, $opdId, $periodeAktif, $klasifikasiaset) {
-                // 1) Dapatkan atau buat ASET KEY (kepemilikan kode_aset oleh OPD ini, global sepanjang waktu)
-                //    Kode digenerate berurutan per OPD+prefix dan DIJAMIN unik global oleh tabel aset_keys (unique: kode_aset)
-                $kode = $this->generateKodeAsetForOpd($opdId, $prefix); // lihat helper di bawah
-
-                // Ambil row aset_key milik (opd_id, kode)
-                $key = DB::table('aset_keys')->where('kode_aset', $kode)->lockForUpdate()->first();
-                if (!$key) {
-                    // Safety net: seharusnya sudah dibuat di helper; tapi kalau belum (race), buat di sini
-                    $keyId = DB::table('aset_keys')->insertGetId([
-                        'opd_id'     => $opdId,
-                        'kode_aset'  => $kode,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                } else {
-                    if ((int) $key->opd_id !== (int) $opdId) {
-                        abort(422, "Kode aset {$kode} sudah dimiliki OPD lain.");
-                    }
-                    $keyId = $key->id;
-                }
+                // 1) Dapatkan atau buat ASET KEY secara atomik: helper kini mengembalikan ['kode' => ..., 'id' => ...]
+                //    Ini menghindari nested transaction dan lock ganda yang dapat menyebabkan deadlock.
+                $res = $this->generateKodeAsetForOpd($opdId, $prefix); // returns ['kode' => 'SK-0001', 'id' => 123]
+                $kode = $res['kode'];
+                $keyId = $res['id'];
 
                 // 2) Simpan baris ASSET untuk periode ini
                 $data = $validated;
@@ -666,53 +651,55 @@ class AsetController extends Controller
      * - Nomor berurutan per OPD+prefix (misal SK-0001, SK-0002, ...)
      * - Anti race: lock & retry jika terjadi bentrok 1062
      */
-    private function generateKodeAsetForOpd(int $opdId, string $prefix, int $pad = 4): string
+    /**
+     * Menghasilkan kode_aset baru untuk OPD tertentu dengan prefix tertentu
+     * dan mendaftarkannya ke tabel aset_keys (kode_aset unik global).
+     *
+     * Mengembalikan array ['kode' => string, 'id' => int]
+     *
+     * Catatan: fungsi ini tidak membuka transaksi sendiri; caller boleh membungkusnya
+     * jika perlu. Duplikasi ditangani oleh unique constraint + retry pada insert.
+     */
+    private function generateKodeAsetForOpd(int $opdId, string $prefix, int $pad = 4): array
     {
         $attempts = 0;
 
-        return DB::transaction(function () use ($opdId, $prefix, $pad, &$attempts) {
-            // Kunci aset_keys terkait prefix ini agar aman dari balapan
-            // Ambil nomor terakhir yang dimiliki OPD ini untuk prefix tsb
-            $lastKode = DB::table('aset_keys')
-                ->where('opd_id', $opdId)
-                ->where('kode_aset', 'like', $prefix . '%')
-                ->lockForUpdate()
-                ->orderByDesc('kode_aset') // aman karena format fix: PREFIX-0001
-                ->value('kode_aset');
+        // Ambil nomor terakhir (tanpa lock). Collisions ditangani oleh unique constraint & retry pada insert.
+        $lastKode = DB::table('aset_keys')
+            ->where('opd_id', $opdId)
+            ->where('kode_aset', 'like', $prefix . '%')
+            ->orderByDesc('kode_aset')
+            ->value('kode_aset');
 
-            $lastNum = 0;
-            if ($lastKode && preg_match('/^' . preg_quote($prefix, '/') . '(\d+)$/', $lastKode, $m)) {
-                $lastNum = (int) $m[1];
-            }
+        $lastNum = 0;
+        if ($lastKode && preg_match('/^' . preg_quote($prefix, '/') . '(\d+)$/', $lastKode, $m)) {
+            $lastNum = (int) $m[1];
+        }
 
-            while (true) {
-                $attempts++;
-                $candidate = $prefix . str_pad(++$lastNum, $pad, '0', STR_PAD_LEFT);
+        while (true) {
+            $attempts++;
+            $candidate = $prefix . str_pad(++$lastNum, $pad, '0', STR_PAD_LEFT);
 
-                try {
-                    // Coba daftarkan ke aset_keys (kode unik global)
-                    DB::table('aset_keys')->insert([
-                        'opd_id'     => $opdId,
-                        'kode_aset'  => $candidate,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
+            try {
+                $id = DB::table('aset_keys')->insertGetId([
+                    'opd_id'     => $opdId,
+                    'kode_aset'  => $candidate,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
 
-                    // Sukses → this OPD “memiliki” kode ini selamanya
-                    return $candidate;
-                } catch (QueryException $e) {
-                    // 1062 = duplicate (kemungkinan karena OPD lain baru saja mengambil kode itu)
-                    if (($e->errorInfo[1] ?? null) === 1062) {
-                        // Naikkan nomor dan coba lagi
-                        if ($attempts > 5) {
-                            // Hindari loop tak berujung; sesuaikan kalau perlu
-                            throw $e;
-                        }
-                        continue;
+                return ['kode' => $candidate, 'id' => (int) $id];
+            } catch (QueryException $e) {
+                // 1062 = duplicate (kemungkinan karena OPD lain baru saja mengambil kode itu)
+                if (($e->errorInfo[1] ?? null) === 1062) {
+                    // Naikkan nomor dan coba lagi. Batasi percobaan bila perlu.
+                    if ($attempts > 20) {
+                        throw $e;
                     }
-                    throw $e;
+                    continue;
                 }
+                throw $e;
             }
-        }, 5); // retry transaksi jika deadlock
+        }
     }
 }
