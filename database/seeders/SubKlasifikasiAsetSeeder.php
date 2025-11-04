@@ -100,12 +100,12 @@ class SubKlasifikasiAsetSeeder extends Seeder
                         [
                 'klasifikasi_aset_id' => $sdm->id,
                 'subklasifikasiaset' => 'Management',
-                'penjelasan' => 'Personil pelaksana teknis proses penyediaan layanan TI'
+                'penjelasan' => 'Personil pelaksana proses penyediaan layanan TI pada tingkat manajerial'
             ],
             [
                 'klasifikasi_aset_id' => $sdm->id,
                 'subklasifikasiaset' => 'Technical',
-                'penjelasan' => 'Personil pelaksana proses penyediaan layanan TI pada tingkat manajerial'
+                'penjelasan' => 'Personil pelaksana teknis proses penyediaan layanan TI'
             ],
             [
                 'klasifikasi_aset_id' => $sdm->id,
