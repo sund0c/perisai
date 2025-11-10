@@ -22,7 +22,7 @@ class KlasifikasiAsetSeeder extends Seeder
             [
                 'klasifikasiaset' => 'Perangkat Lunak',
                 'kodeklas' => 'PL',
-                'tampilan_field_aset' => '["periode_id","kode_aset","nama_aset","keterangan","klasifikasiaset_id","subklasifikasiaset_id","lokasi","opd_id","penyedia_aset","status_aktif","kerahasiaan","integritas","ketersediaan","keaslian","kenirsangkalan","kategori_se"]',
+                'tampilan_field_aset' => '["periode_id","kode_aset","nama_aset","keterangan","link_pse","klasifikasiaset_id","subklasifikasiaset_id","lokasi","opd_id","penyedia_aset","status_aktif","kerahasiaan","integritas","ketersediaan","keaslian","kenirsangkalan","kategori_se"]',
             ],
             [
                 'klasifikasiaset' => 'Perangkat Keras',

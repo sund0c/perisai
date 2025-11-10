@@ -243,6 +243,7 @@ class AsetController extends Controller
         if (in_array('nama_aset', $fields))                $rules['nama_aset'] = 'required|string|max:255';
         if (in_array('spesifikasi_aset', $fields))         $rules['spesifikasi_aset'] = 'required|string|max:255';
         if (in_array('lokasi', $fields))                   $rules['lokasi'] = 'required|string|max:255';
+        if (in_array('link_pse', $fields))                 $rules['link_pse'] = 'nullable|string';
         if (in_array('keterangan', $fields))               $rules['keterangan'] = 'nullable|string';
         if (in_array('format_penyimpanan', $fields))       $rules['format_penyimpanan'] = 'required|in:Fisik,Dokumen Elektronik,Fisik dan Dokumen Elektronik';
         if (in_array('masa_berlaku', $fields))             $rules['masa_berlaku'] = 'required|string|max:100';
@@ -416,6 +417,7 @@ class AsetController extends Controller
         ];
         if (in_array('spesifikasi_aset', $fields))         $rules['spesifikasi_aset'] = 'required|string|max:255';
         if (in_array('lokasi', $fields))                   $rules['lokasi'] = 'required|string|max:255';
+        if (in_array('link_pse', $fields))                 $rules['link_pse'] = 'nullable|string';
         if (in_array('keterangan', $fields))               $rules['keterangan'] = 'nullable|string';
         if (in_array('format_penyimpanan', $fields))       $rules['format_penyimpanan'] = 'required|in:Fisik,Dokumen Elektronik,Fisik dan Dokumen Elektronik';
         if (in_array('masa_berlaku', $fields))             $rules['masa_berlaku'] = 'required|string|max:100';
