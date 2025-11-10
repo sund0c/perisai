@@ -686,10 +686,10 @@ class AsetController extends Controller
         // }
 
 
-        
+
         // ambil kode terakhir
         $lastKode = DB::table('aset_keys')
-            ->where('opd_id', $opdId)
+            // ->where('opd_id', $opdId) // Temporary disable
             ->where('kode_aset', 'like', $prefix . '%')
             ->orderByDesc('kode_aset')
             ->value('kode_aset');
