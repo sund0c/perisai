@@ -281,6 +281,9 @@ class AsetController extends Controller
         $validated['klasifikasiaset_id'] = $klasifikasiaset->id; // FK integer
         $validated['opd_id']             = $opdId;
 
+        Log::warning('Pesan peringatan');
+        Log::error('Pesan error');
+
         // Prefix dari klasifikasi (misal: "SK-" atau berdasarkan kode klasifikasi)
         $prefix = strtoupper($klasifikasiaset->kodeklas ?? substr($klasifikasiaset->klasifikasiaset, 0, 2)) . '-';
 
