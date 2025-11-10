@@ -287,8 +287,8 @@ class AsetController extends Controller
             'klasifikasiaset_id' => $validated['klasifikasiaset_id'],
             'opd_id' => $validated['opd_id'],
         ]);
-        Log::warning('Pesan peringatan');
-        Log::error('Pesan error');
+        Log::warning('----------Pesan peringatan--------------');
+        
 
         // Prefix dari klasifikasi (misal: "SK-" atau berdasarkan kode klasifikasi)
         $prefix = strtoupper($klasifikasiaset->kodeklas ?? substr($klasifikasiaset->klasifikasiaset, 0, 2)) . '-';
@@ -674,16 +674,55 @@ class AsetController extends Controller
         $attempts = 0;
 
         // Ambil nomor terakhir (tanpa lock). Collisions ditangani oleh unique constraint & retry pada insert.
+        // $lastKode = DB::table('aset_keys')
+        //     ->where('opd_id', $opdId)
+        //     ->where('kode_aset', 'like', $prefix . '%')
+        //     ->orderByDesc('kode_aset')
+        //     ->value('kode_aset');
+
+        // $lastNum = 0;
+        // if ($lastKode && preg_match('/^' . preg_quote($prefix, '/') . '(\d+)$/', $lastKode, $m)) {
+        //     $lastNum = (int) $m[1];
+        // }
+
+
+        
+        // ambil kode terakhir
         $lastKode = DB::table('aset_keys')
             ->where('opd_id', $opdId)
             ->where('kode_aset', 'like', $prefix . '%')
             ->orderByDesc('kode_aset')
             ->value('kode_aset');
 
+        // inisialisasi
         $lastNum = 0;
+
+        // logging sebelum regex
+        Log::info('Cek kode aset terakhir', [
+            'opd_id' => $opdId,
+            'prefix' => $prefix,
+            'lastKode' => $lastKode,
+        ]);
+
+        // cek hasil regex
         if ($lastKode && preg_match('/^' . preg_quote($prefix, '/') . '(\d+)$/', $lastKode, $m)) {
             $lastNum = (int) $m[1];
+
+            Log::info('Regex match ditemukan', [
+                'pattern' => '/^' . preg_quote($prefix, '/') . '(\d+)$/',
+                'lastKode' => $lastKode,
+                'lastNum' => $lastNum,
+            ]);
+        } else {
+            Log::warning('Regex tidak cocok atau lastKode kosong', [
+                'lastKode' => $lastKode,
+                'prefix' => $prefix,
+                'opd_id' => $opdId,
+            ]);
         }
+
+        // untuk referensi tambahan
+        Log::debug('Hasil akhir perhitungan lastNum', ['lastNum' => $lastNum]);
 
         while (true) {
             $attempts++;
