@@ -281,6 +281,12 @@ class AsetController extends Controller
         $validated['klasifikasiaset_id'] = $klasifikasiaset->id; // FK integer
         $validated['opd_id']             = $opdId;
 
+        Log::warning('Detail penyimpanan aset', [
+            'uuid' => $validated['uuid'],
+            'periode_id' => $validated['periode_id'],
+            'klasifikasiaset_id' => $validated['klasifikasiaset_id'],
+            'opd_id' => $validated['opd_id'],
+        ]);
         Log::warning('Pesan peringatan');
         Log::error('Pesan error');
 
