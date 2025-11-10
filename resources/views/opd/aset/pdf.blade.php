@@ -198,7 +198,12 @@
     <table>
         @foreach ($fieldList as $field)
             @php
-                $label = ucwords(str_replace('_', ' ', $field));
+                $label = '';
+                if ($field === 'nip_personil') {
+                    $label = 'Nama Personil';
+                } else {
+                    $label = ucwords(str_replace('_', ' ', $field));
+                }
                 $value =
                     $field === 'subklasifikasiaset_id'
                         ? $aset->subklasifikasiaset->subklasifikasiaset ?? '-'
