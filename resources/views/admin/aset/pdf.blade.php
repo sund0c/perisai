@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Aset Informasi</title>
+    <title>Detil Aset TIK</title>
     <style>
         table {
             width: 100%;
@@ -173,79 +173,42 @@
     </div>
 
 
-    {{-- <div class="header">
-        <img src="{{ public_path('images/tlp/tlp_teaser_amber_strict.png') }}" alt="TLP:AMBER+STRICT" class="tlp">
-        <h2>Informasi dan Nilai Aset Informasi - Tahun {{ $tahunAktifGlobal ?? '-' }}</h2>
-        <h3>
-            Pemilik Risiko: {{ strtoupper($namaOpd) }}</h3>
-        <div class="subs">
-            Pemilik Risiko bertanggungjawab terhadap proses bisnis/layanannya dengan cara pengelolaan aset yaitu dari
-            mulai
-            melakukan Pengukuran Nilai Aset, Kategorisasi SE termasuk pemenuhan standar, Pemetaan Risiko, Analisa
-            Risiko,
-            pembuatan Rencana Tindak Lanjut dan implementasi mitigasi risiko, sampai menjadi <i>Lead Auditee</i> dalam
-            Audit Keamanan
-
-        </div>
-
-    </div> --}}
-    {{--
-    @foreach ($fieldList as $field)
-        @includeIf('opd.aset.fields.' . $field, ['aset' => $aset])
-    @endforeach --}}
-
     <table>
         @foreach ($fieldList as $field)
             @php
-                $label = $field === 'nip_personil' ? 'Nama Personil' : ucwords(str_replace('_', ' ', $field));
-
+            $label = '';
+                if ($field === 'nip_personil') {
+                    $label = 'Nama Personil';
+                } else {
+                    $label = ucwords(str_replace('_', ' ', $field));
+                }
                 $value =
                     $field === 'subklasifikasiaset_id'
                         ? $aset->subklasifikasiaset->subklasifikasiaset ?? '-'
                         : $aset->$field ?? '-';
-
-                // Daftar field CIAAA + kode singkat
-                $ciaaaMap = [
-                    'kerahasiaan' => 'C',
-                    'integritas' => 'I',
-                    'ketersediaan' => 'A',
-                    'keaslian' => 'A',
-                    'kenirsangkalan' => 'N',
-                ];
-
-                $labels = [
-                    1 => 'Tidak Signifikan',
-                    2 => 'Penting',
-                    3 => 'Sangat Penting',
-                ];
             @endphp
+            <tr>
+                <td class="label">{{ $label }}</td>
+                @php
+    $labels = [
+        1 => 'Tidak Signifikan',
+        2 => 'Penting',
+        3 => 'Sangat Penting'
+    ];
+@endphp
 
-            {{-- Lewati field keaslian dan kenirsangkalan sepenuhnya --}}
-            @unless (in_array($field, ['kenirsangkalan', 'keaslian']))
-                <tr>
-                    <td class="label">
-                        @if (array_key_exists($field, $ciaaaMap))
-                            Tingkat {{ $label }} ({{ $ciaaaMap[$field] }})
-                        @else
-                            {{ $label }}
-                        @endif
-                    </td>
-                    <td class="value">
-                        {{ $labels[$value] ?? $value }}
-                    </td>
-                </tr>
-            @endunless
+<td class="value">
+    {{ $labels[$value] ?? $value }}
+</td>
+
+            </tr>
         @endforeach
-
-        {{-- Baris terakhir --}}
         <tr>
-            <td class="label">NILAI ASET (CIA)</td>
+            <td class="label">NILAI ASET</td>
             <td class="value"><strong>{{ $aset->nilai_akhir_aset }}</strong></td>
         </tr>
     </table>
-
     <BR>
-
     <h4>A. KETERANGAN SUB KLASIFIKASI ASET</h4>
     <div class="matik-list" style="font-size:0.9em">
         <ul>
@@ -279,6 +242,7 @@
             dilakukan minimal sekali setahun oleh Pemilik Aset. Pemutahiran akan dilakukan serempak, menunggu
             informasi dari Diskominfos Prov Bali. </li>
     </ol>
+
 </body>
 
 </html>

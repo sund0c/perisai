@@ -28,6 +28,7 @@ class DatabaseSeeder extends Seeder
             IndikatorStandardSeeder::class,
             RekomendasiStandardSeeder::class,
             DataPribadiMasterSeeder::class,
+            IndikatorVitalitasSeSeeder::class,
             //KategoriSeSeeder::class,
             // PtkkaSessionSeeder::class,
             //AsetbanyakSeeder::class,

@@ -205,16 +205,7 @@
                 <!-- KIRI: judul + subs (tetap) -->
                 <td style="vertical-align: top;border:none;">
                     <h2>Rekap Kategori SE :: Tahun {{ $tahunAktifGlobal ?? '-' }}</h2>
-                    <h3>Pemilik Risiko: {{ strtoupper($namaOpd) }}</h3>
-
-                    <div class="subs">
-                        Pemilik Risiko bertanggungjawab terhadap proses bisnis/layanannya dengan cara pengelolaan aset
-                        yaitu dari
-                        mulai melakukan Pengukuran Nilai Aset, Kategorisasi SE termasuk pemenuhan standar, Pemetaan
-                        Risiko, Analisa
-                        Risiko, pembuatan Rencana Tindak Lanjut dan implementasi mitigasi risiko, sampai menjadi
-                        <i>Lead Auditee</i> dalam Audit Keamanan
-                    </div>
+                    <h3>Pemilik Risiko: {{ $aset->opd->namaopd }}</h3>
                 </td>
 
                 <!-- KANAN: dua logo sejajar -->
@@ -226,23 +217,19 @@
                 </td>
             </tr>
         </table>
+        <p><strong>Kode Aset: {{ $aset->kode_aset }}</strong></p>
         <p><strong>Nama Aset: {{ $aset->nama_aset }}</strong></p>
         <p><strong>Subklasifikasi:</strong> {{ $aset->subklasifikasiaset->subklasifikasiaset ?? '-' }}</p>
     </div>
 
-
-
-
     <table>
         <thead>
             <tr>
-                <th style="text-align: center;width:7%">NO</th>
                 <th width="50%">INDIKATOR</th>
-                <th>KETERANGAN</th>
+                <th width="50%">KETERANGAN</th>
             </tr>
         </thead>
         <tbody>
-            @php $no=1;@endphp
             @foreach ($indikators as $indikator)
                 @php
                     $kodeJawaban = strtoupper($kategoriSe->jawaban[$indikator->kode]['jawaban'] ?? '');
@@ -258,8 +245,7 @@
                 @endphp
 
                 <tr>
-                    <td style="text-align: center">{{ $no++ }}</td>
-                    <td>{{ $indikator->pertanyaan }}</td>
+                    <td>{{ $indikator->kode }}. {{ $indikator->pertanyaan }}</td>
                     <td>
                         {{ $jawaban }}<br>
                         @if ($keterangan)
@@ -275,20 +261,9 @@
         <strong>Kategori SE:
             {{ strtoupper($kategoriLabel) }} (Skor:{{ $skor }})</strong>
 
-    </p><BR>
-    <h4>A. KETERANGAN KATEGORI SE</h4>
-    <ol>
-        <li><b>STRATEGIS:</b> Berdampak serus terhadap kepentingan umum, pelayanan publik, kelancaran penyelenggaraan
-            negara atau pertahanan dan keamanan negara. Wajib menerapkan TIGA STANDAR KEAMANAN yaitu SNI ISO/IEC 27001,
-            Standar keamanan siber dari BSSN dan Standar keamanan siber lainnya dari Kementrian/Lembaga.</li>
-        <li><b>TINGGI:</b> Berdampak terbatas pada kepentingan sektor dan/atau daerah tertentu. Wajib menerapkan DUA
-            STANDAR KEAMANAN yaitu SNI ISO/IEC 27001 atau standar keamanan siber dari BSSN, dan Standar keamanan siber
-            lainnya dari Kementrian/Lembaga.</li>
-        <li><b>RENDAH:</b> Wajib menerapkan SATU STANDAR KEAMANAN yaitu SNI ISO/IEC 27001 atau standar keamanan dari
-            BSSN.</li>
-
-    </ol><BR>
-    <h4>B CATATAN</h4>
+    </p>
+    <BR><BR>
+    <h4>CATATAN</h4>
     <ol>
         <li>Kode TLP (Traffic Light Protocol) dipakai untuk mengklasifikasikan sensitifitas informasi, supaya jelas
             sejauh mana informasi boleh dibagikan.
@@ -305,14 +280,6 @@
         <li>Semua informasi tentang aset ini dapat berubah sesuai dengan reviu dan pemutahiran data PERISAI yang
             dilakukan minimal sekali setahun oleh Pemilik Risiko. Pemutahiran akan dilakukan serempak, menunggu
             jadwal dari Diskominfos Prov Bali. </li>
-        {{-- <li>SE adalah sistem elektronik yaitu dalam PERISAI adalah <strong>aset dengan klasifikasi [PL] Perangkat
-                Lunak.</strong> Contoh SE adalah
-            website, aplikasi
-            berbasis web, mobile, sistem operasi dan utility.</li>
-        <li>Semua informasi tentang aset ini dapat berubah sesuai dengan review dan pemutahiran data PERISAI <b>yang
-                dilakukan minimal sekali setahun oleh Pemilik Risiko. Pemutahiran akan dilakukan serempak, menunggu
-                informasi dari Diskominfos Prov Bali.</b> </li> --}}
-    </ol>
 </body>
 
 </html>

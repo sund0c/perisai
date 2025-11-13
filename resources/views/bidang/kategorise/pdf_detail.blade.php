@@ -262,8 +262,20 @@
             {{ strtoupper($kategoriLabel) }} (Skor:{{ $skor }})</strong>
 
     </p>
-    <BR><BR>
-    <h4>CATATAN</h4>
+    <BR>
+    <h4>A. KETERANGAN KATEGORI SE</h4>
+    <ol>
+        <li><b>STRATEGIS:</b> Berdampak serus terhadap kepentingan umum, pelayanan publik, kelancaran penyelenggaraan
+            negara atau pertahanan dan keamanan negara. Wajib menerapkan TIGA STANDAR KEAMANAN yaitu SNI ISO/IEC 27001,
+            Standar keamanan siber dari BSSN dan Standar keamanan siber lainnya dari Kementrian/Lembaga.</li>
+        <li><b>TINGGI:</b> Berdampak terbatas pada kepentingan sektor dan/atau daerah tertentu. Wajib menerapkan DUA
+            STANDAR KEAMANAN yaitu SNI ISO/IEC 27001 atau standar keamanan siber dari BSSN, dan Standar keamanan siber
+            lainnya dari Kementrian/Lembaga.</li>
+        <li><b>RENDAH:</b> Wajib menerapkan SATU STANDAR KEAMANAN yaitu SNI ISO/IEC 27001 atau standar keamanan dari
+            BSSN.</li>
+
+    </ol><BR>
+    <h4>B CATATAN</h4>
     <ol>
         <li>Kode TLP (Traffic Light Protocol) dipakai untuk mengklasifikasikan sensitifitas informasi, supaya jelas
             sejauh mana informasi boleh dibagikan.

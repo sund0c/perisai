@@ -29,6 +29,7 @@ use App\Http\Controllers\RangeAsetController;
 //BIDANG
 use App\Http\Controllers\SSOBrokerController;
 use App\Http\Controllers\Opd\KategoriSeController;
+use App\Http\Controllers\Opd\VitalitasSeController;
 use App\Http\Controllers\KlasifikasiAsetController;
 
 //OPD
@@ -185,7 +186,7 @@ Route::middleware(['SSOBrokerMiddleware', 'prevent-back-history', 'spatie_role_o
 
 //============= Start of BIDANG ===========================
 
-Route::middleware(['SSOBrokerMiddleware', 'prevent-back-history', 'spatie_role_or_permission:bidang',])->prefix('bidang/aset')->name('bidang.aset.')->group(function () {
+Route::middleware(['SSOBrokerMiddleware', 'prevent-back-history', 'spatie_role_or_permission:bidang|admin',])->prefix('bidang/aset')->name('bidang.aset.')->group(function () {
     Route::get('/', [BidangAsetController::class, 'index'])->name('index');
     Route::get('/export/rekap', [BidangAsetController::class, 'exportRekapPdf'])->name('export_rekap');
     Route::get('/klasifikasi/{id}', [BidangAsetController::class, 'showByKlasifikasi'])->name('show_by_klasifikasi');
@@ -193,7 +194,7 @@ Route::middleware(['SSOBrokerMiddleware', 'prevent-back-history', 'spatie_role_o
     Route::get('/{id}/pdf', [BidangAsetController::class, 'pdf'])->name('pdf');
 });
 
-Route::middleware(['SSOBrokerMiddleware', 'prevent-back-history', 'spatie_role_or_permission:bidang'])->prefix('bidang/kategorise')->name('bidang.kategorise.')->group(function () {
+Route::middleware(['SSOBrokerMiddleware', 'prevent-back-history', 'spatie_role_or_permission:bidang|admin'])->prefix('bidang/kategorise')->name('bidang.kategorise.')->group(function () {
     Route::get('/export/rekap/{kategori}', [BidangKategoriSeController::class, 'exportRekapKategoriPdf'])->name('export_rekap_kategori');
     Route::get('/', [BidangKategoriSeController::class, 'index'])->name('index');
     Route::get('/kategori/{kategori}', [BidangKategoriSeController::class, 'show'])->name('show');
@@ -201,7 +202,7 @@ Route::middleware(['SSOBrokerMiddleware', 'prevent-back-history', 'spatie_role_o
     Route::get('/export/pdf/{id}', [BidangKategoriSeController::class, 'exportPdf'])->name('exportPdf');
 });
 
-Route::middleware(['SSOBrokerMiddleware', 'prevent-back-history', 'spatie_role_or_permission:bidang'])->prefix('bidang/ptkka')->name('bidang.ptkka.')->group(function () {
+Route::middleware(['SSOBrokerMiddleware', 'prevent-back-history', 'spatie_role_or_permission:bidang|admin'])->prefix('bidang/ptkka')->name('bidang.ptkka.')->group(function () {
     Route::get('/', [BidangPtkkaController::class, 'indexPtkkaBidang'])->name('index');
     Route::post('/{session}/ajukan-verifikasi', [BidangPtkkaController::class, 'ajukanVerifikasi'])->name('ajukanverifikasi');
     Route::get('/export/pdfpengajuan', [BidangPtkkaController::class, 'pengajuanPDF'])->name('pengajuanPDF');
@@ -246,7 +247,7 @@ Route::middleware(['SSOBrokerMiddleware', 'prevent-back-history', 'spatie_role_o
 //         Route::post('/{session}/ajukan-verifikasi', [PtkkaController::class, 'ajukanVerifikasi'])->name('ajukanverifikasi');
 //     });
 
-Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd|admin', 'prevent-back-history'])
+Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd', 'prevent-back-history'])
     ->prefix('opd/aset')
     ->name('opd.aset.')
     ->group(function () {
@@ -276,7 +277,7 @@ Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd|admin',
             ->name('destroy');
     });
 
-Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd|admin', 'prevent-back-history'])
+Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd', 'prevent-back-history'])
     ->prefix('opd/kategorise')
     ->name('opd.kategorise.')
     ->group(function () {
@@ -297,6 +298,29 @@ Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd|admin',
             ->where('aset', '[0-9a-fA-F-]+')
             ->name('update');
         Route::post('/sync-previous', [KategoriSeController::class, 'syncFromPrevious'])->name('sync_previous');
+    });
+
+Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd', 'prevent-back-history'])
+    ->prefix('opd/vitalitasse')
+    ->name('opd.vitalitasse.')
+    ->group(function () {
+        Route::get('/', [VitalitasSeController::class, 'index'])->name('index');
+        Route::get('/export/rekap', [VitalitasSeController::class, 'exportRekapPdf'])->name('export_rekap');
+        Route::get('/kategori/{kategori}', [VitalitasSeController::class, 'showByKategori'])
+            ->whereIn('kategori', ['vital', 'novital', 'belum', 'total'])
+            ->name('show_by_kategori');
+        Route::get('/export/rekap/{kategori}', [VitalitasSeController::class, 'exportRekapKategoriPdf'])
+            ->whereIn('kategori', ['vital', 'novital', 'belum', 'total'])
+            ->name('export_rekap_kategori');
+        Route::get('/export/pdf/{aset:uuid}', [VitalitasSeController::class, 'exportPdf'])
+            ->name('exportPdf');
+        Route::get('/{aset}/edit', [VitalitasSeController::class, 'edit'])
+            ->where('aset', '[0-9a-fA-F-]+')
+            ->name('edit');
+        Route::put('/{aset}', [VitalitasSeController::class, 'update'])
+            ->where('aset', '[0-9a-fA-F-]+')
+            ->name('update');
+        Route::post('/sync-previous', [VitalitasSeController::class, 'syncFromPrevious'])->name('sync_previous');
     });
 
 //============= End of OPD ===========================

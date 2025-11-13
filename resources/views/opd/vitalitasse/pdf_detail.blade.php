@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>Hasil Penilaian Kategori SE</title>
+    <title>Hasil Penilaian Vitalitas SE</title>
     <style>
         table {
             width: 100%;
@@ -204,7 +204,7 @@
             <tr>
                 <!-- KIRI: judul + subs (tetap) -->
                 <td style="vertical-align: top;border:none;">
-                    <h2>Rekap Kategori SE :: Tahun {{ $tahunAktifGlobal ?? '-' }}</h2>
+                    <h2>Status Vitalitas SE :: Tahun {{ $tahunAktifGlobal ?? '-' }}</h2>
                     <h3>Pemilik Risiko: {{ strtoupper($namaOpd) }}</h3>
 
                     <div class="subs">
@@ -237,7 +237,7 @@
         <thead>
             <tr>
                 <th style="text-align: center;width:7%">NO</th>
-                <th width="50%">INDIKATOR</th>
+                <th width="30%">INDIKATOR</th>
                 <th>KETERANGAN</th>
             </tr>
         </thead>
@@ -245,20 +245,21 @@
             @php $no=1;@endphp
             @foreach ($indikators as $indikator)
                 @php
-                    $kodeJawaban = strtoupper($kategoriSe->jawaban[$indikator->kode]['jawaban'] ?? '');
-                    $keterangan = $kategoriSe->jawaban[$indikator->kode]['keterangan'] ?? '';
+                    $kodeJawaban = strtoupper($vitalitasSe->jawaban[$indikator->kode]['jawaban'] ?? '');
+                    $keterangan = $vitalitasSe->jawaban[$indikator->kode]['keterangan'] ?? '';
 
                     // Ambil teks opsi sesuai pilihan
                     $jawaban = match ($kodeJawaban) {
                         'A' => $indikator->opsi_a,
                         'B' => $indikator->opsi_b,
                         'C' => $indikator->opsi_c,
+                        'D' => $indikator->opsi_d,
                         default => '-',
                     };
                 @endphp
 
                 <tr>
-                    <td style="text-align: center">{{ $no++ }}</td>
+                    <td style="text-align: center;height: 40px;">{{ $no++ }}</td>
                     <td>{{ $indikator->pertanyaan }}</td>
                     <td>
                         {{ $jawaban }}<br>
@@ -272,24 +273,22 @@
     </table><BR>
 
     <p>
-        <strong>Kategori SE:
-            {{ strtoupper($kategoriLabel) }} (Skor:{{ $skor }})</strong>
+        <strong>Status SE: <span class="badge"
+                style="background-color: {{ $warna }}; color: {{ $warnatext }};">
+                {{ strtoupper($kategoriLabel) }} (Skor:{{ $skor }})
+            </span>
+        </strong>
 
-    </p><BR>
-    <h4>A. KETERANGAN KATEGORI SE</h4>
-    <ol>
-        <li><b>STRATEGIS:</b> Berdampak serus terhadap kepentingan umum, pelayanan publik, kelancaran penyelenggaraan
-            negara atau pertahanan dan keamanan negara. Wajib menerapkan TIGA STANDAR KEAMANAN yaitu SNI ISO/IEC 27001,
-            Standar keamanan siber dari BSSN dan Standar keamanan siber lainnya dari Kementrian/Lembaga.</li>
-        <li><b>TINGGI:</b> Berdampak terbatas pada kepentingan sektor dan/atau daerah tertentu. Wajib menerapkan DUA
-            STANDAR KEAMANAN yaitu SNI ISO/IEC 27001 atau standar keamanan siber dari BSSN, dan Standar keamanan siber
-            lainnya dari Kementrian/Lembaga.</li>
-        <li><b>RENDAH:</b> Wajib menerapkan SATU STANDAR KEAMANAN yaitu SNI ISO/IEC 27001 atau standar keamanan dari
-            BSSN.</li>
 
-    </ol><BR>
-    <h4>B CATATAN</h4>
+    </p>
+    <BR>
+    <h4>CATATAN</h4>
     <ol>
+        <li>
+            Pengukuran ini adalah self-assessment dari sudut pemilik aset/risiko.
+            Seluruh aset harus diajukan ke BSSN untuk dilakukan evaluasi. Aset yang terkonfirmasi termasuk dalam aset
+            Vital oleh BSSN, akan ditetapkan oleh Kepala BSSN.
+        </li>
         <li>Kode TLP (Traffic Light Protocol) dipakai untuk mengklasifikasikan sensitifitas informasi, supaya jelas
             sejauh mana informasi boleh dibagikan.
             TLP:AMBER+STRICT berarti berisi informasi cukup sensitif. Hanya untuk internal organisasi penerima,

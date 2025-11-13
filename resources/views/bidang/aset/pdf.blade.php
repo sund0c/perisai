@@ -173,7 +173,7 @@
     </div>
 
 
-    <table>
+    {{-- <table>
         @foreach ($fieldList as $field)
             @php
             $label = '';
@@ -207,7 +207,59 @@
             <td class="label">NILAI ASET</td>
             <td class="value"><strong>{{ $aset->nilai_akhir_aset }}</strong></td>
         </tr>
+    </table> --}}
+
+    <table>
+        @foreach ($fieldList as $field)
+            @php
+                $label = $field === 'nip_personil' ? 'Nama Personil' : ucwords(str_replace('_', ' ', $field));
+
+                $value =
+                    $field === 'subklasifikasiaset_id'
+                        ? $aset->subklasifikasiaset->subklasifikasiaset ?? '-'
+                        : $aset->$field ?? '-';
+
+                // Daftar field CIAAA + kode singkat
+                $ciaaaMap = [
+                    'kerahasiaan' => 'C',
+                    'integritas' => 'I',
+                    'ketersediaan' => 'A',
+                    'keaslian' => 'A',
+                    'kenirsangkalan' => 'N',
+                ];
+
+                $labels = [
+                    1 => 'Tidak Signifikan',
+                    2 => 'Penting',
+                    3 => 'Sangat Penting',
+                ];
+            @endphp
+
+            {{-- Lewati field keaslian dan kenirsangkalan sepenuhnya --}}
+            @unless (in_array($field, ['kenirsangkalan', 'keaslian']))
+                <tr>
+                    <td class="label">
+                        @if (array_key_exists($field, $ciaaaMap))
+                            Tingkat {{ $label }} ({{ $ciaaaMap[$field] }})
+                        @else
+                            {{ $label }}
+                        @endif
+                    </td>
+                    <td class="value">
+                        {{ $labels[$value] ?? $value }}
+                    </td>
+                </tr>
+            @endunless
+        @endforeach
+
+        {{-- Baris terakhir --}}
+        <tr>
+            <td class="label">NILAI ASET (CIA)</td>
+            <td class="value"><strong>{{ $aset->nilai_akhir_aset }}</strong></td>
+        </tr>
     </table>
+
+
     <BR>
     <h4>A. KETERANGAN SUB KLASIFIKASI ASET</h4>
     <div class="matik-list" style="font-size:0.9em">

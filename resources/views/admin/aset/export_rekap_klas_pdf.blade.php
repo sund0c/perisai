@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Rekap Aset Informasi per Klas</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        table th,
+        table td {
+            border: 1px solid #333;
+            padding: 5px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #eeeeee;
+        }
+
+        .font-dejavu {
+            font-family: 'DejaVu Sans', sans-serif;
+        }
+
+        .f12 {
+            font-size: 14px;
+        }
+
+        h2,
+        h3,
+        h4,
+        {
+        margin: 0;
+        padding: 0;
+        }
+
+        h3 {
+            margin-bottom: 10px;
+        }
+
+        h4 {
+            margin-bottom: 2px;
+            padding-bottom: 0;
+        }
+
+        ol {
+            margin-top: 0;
+            padding-top: 0;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        body {
+            font-family: sans-serif;
+            font-size: 12px;
+        }
+
+        .underline {
+            text-decoration: underline;
+        }
+
+
+        @page {
+            margin: 170px 50px 70px 50px;
+        }
+
+        .header {
+            position: fixed;
+            top: -120px;
+            left: 0px;
+            right: 0px;
+            text-align: left;
+        }
+
+        .header img.tlp {
+            position: absolute;
+            top: 0;
+            right: -30;
+            width: 150px;
+        }
+
+        .header .subs {
+            margin-top: -5px;
+            line-height: 1.2;
+            font-size: 0.9em;
+            margin-right: 0px;
+            /* ruang kosong supaya teks turun & tidak timpa gambar */
+        }
+
+        .header h2,
+        .header h3 {
+            margin: 6px 0;
+        }
+
+        .matik-list ul {
+            margin: 0;
+            padding-left: 1.2rem;
+            /* default untuk nested */
+        }
+
+        /* level pertama */
+        .matik-list>ul {
+            padding-left: 1em;
+            /* mepet kiri */
+            list-style-type: disc;
+            /* bullet bulat */
+        }
+
+        /* level kedua */
+        .matik-list>ul>li>ul {
+            padding-left: 1.5rem;
+            list-style-type: square;
+            font-size: 0.8em;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <table width="100%" style="border:none;">
+            <tr>
+                <!-- KIRI: judul + subs (tetap) -->
+                <td style="vertical-align: top;border:none;">
+                    <h2 style="margin:0;">Daftar Aset Informasi per Klasifikasi :: Tahun {{ $tahunAktifGlobal ?? '-' }}
+                    </h2>
+                    <h3>Pemerintah Provinsi Bali</h3>
+                    <h3 style="line-height:1; margin-bottom:0;">
+                        Klasifikasi Aset : [{{ $klasifikasi->kodeklas }}] {{ $klasifikasi->klasifikasiaset }}
+                    </h3>
+                </td>
+
+                <!-- KANAN: dua logo sejajar -->
+                <td style="width: 100px; vertical-align: top; text-align: right; white-space: nowrap;border:none;">
+                    <img src="{{ public_path('images/logobaliprovcsirt.png') }}" alt="Logo"
+                        style="height:70px; vertical-align: top; margin-right:0px;">
+                    <img src="{{ public_path('images/tlp/tlp_teaser_amber.jpg') }}" alt="TLP:AMBER"
+                        style="height:70px; vertical-align: top;">
+                </td>
+            </tr>
+        </table>
+    </div>
+
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 15%;">KODE ASET</th>
+                <th style="width: 30%;">NAMA ASET</th>
+                <th style="width: auto;">SUB KLASIFIKASI</th>
+                <th style="width: auto;">PEMILIK RISIKO</th>
+
+            </tr>
+        </thead>
+        <tbody>
+            @foreach ($asets as $aset)
+                <tr>
+                    <td>{{ $aset->kode_aset }}</td>
+                    <td>{{ $aset->nama_aset }}</td>
+                    <td>{{ $aset->subklasifikasiaset->subklasifikasiaset ?? '-' }}</td>
+                    <td>{{ $aset->opd->namaopd }}</td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table><BR>
+    <h4>A. KETERANGAN SUB KLASIFIKASI ASET</h4>
+    <div class="matik-list" style="font-size:0.9em">
+        @if (!empty($subs) && $subs->isNotEmpty())
+            <ul>
+                @foreach ($subs as $sub)
+                    <li><b>{{ $sub->subklasifikasiaset }} :</b> {{ $sub->penjelasan }}</li>
+                @endforeach
+            </ul>
+        @else
+            -
+        @endif
+    </div> <BR>
+    <h4>B. CATATAN LAIN</h4>
+    <ol>
+        <li>Kode TLP (Traffic Light Protocol) dipakai untuk mengklasifikasikan sensitivitas informasi, supaya jelas
+            sejauh mana informasi boleh dibagikan.
+            TLP:AMBER = Pengungkapan terbatas, penerima hanya dapat menyebarkan ini berdasarkan kebutuhan untuk
+            mengetahuinya
+            dalam organisasi dan kliennya.Sumber dapat menggunakan TLP:AMBER ketika informasi memerlukan dukungan
+            untuk ditindaklanjuti secara
+            efektif, namun membawa risiko terhadap privasi, reputasi, atau operasi jika dibagikan di luar organisasi
+            yang terlibat. Penerima
+            dapat membagikan informasi TLP:AMBER dengan anggota organisasi mereka sendiri dan kliennya, tetapi hanya
+            berdasarkan kebutuhan untuk mengetahui guna melindungi organisasi mereka dan kliennya serta mencegah
+            kerugian lebih lanjut.
+        </li>
+        <li>PERISAI adalah sistem elektronik untuk melakukan <b>PE</b>ngelolaan <b>RIS</b>iko <b>A</b>set
+            <b>I</b>nformasi di lingkup Pemerintah Provinsi Bali. PERISAI dikelola oleh
+            Dinas Kominfos Provinsi Bali (Contact: Bidang Persandian)
+        </li>
+        <li>Semua informasi tentang aset ini dapat berubah sesuai dengan review dan pemutahiran data PERISAI yang
+            dilakukan minimal sekali setahun oleh Pemilik Aset. Pemutahiran akan dilakukan serempak, menunggu
+            jadwal dari Diskominfos Prov Bali. </li>
+    </ol>
+</body>
+
+</html>

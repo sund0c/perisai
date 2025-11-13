@@ -123,6 +123,12 @@ class Aset extends Model
         return $this->hasOne(KategoriSe::class, 'aset_id', 'id');
     }
 
+    // Nilai/objek Vitaliyas SE untuk aset
+    public function vitalitasSe()
+    {
+        return $this->hasOne(VitalitasSe::class, 'aset_id', 'id');
+    }
+
     // Semua sesi PTKKA milik aset
     public function ptkkaSessions()
     {
