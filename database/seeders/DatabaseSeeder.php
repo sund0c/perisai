@@ -32,7 +32,8 @@ class DatabaseSeeder extends Seeder
             // PtkkaSessionSeeder::class,
             //AsetbanyakSeeder::class,
 
-            RolePermissionSeeder::class
+            RolePermissionSeeder::class,
+            AddDesktopAplikasiSeeder::class
         ]);
     }
 }

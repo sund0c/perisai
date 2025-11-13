@@ -39,6 +39,7 @@ $asetPL = Aset::whereHas('subklasifikasiaset', function ($q) {
         $q->whereIn('subklasifikasiaset', [
             'Aplikasi berbasis Website',
             'Aplikasi berbasis Mobile',
+            'Aplikasi berbasis Desktop'
         ]);
     })
     ->where('periode_id', $periodeAktifId)   // filter periode aktif
@@ -121,6 +122,7 @@ $asetPL = Aset::whereHas('subklasifikasiaset', function ($q) {
             $q->whereIn('subklasifikasiaset', [
                 'Aplikasi berbasis Website',
                 'Aplikasi berbasis Mobile',
+                'Aplikasi berbasis Desktop'
             ]);
         })
         ->with([
@@ -238,6 +240,7 @@ $query = Aset::query()
         $q->whereIn('subklasifikasiaset', [
             'Aplikasi berbasis Website',
             'Aplikasi berbasis Mobile',
+            'Aplikasi berbasis Desktop'
         ]);
     })
     ->with([

@@ -52,6 +52,7 @@ $asetPL = Aset::whereHas('subklasifikasiaset', function ($q) {
         $q->whereIn('subklasifikasiaset', [
             'Aplikasi berbasis Website',
             'Aplikasi berbasis Mobile',
+            'Aplikasi berbasis Desktop'
         ]);
     })
     ->where('opd_id', $userOpdId)
@@ -156,6 +157,7 @@ $asetPL = Aset::whereHas('subklasifikasiaset', function ($q) {
         $q->whereIn('subklasifikasiaset', [
             'Aplikasi berbasis Website',
             'Aplikasi berbasis Mobile',
+            'Aplikasi berbasis Desktop'
         ]);
     })
     ->where('opd_id', $userOpdId)
@@ -256,6 +258,7 @@ $query = Aset::query()
         $q->whereIn('subklasifikasiaset', [
             'Aplikasi berbasis Website',
             'Aplikasi berbasis Mobile',
+            'Aplikasi berbasis Desktop'
         ]);
     })
     ->with([
@@ -436,6 +439,7 @@ $query = Aset::query()
             $q->whereIn('subklasifikasiaset', [
                 'Aplikasi berbasis Website',
                 'Aplikasi berbasis Mobile',
+                'Aplikasi berbasis Desktop'
             ]);
         })
         ->with([
