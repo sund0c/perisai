@@ -331,6 +331,12 @@ return [
             'can'   => 'is-bidang',
         ],
         [
+            'text' => 'Vitalitas SE',
+            'route' => 'bidang.vitalitasse.index',
+            'icon'  => 'fas fa-fw fa-heartbeat',
+            'can'   => 'is-bidang',
+        ],
+        [
             'text' => 'PTKKA',
             'route' => 'bidang.ptkka.index',
             'icon'  => 'fas fa-clipboard-check',
@@ -381,6 +387,12 @@ return [
             'text' => 'Kategori SE',
             'route' => 'bidang.kategorise.index',
             'icon'  => 'fas fa-fw fa-box',
+            'can'   => 'is-admin',
+        ],
+        [
+            'text' => 'Vitalitas SE',
+            'route' => 'bidang.vitalitasse.index',
+            'icon'  => 'fas fa-fw fa-heartbeat',
             'can'   => 'is-admin',
         ],
         [

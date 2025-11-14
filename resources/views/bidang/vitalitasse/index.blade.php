@@ -25,7 +25,7 @@
     }
 </style>
 @section('content_header')
-    <h1>Vitalitas Sistem Elektronik</h1>
+    <h1>Vitalitas Sistem Elektronik (SE) di Pemprov Bali</h1>
     <div style="line-height:1.2; font-size: 0.9em">
         Sistem Elektronik (SE) dalam PERISAI adalah <strong>ASET INFORMASI dengan klasifikasi [PL] Perangkat
             Lunak.</strong> Contoh SE adalah
@@ -38,10 +38,11 @@
     <li class="nav-item d-none d-sm-inline-block">
         <span class="nav-link font-weight-bold">
             Tahun Aktif: {{ $tahunAktifGlobal ?? '-' }}
-            @if ($kunci === 'locked')
+            @if (($kunci ?? 'locked') === 'locked')
                 <i class="fas fa-lock text-danger ml-1" title="Terkunci"></i>
+            @else
+                <i class="fas fa-lock-open text-success ml-1" title="Terbuka"></i>
             @endif
-            :: {{ strtoupper($namaOpd) }}
         </span>
     </li>
 @endsection
@@ -54,7 +55,7 @@
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex mb-3" style="gap: 10px;">
-                        <a href="{{ route('opd.vitalitasse.export_rekap') }}" class="btn btn-danger btn-sm">
+                        <a href="{{ route('bidang.vitalitasse.export_rekap') }}" class="btn btn-danger btn-sm">
 
                             <i class="fas fa-file-pdf"></i> Export PDF
                         </a>
@@ -72,9 +73,13 @@
                                 </td>
                                 <td style="vertical-align: middle; text-align: center;">
                                     <a class="btn btn-light btn-sm px-4"
-                                        href="{{ route('opd.vitalitasse.show_by_kategori', ['kategori' => 'vital']) }}">
+                                        href="{{ route('bidang.vitalitasse.show', ['kategori' => 'vital']) }}">
                                         {{ $vital }}
                                     </a>
+                                    {{-- <a class="btn btn-light btn-sm px-4"
+                                        href="{{ route('bidang.vitalitasse.show_by_kategori', ['kategori' => 'vital']) }}">
+                                        {{ $vital }}
+                                    </a> --}}
                                 </td>
                             </tr>
 
@@ -83,9 +88,13 @@
                                 </td>
                                 <td style="vertical-align: middle; text-align: center;">
                                     <a class="btn btn-light btn-sm px-4"
-                                        href="{{ route('opd.vitalitasse.show_by_kategori', ['kategori' => 'novital']) }}">
+                                        href="{{ route('bidang.vitalitasse.show', ['kategori' => 'novital']) }}">
                                         {{ $novital }}
                                     </a>
+                                    {{-- <a class="btn btn-light btn-sm px-4"
+                                        href="{{ route('bidang.vitalitasse.show_by_kategori', ['kategori' => 'novital']) }}">
+                                        {{ $novital }}
+                                    </a> --}}
                                 </td>
                             </tr>
 
@@ -93,8 +102,9 @@
                                 <td style="text-align: left"><b>Aset Belum Dinilai</b>
                                 </td>
                                 <td style="vertical-align: middle; text-align: center;">
+
                                     <a class="btn btn-light btn-sm px-4"
-                                        href="{{ route('opd.vitalitasse.show_by_kategori', ['kategori' => 'belum']) }}">
+                                        href="{{ route('bidang.vitalitasse.show', ['kategori' => 'belum']) }}">
                                         {{ $belum }}
                                     </a>
                                 </td>

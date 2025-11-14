@@ -439,7 +439,7 @@ class VitalitasSeController extends Controller
         ))
             ->setPaper('a4', 'portrait');
         PdfFooter::add_right_corner_footer($pdf);
-        return $pdf->download('penilaian_kategori_se_' . now()->format('Ymd_His') . '.pdf');
+        return $pdf->download('penilaian_vitalitas_se_' . now()->format('Ymd_His') . '.pdf');
     }
 
 

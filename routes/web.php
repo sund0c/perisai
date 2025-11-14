@@ -25,19 +25,21 @@ use App\Http\Middleware\SSOBrokerMiddleware;
 
 use App\Http\Controllers\Opd\PtkkaController;
 use App\Http\Controllers\RangeAsetController;
+use App\Http\Controllers\KlasifikasiAsetController;
 
 //BIDANG
 use App\Http\Controllers\SSOBrokerController;
-use App\Http\Controllers\Opd\KategoriSeController;
-use App\Http\Controllers\Opd\VitalitasSeController;
-use App\Http\Controllers\KlasifikasiAsetController;
-
-//OPD
+use App\Http\Controllers\Bidang\BidangKategoriSeController;
+use App\Http\Controllers\Bidang\BidangVitalitasSeController;
 use App\Http\Controllers\Bidang\BidangAsetController;
 use App\Http\Controllers\Bidang\BidangPtkkaController;
+
+//OPD
+use App\Http\Controllers\Opd\KategoriSeController;
+use App\Http\Controllers\Opd\VitalitasSeController;
 use App\Http\Controllers\SubKlasifikasiAsetController;
 use App\Http\Controllers\IndikatorKategoriSeController;
-use App\Http\Controllers\Bidang\BidangKategoriSeController;
+
 
 // FOR TESTING PURPOSES
 use App\Http\Controllers\ExampleController;
@@ -200,6 +202,14 @@ Route::middleware(['SSOBrokerMiddleware', 'prevent-back-history', 'spatie_role_o
     Route::get('/kategori/{kategori}', [BidangKategoriSeController::class, 'show'])->name('show');
     Route::get('/export/rekap', [BidangKategoriSeController::class, 'exportRekapPdf'])->name('export_rekap');
     Route::get('/export/pdf/{id}', [BidangKategoriSeController::class, 'exportPdf'])->name('exportPdf');
+});
+
+Route::middleware(['SSOBrokerMiddleware', 'prevent-back-history', 'spatie_role_or_permission:bidang|admin'])->prefix('bidang/vitalitasse')->name('bidang.vitalitasse.')->group(function () {
+    Route::get('/export/rekap/{kategori}', [BidangVitalitasSEController::class, 'exportRekapKategoriPdf'])->name('export_rekap_kategori');
+    Route::get('/', [BidangVitalitasSEController::class, 'index'])->name('index');
+    Route::get('/kategori/{kategori}', [BidangVitalitasSEController::class, 'show'])->name('show');
+    Route::get('/export/rekap', [BidangVitalitasSEController::class, 'exportRekapPdf'])->name('export_rekap');
+    Route::get('/export/pdf/{id}', [BidangVitalitasSEController::class, 'exportPdf'])->name('exportPdf');
 });
 
 Route::middleware(['SSOBrokerMiddleware', 'prevent-back-history', 'spatie_role_or_permission:bidang|admin'])->prefix('bidang/ptkka')->name('bidang.ptkka.')->group(function () {

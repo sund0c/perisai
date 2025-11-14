@@ -43,34 +43,38 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td class="bg-danger text-white" style="text-align: left">TINGGI</td>
+                            <tr class="bg-danger text-white" style="text-align: left">
+                                <td style="text-align: left">TINGGI</td>
                                 <td>
-                                    <a href="{{ route('bidang.kategorise.show', ['kategori' => 'tinggi']) }}">
+                                    <a class="btn btn-light btn-sm px-4"
+                                        href="{{ route('bidang.kategorise.show', ['kategori' => 'tinggi']) }}">
                                         {{ $tinggi }}
                                     </a>
                                 </td>
                             </tr>
-                            <tr>
-                                <td class="bg-warning" style="text-align: left">SEDANG</td>
+                            <tr class="bg-warning text-white" style="text-align: left">
+                                <td style="text-align: left">SEDANG</td>
                                 <td>
-                                    <a href="{{ route('bidang.kategorise.show', ['kategori' => 'sedang']) }}">
+                                    <a class="btn btn-light btn-sm px-4"
+                                        href="{{ route('bidang.kategorise.show', ['kategori' => 'sedang']) }}">
                                         {{ $sedang }}
                                     </a>
                                 </td>
                             </tr>
-                            <tr>
-                                <td class="bg-success text-white" style="text-align: left">RENDAH</td>
+                            <tr class="bg-success text-white" style="text-align: left">
+                                <td style="text-align: left">RENDAH</td>
                                 <td>
-                                    <a href="{{ route('bidang.kategorise.show', ['kategori' => 'rendah']) }}">
+                                    <a class="btn btn-light btn-sm px-4"
+                                        href="{{ route('bidang.kategorise.show', ['kategori' => 'rendah']) }}">
                                         {{ $rendah }}
                                     </a>
                                 </td>
                             </tr>
-                            <tr>
-                                <td class="bg-secondary text-white" style="text-align: left">Belum Dinilai</td>
+                            <tr class="bg-secondary text-white" style="text-align: left">
+                                <td style="text-align: left">Belum Dinilai</td>
                                 <td>
-                                    <a href="{{ route('bidang.kategorise.show', ['kategori' => 'belum']) }}">
+                                    <a class="btn btn-light btn-sm px-4"
+                                        href="{{ route('bidang.kategorise.show', ['kategori' => 'belum']) }}">
                                         {{ $belum }}
                                     </a>
                                 </td>
