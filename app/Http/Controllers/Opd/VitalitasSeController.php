@@ -44,6 +44,7 @@ class VitalitasSeController extends Controller
             $q->whereIn('subklasifikasiaset', [
                 'Aplikasi berbasis Website',
                 'Aplikasi berbasis Mobile',
+                'Aplikasi berbasis Desktop',
             ]);
         })
             ->where('opd_id', $userOpdId)
@@ -100,6 +101,7 @@ class VitalitasSeController extends Controller
             $q->whereIn('subklasifikasiaset', [
                 'Aplikasi berbasis Website',
                 'Aplikasi berbasis Mobile',
+                'Aplikasi berbasis Desktop',
             ]);
         })
             ->where('opd_id', $userOpdId)
@@ -165,6 +167,7 @@ class VitalitasSeController extends Controller
                 $q->whereIn('subklasifikasiaset', [
                     'Aplikasi berbasis Website',
                     'Aplikasi berbasis Mobile',
+                    'Aplikasi berbasis Desktop',
                 ]);
             })
             ->with([
@@ -339,6 +342,7 @@ class VitalitasSeController extends Controller
                 $q->whereIn('subklasifikasiaset', [
                     'Aplikasi berbasis Website',
                     'Aplikasi berbasis Mobile',
+                    'Aplikasi berbasis Desktop',
                 ]);
             })
             ->with([
