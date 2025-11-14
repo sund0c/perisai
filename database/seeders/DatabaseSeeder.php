@@ -34,7 +34,8 @@ class DatabaseSeeder extends Seeder
             //AsetbanyakSeeder::class,
 
             RolePermissionSeeder::class,
-            AddDesktopAplikasiSeeder::class
+            AddDesktopAplikasiSeeder::class,
+            UpdateRangeAsetV2Seeder::class,
         ]);
     }
 }

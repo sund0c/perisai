@@ -2,11 +2,15 @@
 
 namespace Database\Seeders;
 
-use App\Models\RangeAset;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use App\Models\RangeAset;
 
-class RangeAsetSeeder extends Seeder
+class UpdateRangeAsetV2Seeder extends Seeder
 {
+    /**
+     * Run the database seeds.
+     */
     public function run(): void
     {
         // RENDAH
@@ -34,3 +38,5 @@ class RangeAsetSeeder extends Seeder
         );
     }
 }
+
+
