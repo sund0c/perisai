@@ -58,6 +58,8 @@ class IndikatorVitalitasSeSeeder extends Seeder
             ],
         ];
 
+        IndikatorVitalitasSe::truncate();
+
         foreach ($data as $item) {
             IndikatorVitalitasSe::create(array_merge($item, [
                 'nilai_a' => 15,
