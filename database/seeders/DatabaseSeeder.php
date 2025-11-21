@@ -36,6 +36,7 @@ class DatabaseSeeder extends Seeder
             RolePermissionSeeder::class,
             AddDesktopAplikasiSeeder::class,
             UpdateRangeAsetV2Seeder::class,
+            UpdateKlasifikasiAsetV2Seeder::class,
         ]);
     }
 }

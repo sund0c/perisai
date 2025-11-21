@@ -46,6 +46,7 @@ class Aset extends Model
         'unit_personil',
         'keterangan',
         'link_pse',
+        'link_url',
         'aset_key_id',
     ];
 
