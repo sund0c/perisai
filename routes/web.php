@@ -15,6 +15,7 @@ use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SkController;
 use App\Http\Controllers\OpdController;
+use App\Http\Controllers\Admin\UserRoleController;
 
 use App\Http\Middleware\RoleMiddleware;
 use App\Http\Controllers\PeriodeController;
@@ -231,7 +232,14 @@ Route::middleware(['SSOBrokerMiddleware', 'prevent-back-history', 'spatie_role_o
 
 //============= END of BIDANG ===========================
 
-
+Route::middleware(['SSOBrokerMiddleware', 'prevent-back-history', 'spatie_role_or_permission:admin'])
+    ->prefix('admin/users')
+    ->name('admin.users.')
+    ->group(function () {
+        Route::get('/', [UserRoleController::class, 'index'])->name('index');
+        Route::get('/{user}/edit', [UserRoleController::class, 'edit'])->name('edit');
+        Route::put('/{user}', [UserRoleController::class, 'update'])->name('update');
+    });
 
 //============= Start of OPD ===========================
 // UPDATED: hide ptkka

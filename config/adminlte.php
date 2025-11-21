@@ -401,6 +401,12 @@ return [
             'icon'  => 'fas fa-fw fa-building',
             'can'   => 'is-admin',
         ],
+        [
+            'text' => 'Users',
+            'route' => 'admin.users.index',
+            'icon' => 'fas fa-fw fa-user',
+            'can' => 'is-admin',
+        ],
 
         [
             'text' => 'Klasifikasi Aset',

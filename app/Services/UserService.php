@@ -70,8 +70,10 @@ class UserService
                 "email" => $sso_user->email,
                 "role" => $role,
             ]);
- 	    #UPDATE:: sync role for change the role
-            $user->syncRoles([$role]);
+ 	    #UPDATE:: sync role only when user has no manual role yet
+            if (! $user->roles()->exists()) {
+                $user->syncRoles([$role]);
+            }
             // $user->assignRole($role);
             return true;
         }
@@ -83,8 +85,10 @@ class UserService
                 "email" => $sso_user->email,
                 "role" => $role,
             ]);
-            #UPDATE:: sync role for change the role.
-            $user->syncRoles([$role]);
+            #UPDATE:: sync role only when user has no manual role yet.
+            if (! $user->roles()->exists()) {
+                $user->syncRoles([$role]);
+            }
             // $user->assignRole($role);
             return true;
         }
