@@ -186,6 +186,10 @@
                     $field === 'subklasifikasiaset_id'
                         ? $aset->subklasifikasiaset->subklasifikasiaset ?? '-'
                         : $aset->$field ?? '-';
+
+                if (in_array($field, ['link_url', 'link_pse']) && $value === '-') {
+                    $value = '';
+                }
             @endphp
             <tr>
                 <td class="label">{{ $label }}</td>
@@ -195,10 +199,15 @@
         2 => 'Penting',
         3 => 'Sangat Penting'
     ];
+    $isLinkField = in_array($field, ['link_url', 'link_pse']) && filter_var($value, FILTER_VALIDATE_URL);
 @endphp
 
 <td class="value">
-    {{ $labels[$value] ?? $value }}
+    @if ($isLinkField)
+        <a href="{{ $value }}" target="_blank" rel="noopener">{{ $value }}</a>
+    @else
+        {{ $labels[$value] ?? ($value === '' ? '-' : $value) }}
+    @endif
 </td>
 
             </tr>

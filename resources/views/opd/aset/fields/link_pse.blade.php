@@ -1,5 +1,12 @@
 <div class="form-group">
     <label for="link_pse">Link PSE Komdigi (Optional)</label>
-    <input type="text" name="link_pse" id="link_pse" class="form-control"
+    <input type="url" name="link_pse" id="link_pse" class="form-control @error('link_pse') is-invalid @enderror"
+        placeholder=""
+        pattern="https://.*"
+        oninvalid="this.setCustomValidity('URL harus diawali dengan https://')"
+        oninput="this.setCustomValidity('')"
         value="{{ old('link_pse', $aset->link_pse ?? '') }}">
+    @error('link_pse')
+        <div class="invalid-feedback">{{ $message }}</div>
+    @enderror
 </div>
