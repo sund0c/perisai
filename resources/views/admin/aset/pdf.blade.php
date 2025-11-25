@@ -176,12 +176,20 @@
     <table>
         @foreach ($fieldList as $field)
             @php
-            $label = '';
-                if ($field === 'nip_personil') {
-                    $label = 'Nama Personil';
-                } else {
-                    $label = ucwords(str_replace('_', ' ', $field));
-                }
+                $label =
+                    $field === 'nip_personil'
+                        ? 'Nama Personil'
+                        : ($field === 'link_pse'
+                            ? 'Link PSE'
+                            : ($field === 'subklasifikasiaset_id'
+                                ? 'Sub Klasifikasi Aset'
+                                : ($field === 'keterangan'
+                                    ? 'Keterangan / Fungsi'
+                                    : ($field === 'fungsi_personil'
+                                        ? 'Kabid/Kabag'
+                                        : ($field === 'unit_personil'
+                                            ? 'Seksi/Tim'
+                                            : ucwords(str_replace('_', ' ', $field)))))));
                 $value =
                     $field === 'subklasifikasiaset_id'
                         ? $aset->subklasifikasiaset->subklasifikasiaset ?? '-'
