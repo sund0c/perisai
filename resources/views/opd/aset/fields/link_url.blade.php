@@ -1,5 +1,5 @@
 <div class="form-group">
-    <label for="link_url">URL Aplikasi (Isi jika aplikasi berbasis website)</label>
+    <label for="link_url">Link URL</label>
     <input type="url" name="link_url" id="link_url" class="form-control @error('link_url') is-invalid @enderror"
         placeholder=""
         pattern="https://.*"
@@ -9,4 +9,6 @@
     @error('link_url')
         <div class="invalid-feedback">{{ $message }}</div>
     @enderror
+
+    <small class="form-text text-muted">Link URL Aplikasi (Isi jika aplikasi berbasis website)</small>
 </div>

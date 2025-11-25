@@ -15,8 +15,7 @@
 </div> --}}
 
 <div class="form-group">
-    <label for="ketersediaan">Ketersediaan (Seberapa penting memastikan aset selalu dapat diakses saat
-        dibutuhkan?)</label>
+    <label for="ketersediaan">Tingkat Ketersediaan (A)</label>
     <select name="ketersediaan" id="ketersediaan" class="form-control" required>
         <option value="">Pilih</option>
         @foreach ($options['ketersediaan'] ?? [] as $opt)
@@ -26,4 +25,5 @@
             </option>
         @endforeach
     </select>
+    <small class="form-text text-muted">(Seberapa penting memastikan aset selalu dapat diakses saat dibutuhkan?)</small>
 </div>
