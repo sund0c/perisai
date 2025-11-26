@@ -208,11 +208,16 @@
         3 => 'Sangat Penting'
     ];
     $isLinkField = in_array($field, ['link_url', 'link_pse']) && filter_var($value, FILTER_VALIDATE_URL);
+    $displayUrl = $value;
+    if ($isLinkField) {
+        $displayUrl = preg_replace('#^https?://#i', '', $value);
+    }
 @endphp
 
 <td class="value">
     @if ($isLinkField)
-        <a href="{{ $value }}" target="_blank" rel="noopener">{{ $value }}</a>
+        <a href="{{ $value }}" target="_blank" rel="noopener"
+            style="text-decoration:none;color:#000;">{{ $displayUrl }}</a>
     @else
         {{ $labels[$value] ?? ($value === '' ? '-' : $value) }}
     @endif

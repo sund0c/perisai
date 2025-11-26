@@ -232,6 +232,10 @@
                         ? $aset->subklasifikasiaset->subklasifikasiaset ?? '-'
                         : $aset->$field ?? '-';
 
+                if (in_array($field, ['link_url', 'link_pse']) && $value === '-') {
+                    $value = '';
+                }
+
                 // Daftar field CIAAA + kode singkat
                 $ciaaaMap = [
                     'kerahasiaan' => 'C',
@@ -246,6 +250,11 @@
                     2 => 'Penting',
                     3 => 'Sangat Penting',
                 ];
+                $isLinkField = in_array($field, ['link_url', 'link_pse']) && filter_var($value, FILTER_VALIDATE_URL);
+                $displayUrl = $value;
+                if ($isLinkField) {
+                    $displayUrl = preg_replace('#^https?://#i', '', $value);
+                }
             @endphp
 
             {{-- Lewati field keaslian dan kenirsangkalan sepenuhnya --}}
@@ -259,7 +268,12 @@
                         @endif
                     </td>
                     <td class="value">
-                        {{ $labels[$value] ?? $value }}
+                        @if ($isLinkField)
+                            <a href="{{ $value }}" target="_blank" rel="noopener"
+                                style="text-decoration:none;color:#000;">{{ $displayUrl }}</a>
+                        @else
+                            {{ $labels[$value] ?? ($value === '' ? '-' : $value) }}
+                        @endif
                     </td>
                 </tr>
             @endunless
