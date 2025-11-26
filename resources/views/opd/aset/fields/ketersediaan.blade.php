@@ -25,5 +25,5 @@
             </option>
         @endforeach
     </select>
-    <small class="form-text text-muted">(Seberapa penting memastikan aset selalu dapat diakses saat dibutuhkan?)</small>
+    <small class="form-text text-muted">(Seberapa besar dampaknya bagi instansi jika aset ini tidak dapat digunakan atau diakses saat dibutuhkan?)</small>
 </div>

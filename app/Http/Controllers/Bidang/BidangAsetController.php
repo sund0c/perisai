@@ -13,13 +13,17 @@ use App\Models\SubKlasifikasiAset;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Services\PdfFooter;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Database\QueryException;
+use App\Traits\CalculatesAsetRange;
 
 class BidangAsetController extends Controller
 {
+    use CalculatesAsetRange;
+
     /**
      * Ambil opsi field sesuai klasifikasi (fallback ke _DEFAULT_ bila kosong).
      */
@@ -59,6 +63,8 @@ class BidangAsetController extends Controller
             }
         ])->orderBy('klasifikasiaset')->get();
 
+        $rangesCache = RangeAset::orderBy('nilai_bawah')->get();
+
         // 3) Siapkan total global
         $totalTinggi = 0;
         $totalSedang = 0;
@@ -70,41 +76,17 @@ class BidangAsetController extends Controller
                 ->where('periode_id', $periodeAktifId)
                 ->get(['kerahasiaan', 'integritas', 'ketersediaan', 'keaslian', 'kenirsangkalan']); // hemat kolom
 
-            $jumlahTinggi = 0;
-            $jumlahSedang = 0;
-            $jumlahRendah = 0;
-
-            foreach ($asets as $aset) {
-                $total = (int)$aset->kerahasiaan
-                    + (int)$aset->integritas
-                    + (int)$aset->ketersediaan
-                    + (int)$aset->keaslian
-                    + (int)$aset->kenirsangkalan;
-
-                $range = RangeAset::where('nilai_bawah', '<=', $total)
-                    ->where('nilai_atas', '>=', $total)
-                    ->first();
-
-                $nilai = $range->nilai_akhir_aset ?? null;
-
-                if ($nilai === 'TINGGI') {
-                    $jumlahTinggi++;
-                } elseif ($nilai === 'SEDANG') {
-                    $jumlahSedang++;
-                } elseif ($nilai === 'RENDAH') {
-                    $jumlahRendah++;
-                }
-            }
+            $summary = $this->summarizeRangeCounts($asets, $rangesCache);
 
             // simpan ke objek klasifikasi untuk dipakai di view
-            $klasifikasi->jumlah_tinggi = $jumlahTinggi;
-            $klasifikasi->jumlah_sedang = $jumlahSedang;
-            $klasifikasi->jumlah_rendah = $jumlahRendah;
+            $klasifikasi->jumlah_tinggi = $summary['tinggi'];
+            $klasifikasi->jumlah_sedang = $summary['sedang'];
+            $klasifikasi->jumlah_rendah = $summary['rendah'];
 
             // akumulasi global
-            $totalTinggi += $jumlahTinggi;
-            $totalSedang += $jumlahSedang;
-            $totalRendah += $jumlahRendah;
+            $totalTinggi += $summary['tinggi'];
+            $totalSedang += $summary['sedang'];
+            $totalRendah += $summary['rendah'];
         }
 
         // 5) Karena ini agregat lintas OPD:
@@ -160,23 +142,7 @@ class BidangAsetController extends Controller
 
         // Ambil range sekali (hemat query)
         $ranges = RangeAset::orderBy('nilai_bawah')->get();
-
-        foreach ($asets as $aset) {
-            // Total nilai keamanan informasi
-            $total = (int)$aset->kerahasiaan
-                + (int)$aset->integritas
-                + (int)$aset->ketersediaan
-                + (int)$aset->keaslian
-                + (int)$aset->kenirsangkalan;
-
-            // Tentukan range di memori
-            $range = $ranges->first(function ($r) use ($total) {
-                return $r->nilai_bawah <= $total && $r->nilai_atas >= $total;
-            });
-
-            $aset->nilai_akhir_aset = $range->nilai_akhir_aset ?? '-';
-            $aset->warna_hexa       = $range->warna_hexa ?? '#999999'; // default abu-abu
-        }
+        $this->applyRangeAttributes($asets, $ranges);
 
         // Karena lintas OPD, labelnya diset generik
         //$namaOpd = 'SEMUA OPD';
@@ -247,32 +213,11 @@ class BidangAsetController extends Controller
                 ->where('periode_id', $periodeAktifId)
                 ->get(['kerahasiaan', 'integritas', 'ketersediaan', 'keaslian', 'kenirsangkalan']);
 
-            $jumlahTinggi = 0;
-            $jumlahSedang = 0;
-            $jumlahRendah = 0;
+            $summary = $this->summarizeRangeCounts($asets, $ranges);
 
-            foreach ($asets as $aset) {
-                $total = (int)$aset->kerahasiaan
-                    + (int)$aset->integritas
-                    + (int)$aset->ketersediaan
-                    + (int)$aset->keaslian
-                    + (int)$aset->kenirsangkalan;
-
-                // Match range di memori
-                $range = $ranges->first(function ($r) use ($total) {
-                    return $r->nilai_bawah <= $total && $r->nilai_atas >= $total;
-                });
-
-                $nilai = $range->nilai_akhir_aset ?? null;
-
-                if ($nilai === 'TINGGI')      $jumlahTinggi++;
-                elseif ($nilai === 'SEDANG')  $jumlahSedang++;
-                elseif ($nilai === 'RENDAH')  $jumlahRendah++;
-            }
-
-            $klasifikasi->jumlah_tinggi = $jumlahTinggi;
-            $klasifikasi->jumlah_sedang = $jumlahSedang;
-            $klasifikasi->jumlah_rendah = $jumlahRendah;
+            $klasifikasi->jumlah_tinggi = $summary['tinggi'];
+            $klasifikasi->jumlah_sedang = $summary['sedang'];
+            $klasifikasi->jumlah_rendah = $summary['rendah'];
         }
 
         // Karena lintas OPD
@@ -323,18 +268,7 @@ class BidangAsetController extends Controller
         // Ambil range sekali untuk hemat query
         $ranges = RangeAset::orderBy('nilai_bawah')->get();
 
-        foreach ($asets as $aset) {
-            $total = (int)$aset->kerahasiaan
-                + (int)$aset->integritas
-                + (int)$aset->ketersediaan
-                + (int)$aset->keaslian
-                + (int)$aset->kenirsangkalan;
-
-            $match = $ranges->first(fn($r) => $r->nilai_bawah <= $total && $r->nilai_atas >= $total);
-
-            $aset->nilai_akhir_aset = $match->nilai_akhir_aset ?? '-';
-            $aset->warna_hexa       = $match->warna_hexa ?? '#999999';
-        }
+        $this->applyRangeAttributes($asets, $ranges);
 
         // Karena semua OPD
         $namaOpd = 'SEMUA OPD';
@@ -366,23 +300,8 @@ class BidangAsetController extends Controller
         $hiddenFields = ['opd_id', 'klasifikasiaset_id', 'periode_id',  'kategori_se'];
         $fieldList = array_values(array_diff($fieldList, $hiddenFields));
 
-           $ranges = RangeAset::select('nilai_akhir_aset', 'deskripsi')
-            ->orderBy('nilai_atas')
-            ->get();
-
-        // Hitung nilai keamanan informasi
-        $total = (int)$aset->kerahasiaan
-            + (int)$aset->integritas
-            + (int)$aset->ketersediaan
-            + (int)$aset->keaslian
-            + (int)$aset->kenirsangkalan;
-
-        $range = RangeAset::where('nilai_bawah', '<=', $total)
-            ->where('nilai_atas', '>=', $total)
-            ->first();
-
-        $aset->nilai_akhir_aset = $range->nilai_akhir_aset ?? '-';
-        $aset->warna_hexa       = $range->warna_hexa ?? '#999999';
+        $ranges = RangeAset::orderBy('nilai_bawah')->get();
+        $this->applyRangeAttributes(collect([$aset]), $ranges);
 
         // Nama OPD pemilik aset (bukan OPD user login)
         $namaOpd = $aset->opd->namaopd ?? '—';
@@ -415,7 +334,7 @@ class BidangAsetController extends Controller
         if (in_array('spesifikasi_aset', $fields))         $rules['spesifikasi_aset'] = 'required|string|max:255';
         if (in_array('lokasi', $fields))                   $rules['lokasi'] = 'required|string|max:255';
         if (in_array('link_pse', $fields))                 $rules['link_pse'] = 'nullable|string';
-        if (in_array('link_url', $fields))                 $rules['link_url'] = 'nullable|url|starts_with:https://';
+        if (in_array('link_url', $fields))                 $rules['link_url'] = 'nullable|url|starts_with:https://,http://';
         if (in_array('keterangan', $fields))               $rules['keterangan'] = 'nullable|string';
         if (in_array('format_penyimpanan', $fields))       $rules['format_penyimpanan'] = 'required|in:Fisik,Dokumen Elektronik,Fisik dan Dokumen Elektronik';
         if (in_array('masa_berlaku', $fields))             $rules['masa_berlaku'] = 'required|string|max:100';
@@ -460,4 +379,5 @@ class BidangAsetController extends Controller
             return back()->withInput()->with('error', 'Terjadi kesalahan. Silakan coba lagi atau hubungi admin.');
         }
     }
+
 }

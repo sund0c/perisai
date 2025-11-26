@@ -23,9 +23,12 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Arr;
+use App\Traits\CalculatesAsetRange;
 
 class AsetController extends Controller
 {
+    use CalculatesAsetRange;
+
 
     public function __construct()
     {
@@ -65,49 +68,26 @@ class AsetController extends Controller
             ->orderBy('klasifikasiaset')
             ->get();
 
+        $totalTinggi = 0;
+        $totalSedang = 0;
+        $totalRendah = 0;
 
+
+
+        $ranges = RangeAset::orderBy('nilai_bawah')->get();
 
         // Hitung jumlah aset berdasarkan nilai CIAAA (TINGGI, SEDANG, RENDAH)
         foreach ($klasifikasis as $klasifikasi) {
-            $totalTinggi = $klasifikasis->sum('jumlah_tinggi');
-            $totalSedang = $klasifikasis->sum('jumlah_sedang');
-            $totalRendah = $klasifikasis->sum('jumlah_rendah');
             $asets = Aset::where('klasifikasiaset_id', $klasifikasi->id)
                 ->where('opd_id', $opdId)
                 ->where('periode_id', $periodeAktifId)
                 ->get();
 
-            $jumlahTinggi = 0;
-            $jumlahSedang = 0;
-            $jumlahRendah = 0;
+            $summary = $this->summarizeRangeCounts($asets, $ranges);
 
-            foreach ($asets as $aset) {
-                $total = collect([
-                    $aset->kerahasiaan,
-                    $aset->integritas,
-                    $aset->ketersediaan,
-                    $aset->keaslian,
-                    $aset->kenirsangkalan,
-                ])->map(fn($v) => intval($v))->sum();
-
-                $range = RangeAset::where('nilai_bawah', '<=', $total)
-                    ->where('nilai_atas', '>=', $total)
-                    ->first();
-
-                $nilai = $range->nilai_akhir_aset ?? null;
-
-                if ($nilai === 'TINGGI') {
-                    $jumlahTinggi++;
-                } elseif ($nilai === 'SEDANG') {
-                    $jumlahSedang++;
-                } elseif ($nilai === 'RENDAH') {
-                    $jumlahRendah++;
-                }
-            }
-
-            $klasifikasi->jumlah_tinggi = $jumlahTinggi;
-            $klasifikasi->jumlah_sedang = $jumlahSedang;
-            $klasifikasi->jumlah_rendah = $jumlahRendah;
+            $klasifikasi->jumlah_tinggi = $summary['tinggi'];
+            $klasifikasi->jumlah_sedang = $summary['sedang'];
+            $klasifikasi->jumlah_rendah = $summary['rendah'];
         }
 
         $namaOpd = auth()->user()->opd->namaopd ?? '-';
@@ -143,22 +123,8 @@ class AsetController extends Controller
             ->with('subklasifikasiaset')
             ->get();
 
-        foreach ($asets as $aset) {
-            $total = collect([
-                $aset->kerahasiaan,
-                $aset->integritas,
-                $aset->ketersediaan,
-                $aset->keaslian,
-                $aset->kenirsangkalan,
-            ])->map(fn($v) => (int) $v)->sum();
-
-            $range = \App\Models\RangeAset::where('nilai_bawah', '<=', $total)
-                ->where('nilai_atas', '>=', $total)
-                ->first();
-
-            $aset->nilai_akhir_aset = $range->nilai_akhir_aset ?? '-';
-            $aset->warna_hexa       = $range->warna_hexa ?? '#999999';
-        }
+        $ranges = RangeAset::orderBy('nilai_bawah')->get();
+        $this->applyRangeAttributes($asets, $ranges);
 
         $namaOpd = auth()->user()->opd->namaopd ?? '-';
 
@@ -244,7 +210,7 @@ class AsetController extends Controller
         if (in_array('spesifikasi_aset', $fields))         $rules['spesifikasi_aset'] = 'required|string|max:255';
         if (in_array('lokasi', $fields))                   $rules['lokasi'] = 'required|string|max:255';
         if (in_array('link_pse', $fields))                 $rules['link_pse'] = 'nullable|string';
-        if (in_array('link_url', $fields))                 $rules['link_url'] = 'nullable|url|starts_with:https://';
+        if (in_array('link_url', $fields))                 $rules['link_url'] = 'nullable|url|starts_with:https://,http://';
         if (in_array('keterangan', $fields))               $rules['keterangan'] = 'nullable|string';
         if (in_array('format_penyimpanan', $fields))       $rules['format_penyimpanan'] = 'required|in:Fisik,Dokumen Elektronik,Fisik dan Dokumen Elektronik';
         if (in_array('masa_berlaku', $fields))             $rules['masa_berlaku'] = 'required|string|max:100';
@@ -419,7 +385,7 @@ class AsetController extends Controller
         if (in_array('spesifikasi_aset', $fields))         $rules['spesifikasi_aset'] = 'required|string|max:255';
         if (in_array('lokasi', $fields))                   $rules['lokasi'] = 'required|string|max:255';
         if (in_array('link_pse', $fields))                 $rules['link_pse'] = 'nullable|string';
-        if (in_array('link_url', $fields))                 $rules['link_url'] = 'nullable|url|starts_with:https://';
+        if (in_array('link_url', $fields))                 $rules['link_url'] = 'nullable|url|starts_with:https://,http://';
         if (in_array('keterangan', $fields))               $rules['keterangan'] = 'nullable|string';
         if (in_array('format_penyimpanan', $fields))       $rules['format_penyimpanan'] = 'required|in:Fisik,Dokumen Elektronik,Fisik dan Dokumen Elektronik';
         if (in_array('masa_berlaku', $fields))             $rules['masa_berlaku'] = 'required|string|max:100';
@@ -617,26 +583,10 @@ class AsetController extends Controller
         $hiddenFields = ['opd_id', 'klasifikasiaset_id', 'periode_id', 'kode_aset', 'kategori_se'];
         $fieldList    = array_values(array_diff($fieldList, $hiddenFields));
 
-        $ranges = RangeAset::select('nilai_akhir_aset', 'deskripsi')
-            ->orderBy('nilai_atas')
-            ->get();
+        $ranges = RangeAset::orderBy('nilai_bawah')->get();
 
         // Hitung nilai keamanan
-        $total = collect([
-            $aset->kerahasiaan,
-            $aset->integritas,
-            $aset->ketersediaan,
-            $aset->keaslian,
-            $aset->kenirsangkalan,
-        ])->map(fn($v) => (int) $v)->sum();
-
-        $range = RangeAset::where('nilai_bawah', '<=', $total)
-            ->where('nilai_atas', '>=', $total)
-            ->first();
-
-        // Tambahkan atribut tampilan (tidak disimpan ke DB)
-        $aset->nilai_akhir_aset = $range->nilai_akhir_aset ?? '-';
-        $aset->warna_hexa       = $range->warna_hexa ?? '#999999';
+        $this->applyRangeAttributes(collect([$aset]), $ranges);
 
         $namaOpd = auth()->user()->opd->namaopd ?? '-';
 

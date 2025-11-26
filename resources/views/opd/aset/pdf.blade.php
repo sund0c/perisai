@@ -212,8 +212,7 @@
                                             ? 'Seksi/Tim'
                                             : ucwords(str_replace('_', ' ', $field)))))));
 
-                $value =
-                    $field === 'subklasifikasiaset_id'
+                $value = $field === 'subklasifikasiaset_id'
                         ? $aset->subklasifikasiaset->subklasifikasiaset ?? '-'
                         : $aset->$field ?? '-';
 
@@ -230,10 +229,15 @@
                     'kenirsangkalan' => 'N',
                 ];
 
+                // $labels = [
+                //    1 => 'Tidak Signifikan',
+                //    2 => 'Penting',
+                //    3 => 'Sangat Penting',
+                // ];
                 $labels = [
-                    1 => 'Tidak Signifikan',
-                    2 => 'Penting',
-                    3 => 'Sangat Penting',
+                    1 => 'Rendah',
+                    2 => 'Sedang',
+                    3 => 'Tinggi'
                 ];
                 $isLinkField = in_array($field, ['link_url', 'link_pse']) && filter_var($value, FILTER_VALIDATE_URL);
                 $displayUrl = $value;

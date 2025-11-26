@@ -26,5 +26,5 @@
             </option>
         @endforeach
     </select>
-    <small class="form-text text-muted">(Seberapa penting mencegah akses pihak tidak berwenang terhadap aset?)</small>
+    <small class="form-text text-muted">(Seberapa besar dampaknya bagi instansi jika informasi atau akses dari aset ini diketahui oleh pihak yang tidak berwenang?)</small>
 </div>

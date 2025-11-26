@@ -25,4 +25,5 @@
             </option>
         @endforeach
     </select>
+    <small class="form-text text-muted">(Seberapa besar dampaknya bagi instansi jika aset ini diubah tanpa ijin, rusak, atau hilang ?)</small>
 </div>
