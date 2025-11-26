@@ -90,7 +90,7 @@
                         <th>Sub Klasifikasi Aset</th>
                         <th>Pemilik Risiko</th>
                         <th>Nilai Aset (CIAAN)</th>
-                        <th>Detil</th>
+                        <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -104,9 +104,13 @@
                                 {{ $aset->nilai_akhir_aset }}
                             </td>
 
-                            <td align="center">
-                                <a href="{{ route('bidang.aset.pdf', $aset->id) }}" class="btn btn-sm btn-danger"><i
-                                        class="fas fa-file-pdf"></i></a>
+                            <td align="center" class="actions-cell">
+                                <a href="{{ route('bidang.aset.edit', $aset->uuid) }}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{{ route('bidang.aset.pdf', $aset->id) }}" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-file-pdf"></i>
+                                </a>
                             </td>
                         </tr>
                     @endforeach

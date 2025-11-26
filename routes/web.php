@@ -189,11 +189,13 @@ Route::middleware(['SSOBrokerMiddleware', 'prevent-back-history', 'spatie_role_o
 
 //============= Start of BIDANG ===========================
 
-Route::middleware(['SSOBrokerMiddleware', 'prevent-back-history', 'spatie_role_or_permission:bidang|admin',])->prefix('bidang/aset')->name('bidang.aset.')->group(function () {
+Route::middleware(['SSOBrokerMiddleware', 'prevent-back-history', 'spatie_role_or_permission:bidang|admin'])->prefix('bidang/aset')->name('bidang.aset.')->group(function () {
     Route::get('/', [BidangAsetController::class, 'index'])->name('index');
     Route::get('/export/rekap', [BidangAsetController::class, 'exportRekapPdf'])->name('export_rekap');
     Route::get('/klasifikasi/{id}', [BidangAsetController::class, 'showByKlasifikasi'])->name('show_by_klasifikasi');
     Route::get('/export/rekapklas/{id}', [BidangAsetController::class, 'exportRekapKlasPdf'])->name('export_rekap_klas');
+    Route::get('/{aset:uuid}/edit', [BidangAsetController::class, 'edit'])->name('edit');
+    Route::put('/{aset:uuid}', [BidangAsetController::class, 'update'])->name('update');
     Route::get('/{id}/pdf', [BidangAsetController::class, 'pdf'])->name('pdf');
 });
 
