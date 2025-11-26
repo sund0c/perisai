@@ -47,14 +47,14 @@ return [
             ['value' => '3', 'label' => 'Tinggi: Mengandung data rahasia, pribadi, atau strategis; kebocoran menimbulkan dampak serius'],
         ],
         'Sarana Pendukung' => [
-            ['value' => '1', 'label' => 'Rendah: Berada di ruangan publik atau aset bisa diakses tanpa ijin khusus'],
-            ['value' => '2', 'label' => 'Sedang: Berada di ruangan dengan akses terbatas dan aset bisa diakses tanpa ijin khusus'],
-            ['value' => '3', 'label' => 'Tinggi: Berada di ruangan dengan akses terbatas atau aset hanya bisa diakses dengn ijin khusus'],
+            ['value' => '1', 'label' => 'Rendah: Informasi bersifat umum dan dapat diakses publik tanpa risiko'],
+            ['value' => '2', 'label' => 'Sedang: Mengandung informasi internal yang perlu dijaga dari pihak luar'],
+            ['value' => '3', 'label' => 'Tinggi: Mengandung data rahasia, pribadi, atau strategis; kebocoran menimbulkan dampak serius'],
         ],
         'SDM dan Pihak Ketiga' => [
-            ['value' => '1', 'label' => 'Rendah: Tidak punya akses informasi'],
-            ['value' => '2', 'label' => 'Sedang: Punya akses ke informasi internal tapi tidak ke data pribadi spesifik UU PDP atau informasi dikecualikan UU KIP'],
-            ['value' => '3', 'label' => 'Tinggi: Punya akses ke data pribadi spesifik UU PDP atau informasi dikecualikan UU KIP'],
+            ['value' => '1', 'label' => 'Rendah: Informasi bersifat umum dan dapat diakses publik tanpa risiko'],
+            ['value' => '2', 'label' => 'Sedang: Mengandung informasi internal yang perlu dijaga dari pihak luar'],
+            ['value' => '3', 'label' => 'Tinggi: Mengandung data rahasia, pribadi, atau strategis; kebocoran menimbulkan dampak serius'],
         ],
     ],
     // 'integritas' => [
