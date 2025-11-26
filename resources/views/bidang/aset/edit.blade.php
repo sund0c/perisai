@@ -28,12 +28,19 @@
                 @csrf
                 @method('PUT')
 
+                @php
+                    $skip = ['kenirsangkalan', 'keaslian'];
+                @endphp
+
                 @foreach ($fieldList as $field)
+                    @continue(in_array($field, $skip))
+
                     @includeIf('opd.aset.fields.' . $field, [
                         'options' => $fieldOptions,
                         'aset' => $aset,
                     ])
                 @endforeach
+
 
                 <button type="submit" class="btn btn-sm btn-primary">Simpan</button>
                 <a href="{{ route('bidang.aset.show_by_klasifikasi', $klasifikasi->id) }}"

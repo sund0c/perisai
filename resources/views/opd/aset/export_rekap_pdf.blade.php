@@ -149,7 +149,7 @@
         </table>
     </div>
 
-     <!-- Add space for bottom -->
+    <!-- Add space for bottom -->
     <table style="margin-top: -10px;">
         <thead>
             <tr>
@@ -209,7 +209,7 @@
         </ul>
     </div>
     <BR>
-    <h4>B. KETERANGAN NILAI ASET (CIAAN )</h4>
+    <h4>B. KETERANGAN NILAI ASET (CIA)</h4>
     <ol>
         @foreach ($ranges as $range)
             <li><b>{{ $range->nilai_akhir_aset }} :</b> {{ $range->deskripsi }}</li>

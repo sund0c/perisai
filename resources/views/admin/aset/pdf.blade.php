@@ -186,7 +186,7 @@
                                 : ($field === 'keterangan'
                                     ? 'Keterangan / Fungsi'
                                     : ($field === 'fungsi_personil'
-                                        ? 'Kabid/Kabag'
+                                        ? 'Bidang/Bagian'
                                         : ($field === 'unit_personil'
                                             ? 'Seksi/Tim'
                                             : ucwords(str_replace('_', ' ', $field)))))));
@@ -202,31 +202,32 @@
             <tr>
                 <td class="label">{{ $label }}</td>
                 @php
-                // $labels = [
-                //    1 => 'Tidak Signifikan',
-                //    2 => 'Penting',
-                //    3 => 'Sangat Penting',
-                // ];
-    $labels = [
-        1 => 'Rendah',
-        2 => 'Sedang',
-        3 => 'Tinggi'
-    ];
-    $isLinkField = in_array($field, ['link_url', 'link_pse']) && filter_var($value, FILTER_VALIDATE_URL);
-    $displayUrl = $value;
-    if ($isLinkField) {
-        $displayUrl = preg_replace('#^https?://#i', '', $value);
-    }
-@endphp
+                    // $labels = [
+                    //    1 => 'Tidak Signifikan',
+                    //    2 => 'Penting',
+                    //    3 => 'Sangat Penting',
+                    // ];
+                    $labels = [
+                        1 => 'Rendah',
+                        2 => 'Sedang',
+                        3 => 'Tinggi',
+                    ];
+                    $isLinkField =
+                        in_array($field, ['link_url', 'link_pse']) && filter_var($value, FILTER_VALIDATE_URL);
+                    $displayUrl = $value;
+                    if ($isLinkField) {
+                        $displayUrl = preg_replace('#^https?://#i', '', $value);
+                    }
+                @endphp
 
-<td class="value">
-    @if ($isLinkField)
-        <a href="{{ $value }}" target="_blank" rel="noopener"
-            style="text-decoration:none;color:#000;">{{ $displayUrl }}</a>
-    @else
-        {{ $labels[$value] ?? ($value === '' ? '-' : $value) }}
-    @endif
-</td>
+                <td class="value">
+                    @if ($isLinkField)
+                        <a href="{{ $value }}" target="_blank" rel="noopener"
+                            style="text-decoration:none;color:#000;">{{ $displayUrl }}</a>
+                    @else
+                        {{ $labels[$value] ?? ($value === '' ? '-' : $value) }}
+                    @endif
+                </td>
 
             </tr>
         @endforeach

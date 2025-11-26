@@ -113,7 +113,7 @@
                         <th>Kode Aset</th>
                         <th>Nama Aset</th>
                         <th>Sub Klasifikasi Aset</th>
-                        <th>Nilai Aset (CIAAN)</th>
+                        <th>Nilai Aset (CIA)</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>

@@ -222,7 +222,7 @@
                                 : ($field === 'keterangan'
                                     ? 'Keterangan / Fungsi'
                                     : ($field === 'fungsi_personil'
-                                        ? 'Kabid/Kabag'
+                                        ? 'Bidang/Bagian'
                                         : ($field === 'unit_personil'
                                             ? 'Seksi/Tim'
                                             : ucwords(str_replace('_', ' ', $field)))))));
@@ -253,7 +253,7 @@
                 $labels = [
                     1 => 'Rendah',
                     2 => 'Sedang',
-                    3 => 'Tinggi'
+                    3 => 'Tinggi',
                 ];
                 $isLinkField = in_array($field, ['link_url', 'link_pse']) && filter_var($value, FILTER_VALIDATE_URL);
                 $displayUrl = $value;

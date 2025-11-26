@@ -142,7 +142,7 @@
     </div>
 
     <!-- Add space for bottom -->
-    <table style="margin-top: -10px;"> 
+    <table style="margin-top: -10px;">
         <thead>
             <tr>
                 <th style="width:auto;text-align: center;"rowspan="2">KLASIFIKASI ASET</th>
@@ -156,7 +156,7 @@
             </tr>
         </thead>
         <tbody>
-             @foreach ($klasifikasis as $klasifikasi)
+            @foreach ($klasifikasis as $klasifikasi)
                 <tr">
                     <td><b>[{{ $klasifikasi->kodeklas }}] {{ $klasifikasi->klasifikasiaset }}</b>
 
@@ -168,7 +168,7 @@
                     </tr>
             @endforeach
         </tbody>
-         <tfoot>
+        <tfoot>
             <tr style="background-color:#eeeeee; font-weight:bold;height:200px;">
                 <td style="text-align: center;">TOTAL JUMLAH ASET</td>
                 <td style="text-align: center;">
@@ -201,7 +201,7 @@
         </ul>
     </div>
     <BR>
-    <h4>B. KETERANGAN NILAI ASET (CIAAN )</h4>
+    <h4>B. KETERANGAN NILAI ASET (CIA)</h4>
     <ol>
         @foreach ($ranges as $range)
             <li><b>{{ $range->nilai_akhir_aset }} :</b> {{ $range->deskripsi }}</li>

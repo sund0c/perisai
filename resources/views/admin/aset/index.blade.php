@@ -77,7 +77,7 @@
                                             [{{ $klasifikasi->kodeklas }}] {{ $klasifikasi->klasifikasiaset }}
                                         </a>
                                     </td>
-                                   <td style="vertical-align: middle; text-align: center;">
+                                    <td style="vertical-align: middle; text-align: center;">
                                         {{ $klasifikasi->jumlah_aset ?? 0 }}
                                     </td>
                                     <td
@@ -133,7 +133,7 @@
             </div>
         </div>
         <div class="col-md-5">
-<div class="card">
+            <div class="card">
                 <div class="card-body">
                     @php
                         $tTinggi = (int) ($totalTinggi ?? 0);
@@ -147,7 +147,7 @@
                     <br>
 
                     <div class="matik-list">
-                        <b>Keterangan Nilai Aset (CIAAN): </b>
+                        <b>Keterangan Nilai Aset (CIA): </b>
                         <ol style="padding-left: 20px; margin-left: 0;">
                             @foreach ($ranges ?? collect() as $range)
                                 <li><b>{{ $range->nilai_akhir_aset }} :</b> {{ $range->deskripsi }}</li>

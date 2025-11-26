@@ -80,7 +80,7 @@ return [
             ['value' => '2', 'label' => 'Sedang: Dapat menyebabkan kesalahan data atau proses, namun masih bisa dikoreksi.'],
             ['value' => '3', 'label' => 'Tinggi: Dapat menyebabkan kerugian besar, gangguan operasional, atau kesalahan mengambil keputusan']
         ],
-         'Perangkat Lunak' => [
+        'Perangkat Lunak' => [
             ['value' => '1', 'label' => 'Rendah: Tidak Signifikan'],
             ['value' => '2', 'label' => 'Sedang: Dapat menyebabkan kesalahan data atau proses, namun masih bisa dikoreksi.'],
             ['value' => '3', 'label' => 'Tinggi: Dapat menyebabkan kerugian besar, gangguan operasional, atau kesalahan mengambil keputusan']
@@ -160,36 +160,36 @@ return [
     ],
     'keaslian' => [
         'Data dan Informasi' => [
-        ['value' => '3', 'label' => 'Sangat Penting'],
+            ['value' => '0', 'label' => 'N/A'],
         ],
-         'Perangkat Lunak' => [
-            ['value' => '3', 'label' => 'Sangat Penting'],
+        'Perangkat Lunak' => [
+            ['value' => '0', 'label' => 'N/A'],
         ],
         'Perangkat Keras' => [
-            ['value' => '3', 'label' => 'Sangat Penting'],
+            ['value' => '0', 'label' => 'N/A'],
         ],
         'Sarana Pendukung' => [
-            ['value' => '3', 'label' => 'Sangat Penting'],
+            ['value' => '0', 'label' => 'N/A'],
         ],
         'SDM dan Pihak Ketiga' => [
-     ['value' => '3', 'label' => 'Sangat Penting'],
+            ['value' => '0', 'label' => 'N/A'],
         ],
     ],
     'kenirsangkalan' => [
-         'Data dan Informasi' => [
-        ['value' => '3', 'label' => 'Sangat Penting'],
+        'Data dan Informasi' => [
+            ['value' => '0', 'label' => 'N/A'],
         ],
-         'Perangkat Lunak' => [
-            ['value' => '3', 'label' => 'Sangat Penting'],
+        'Perangkat Lunak' => [
+            ['value' => '0', 'label' => 'N/A'],
         ],
         'Perangkat Keras' => [
-            ['value' => '3', 'label' => 'Sangat Penting'],
+            ['value' => '0', 'label' => 'N/A'],
         ],
         'Sarana Pendukung' => [
-            ['value' => '3', 'label' => 'Sangat Penting'],
+            ['value' => '0', 'label' => 'N/A'],
         ],
         'SDM dan Pihak Ketiga' => [
-     ['value' => '3', 'label' => 'Sangat Penting'],
+            ['value' => '0', 'label' => 'N/A'],
         ],
     ],
     // kamu bisa tambah field lain (integritas, ketersediaan, dst) dengan struktur serupa

@@ -16,8 +16,12 @@
 </div> --}}
 
 <div class="form-group">
-    <label for="kerahasiaan">Tingkat Kerahasiaan (C)</label>
-    <select name="kerahasiaan" id="kerahasiaan" class="form-control" required>
+    <label for="kerahasiaan" style="margin-bottom:0; padding-bottom:0; display:block; line-height:1;">Tingkat Kerahasiaan
+        (C)</label>
+    <small class="text-muted" style="margin-top:0;padding-top:0; display:block; line-height:1;">
+        (Seberapa besar dampaknya bagi instansi jika informasi atau akses dari aset ini
+        diketahui oleh pihak yang tidak berwenang?)</small>
+    <select name="kerahasiaan" id="kerahasiaan" class="form-control" style="margin-top:6px;" required>
         <option value="">Pilih</option>
         @foreach ($options['kerahasiaan'] ?? [] as $opt)
             <option value="{{ $opt['value'] }}"
@@ -26,5 +30,5 @@
             </option>
         @endforeach
     </select>
-    <small class="form-text text-muted">(Seberapa besar dampaknya bagi instansi jika informasi atau akses dari aset ini diketahui oleh pihak yang tidak berwenang?)</small>
+
 </div>

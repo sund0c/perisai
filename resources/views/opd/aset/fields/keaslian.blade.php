@@ -15,7 +15,7 @@
 </div> --}}
 
 <div class="form-group">
-    <label for="keaslian">Keaslian</label>
+    <label for="keaslian">Tingkat Keaslian (N/A)</label>
     <select name="keaslian" id="keaslian" class="form-control" required>
         <option value="">Pilih</option>
         @foreach ($options['keaslian'] ?? [] as $opt)

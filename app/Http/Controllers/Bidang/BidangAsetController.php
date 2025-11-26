@@ -94,7 +94,7 @@ class BidangAsetController extends Controller
         $ranges = RangeAset::select('nilai_akhir_aset', 'deskripsi')->orderBy('nilai_atas')->get();
 
         return view('bidang.aset.index', compact(
-           'klasifikasis',
+            'klasifikasis',
             'namaOpd',
             'totalTinggi',
             'totalSedang',
@@ -123,20 +123,24 @@ class BidangAsetController extends Controller
 
 
         $asets = Aset::where('klasifikasiaset_id', $id)
-        ->where('periode_id', $periodeAktifId)
-        ->with([
-            'subklasifikasiaset', // sesuaikan nama kolom
-            'opd:id,namaopd',
-        ])
-        ->get([
-            'id',
-            'opd_id', // PENTING: harus di-select agar relasi opd() terikat
-            'uuid',
-            'kode_aset',
-            'nama_aset',
-            'subklasifikasiaset_id',
-            'kerahasiaan', 'integritas', 'ketersediaan', 'keaslian', 'kenirsangkalan'
-        ]);
+            ->where('periode_id', $periodeAktifId)
+            ->with([
+                'subklasifikasiaset', // sesuaikan nama kolom
+                'opd:id,namaopd',
+            ])
+            ->get([
+                'id',
+                'opd_id', // PENTING: harus di-select agar relasi opd() terikat
+                'uuid',
+                'kode_aset',
+                'nama_aset',
+                'subklasifikasiaset_id',
+                'kerahasiaan',
+                'integritas',
+                'ketersediaan',
+                'keaslian',
+                'kenirsangkalan'
+            ]);
 
 
 
@@ -146,7 +150,7 @@ class BidangAsetController extends Controller
 
         // Karena lintas OPD, labelnya diset generik
         //$namaOpd = 'SEMUA OPD';
-        return view('bidang.aset.show_by_klasifikasi', compact('klasifikasi', 'asets','subs'));
+        return view('bidang.aset.show_by_klasifikasi', compact('klasifikasi', 'asets', 'subs'));
     }
 
     public function edit(Aset $aset)
@@ -229,7 +233,7 @@ class BidangAsetController extends Controller
             ->setPaper('A4', 'portrait');
 
         // Use centralized footer
-    PdfFooter::add_right_corner_footer($pdf);
+        PdfFooter::add_right_corner_footer($pdf);
         return $pdf->download('asettikpemprovbali_' . date('Ymd_His') . '.pdf');
     }
 
@@ -244,14 +248,16 @@ class BidangAsetController extends Controller
 
         // Pastikan klasifikasi ada
         $klasifikasi = KlasifikasiAset::findOrFail($id);
-                $subs  = $klasifikasi->subklasifikasi;
+        $subs  = $klasifikasi->subklasifikasi;
 
 
         // Ambil semua aset pada klasifikasi ini & periode aktif (tanpa filter OPD)
         $asets = Aset::where('klasifikasiaset_id', $id)
             ->where('periode_id', $periodeAktifId)
-            ->with('subklasifikasiaset',
-            'opd:id,namaopd') // tambah relasi lain kalau perlu di view
+            ->with(
+                'subklasifikasiaset',
+                'opd:id,namaopd'
+            ) // tambah relasi lain kalau perlu di view
             ->get([
                 'id',
                 'opd_id', // PENTING: tanpa ini relasi opd() tidak bisa dipetakan
@@ -274,9 +280,9 @@ class BidangAsetController extends Controller
         $namaOpd = 'SEMUA OPD';
 
         // Buat PDF
-        $pdf = PDF::loadView('bidang.aset.export_rekap_klas_pdf', compact('klasifikasi', 'asets', 'namaOpd','subs'))
+        $pdf = PDF::loadView('bidang.aset.export_rekap_klas_pdf', compact('klasifikasi', 'asets', 'namaOpd', 'subs'))
             ->setPaper([0, 0, 595.28, 841.89], 'portrait'); // A4 dalam points
-    PdfFooter::add_right_corner_footer($pdf);
+        PdfFooter::add_right_corner_footer($pdf);
 
         return $pdf->download('asettikperklas_' . date('Ymd_His') . '.pdf');
     }
@@ -307,16 +313,17 @@ class BidangAsetController extends Controller
         $namaOpd = $aset->opd->namaopd ?? '—';
 
         // Buat PDF + footer (render → page_script)
-        $pdf = PDF::loadView('bidang.aset.pdf', compact('aset', 'namaOpd', 'klasifikasi', 'fieldList', 'subklasifikasis','ranges'))
+        $pdf = PDF::loadView('bidang.aset.pdf', compact('aset', 'namaOpd', 'klasifikasi', 'fieldList', 'subklasifikasis', 'ranges'))
             ->setPaper([0, 0, 595.28, 841.89], 'portrait'); // A4 in points
 
-    PdfFooter::add_right_corner_footer($pdf);
+        PdfFooter::add_right_corner_footer($pdf);
 
         return $pdf->download('detilaset_' . date('Ymd_His') . '.pdf');
     }
 
     public function update(Request $request, Aset $aset)
     {
+        //dd($request);
         $aset->load('klasifikasi');
         $klasifikasi = $aset->klasifikasi;
 
@@ -342,7 +349,7 @@ class BidangAsetController extends Controller
         if (in_array('status_aktif', $fields))             $rules['status_aktif'] = 'required|in:Aktif,Tidak Aktif';
         if (in_array('kondisi_aset', $fields))             $rules['kondisi_aset'] = 'required|in:Baik,Tidak Layak,Rusak';
 
-        foreach (['kerahasiaan', 'integritas', 'ketersediaan', 'keaslian', 'kenirsangkalan'] as $ci) {
+        foreach (['kerahasiaan', 'integritas', 'ketersediaan'] as $ci) {
             if (in_array($ci, $fields)) $rules[$ci] = 'required|in:1,2,3';
         }
 
@@ -379,5 +386,4 @@ class BidangAsetController extends Controller
             return back()->withInput()->with('error', 'Terjadi kesalahan. Silakan coba lagi atau hubungi admin.');
         }
     }
-
 }
