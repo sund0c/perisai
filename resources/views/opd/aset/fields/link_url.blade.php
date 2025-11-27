@@ -2,8 +2,8 @@
     <label for="link_url">Link URL</label>
     <input type="url" name="link_url" id="link_url" class="form-control @error('link_url') is-invalid @enderror"
         placeholder=""
-        pattern="https://.*"
-        oninvalid="this.setCustomValidity('URL harus diawali dengan https://')"
+        pattern="https?://.*"
+        oninvalid="this.setCustomValidity('URL harus diawali dengan http:// atau https://')"
         oninput="this.setCustomValidity('')"
         value="{{ old('link_url', $aset->link_url ?? '') }}">
     @error('link_url')
