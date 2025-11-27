@@ -10,5 +10,5 @@
         <div class="invalid-feedback">{{ $message }}</div>
     @enderror
 
-    <small class="form-text text-muted">Link URL Aplikasi (Isi jika aplikasi berbasis website)</small>
+    <small class="form-text text-muted">Link URL Aplikasi (Isi jika aplikasi berbasis website, kosongkan jika tidak berbasis website)</small>
 </div>

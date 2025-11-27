@@ -10,5 +10,5 @@
     @error('link_pse')
         <div class="invalid-feedback">{{ $message }}</div>
     @enderror
-    <small class="form-text text-muted">Link PSE Komdigi (Isi jika ada)</small>
+    <small class="form-text text-muted">Link PSE Komdigi (Isi jika ada, kosongkan jika tidak ada)</small>
 </div>
