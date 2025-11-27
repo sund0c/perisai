@@ -5,13 +5,15 @@ namespace App\Http\Controllers\Bidang;
 use App\Http\Controllers\Controller;
 
 use App\Models\Aset;
-//use App\Models\KategoriSe;
+use App\Models\KategoriSe;
 use App\Models\RangeSe;
 use App\Models\IndikatorKategoriSe;
 //use Illuminate\Http\Request;
 use PDF;
 use App\Services\PdfFooter;
 use App\Models\Periode;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Log;
 
 // use App\Models\KlasifikasiAset;
 // use App\Models\Periode;
@@ -53,8 +55,8 @@ $asetPL = Aset::whereHas('subklasifikasiaset', function ($q) {
 
         // Inisialisasi counter
         $kategoriCount = [
+            'STRATEGIS' => 0,
             'TINGGI' => 0,
-            'SEDANG' => 0,
             'RENDAH' => 0,
             'BELUM'  => 0,
             'TOTAL'  => $asetPL->count(),
@@ -87,8 +89,8 @@ $asetPL = Aset::whereHas('subklasifikasiaset', function ($q) {
         }
 
         return view('bidang.kategorise.index', [
+            'strategis' => $kategoriCount['STRATEGIS'] ?? 0,
             'tinggi'  => $kategoriCount['TINGGI'] ?? 0,
-            'sedang'  => $kategoriCount['SEDANG'] ?? 0,
             'rendah'  => $kategoriCount['RENDAH'] ?? 0,
             'belum'   => $kategoriCount['BELUM'],
             'total'   => $kategoriCount['TOTAL'],
@@ -100,13 +102,13 @@ $asetPL = Aset::whereHas('subklasifikasiaset', function ($q) {
     public function show($kategori)
     {
         $namaOpd = 'SEMUA OPD';
-        $kategori = strtolower($kategori); // 'tinggi' | 'sedang' | 'rendah' | 'belum' | 'total'
+        $kategori = strtolower($kategori); // 'strategis' | 'tinggi' | 'rendah' | 'belum' | 'total'
         $periodeAktifId = Periode::where('status', 'open')->value('id');
         if (! $periodeAktifId) {
             abort(409, 'Tidak ada periode yang berstatus open.');
         }
         $range = null;
-        if (in_array($kategori, ['tinggi', 'sedang', 'rendah'])) {
+        if (in_array($kategori, ['strategis', 'tinggi', 'rendah'])) {
             $range = RangeSe::whereRaw('LOWER(nilai_akhir_aset) = ?', [$kategori])->first();
         }
 
@@ -173,14 +175,14 @@ $asetPL = Aset::whereHas('subklasifikasiaset', function ($q) {
         };
 
         // Hitung kategori
+        $strategis = $asetPL->filter(function ($a) use ($ranges, $inRange) {
+            $skor = $a->kategoriSe->skor_total ?? null;
+            return $inRange($skor, $ranges['STRATEGIS'] ?? null);
+        })->count();
+
         $tinggi = $asetPL->filter(function ($a) use ($ranges, $inRange) {
             $skor = $a->kategoriSe->skor_total ?? null;
             return $inRange($skor, $ranges['TINGGI'] ?? null);
-        })->count();
-
-        $sedang = $asetPL->filter(function ($a) use ($ranges, $inRange) {
-            $skor = $a->kategoriSe->skor_total ?? null;
-            return $inRange($skor, $ranges['SEDANG'] ?? null);
         })->count();
 
         $rendah = $asetPL->filter(function ($a) use ($ranges, $inRange) {
@@ -193,8 +195,8 @@ $asetPL = Aset::whereHas('subklasifikasiaset', function ($q) {
 
         // Buat PDF (A4 dalam points) + footer style "render → page_script"
         $pdf = PDF::loadView('bidang.kategorise.export_rekap_pdf', compact(
+            'strategis',
             'tinggi',
-            'sedang',
             'rendah',
             'belum',
             'total',
@@ -302,5 +304,31 @@ $query = Aset::query()
             ->setPaper('A4', 'potrait');
     PdfFooter::add_right_corner_footer($pdf);
         return $pdf->download('penilaiankategorise_' . date('Ymd_His') . '.pdf');
+    }
+
+
+    public function destroy($id)
+    {
+        $aset = Aset::with('kategoriSe')->findOrFail($id);
+
+        if (!$aset->kategoriSe) {
+            return back()->with('error', 'Tidak ada data kategori SE untuk aset ini.');
+        }
+
+        try {
+            $aset->kategoriSe->delete();
+
+            return back()->with('success', 'Kategori SE berhasil dihapus.');
+        } catch (QueryException $e) {
+            Log::warning('Bidang gagal menghapus kategori SE', [
+                'aset_id' => $aset->id,
+                'mysql_code' => $e->errorInfo[1] ?? null,
+                'sql_state'  => $e->errorInfo[0] ?? null,
+                'driver_msg' => $e->errorInfo[2] ?? null,
+                'route'      => request()->path(),
+            ]);
+
+            return back()->with('error', 'Gagal menghapus kategori SE. Silakan coba lagi.');
+        }
     }
 }

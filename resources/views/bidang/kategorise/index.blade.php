@@ -44,20 +44,20 @@
                         </thead>
                         <tbody>
                             <tr class="bg-danger text-white" style="text-align: left">
+                                <td style="text-align: left">STRATEGIS</td>
+                                <td>
+                                    <a class="btn btn-light btn-sm px-4"
+                                        href="{{ route('bidang.kategorise.show', ['kategori' => 'strategis']) }}">
+                                        {{ $strategis }}
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr class="bg-warning text-white" style="text-align: left">
                                 <td style="text-align: left">TINGGI</td>
                                 <td>
                                     <a class="btn btn-light btn-sm px-4"
                                         href="{{ route('bidang.kategorise.show', ['kategori' => 'tinggi']) }}">
                                         {{ $tinggi }}
-                                    </a>
-                                </td>
-                            </tr>
-                            <tr class="bg-warning text-white" style="text-align: left">
-                                <td style="text-align: left">SEDANG</td>
-                                <td>
-                                    <a class="btn btn-light btn-sm px-4"
-                                        href="{{ route('bidang.kategorise.show', ['kategori' => 'sedang']) }}">
-                                        {{ $sedang }}
                                     </a>
                                 </td>
                             </tr>
@@ -110,9 +110,9 @@
 
     <script>
         const pieData = {
-            labels: ['TINGGI', 'SEDANG', 'RENDAH', 'BELUM DINILAI'],
+            labels: ['STRATEGIS', 'TINGGI', 'RENDAH', 'BELUM DINILAI'],
             datasets: [{
-                data: [{{ $tinggi }}, {{ $sedang }}, {{ $rendah }}, {{ $belum }}],
+                data: [{{ $strategis }}, {{ $tinggi }}, {{ $rendah }}, {{ $belum }}],
                 backgroundColor: ['#dc3545', '#ffc107', '#28a745', '#6c757d'],
                 borderColor: '#fff',
                 borderWidth: 2

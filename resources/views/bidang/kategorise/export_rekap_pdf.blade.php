@@ -152,14 +152,14 @@
         </thead>
         <tbody>
             <tr>
-                <td style="width:10%;background-color:#FF0000; color:#fff;text-align: left">TINGGI</td>
+                <td style="width:10%;background-color:#FF0000; color:#fff;text-align: left">STRATEGIS</td>
                 <td>
-                    {{ $tinggi }}
+                    {{ $strategis }}
                 </td>
             </tr>
             <tr>
-                <td style="width:10%;background-color:#FFD700; color:#000;text-align: left">SEDANG</td>
-                <td> {{ $sedang }}
+                <td style="width:10%;background-color:#FFD700; color:#000;text-align: left">TINGGI</td>
+                <td> {{ $tinggi }}
                 </td>
             </tr>
             <tr>

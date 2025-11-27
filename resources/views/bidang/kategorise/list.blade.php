@@ -40,6 +40,7 @@
                         <th>Pemilik Aset</th>
                         <th>Kategorisasi</th>
                         <th>Detil</th>
+                        <th>Hapus</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -80,6 +81,18 @@
                                     class="btn btn-sm btn-danger">
                                     <i class="fas fa-file-pdf"></i>
                                 </a>
+                            </td>
+                            <td align="center">
+                                @if ($aset->kategoriSe)
+                                    <form action="{{ route('bidang.kategorise.destroy', $aset->id) }}" method="POST"
+                                        onsubmit="return confirm('Hapus kategori SE aset ini?');" class="d-inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                @endif
                             </td>
                         </tr>
                     @endforeach
