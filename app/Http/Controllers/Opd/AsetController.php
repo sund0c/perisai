@@ -495,6 +495,8 @@ class AsetController extends Controller
             ->orderBy('klasifikasiaset')
             ->get();
 
+        $rangesCache = RangeAset::orderBy('nilai_bawah')->get();
+
 
         // Hitung nilai aset per klasifikasi
         foreach ($klasifikasis as $klasifikasi) {
@@ -503,37 +505,11 @@ class AsetController extends Controller
                 ->where('periode_id', $periodeAktifId)
                 ->get();
 
-            $jumlahTinggi = 0;
-            $jumlahSedang = 0;
-            $jumlahRendah = 0;
+            $summary = $this->summarizeRangeCounts($asets, $rangesCache);
 
-            foreach ($asets as $aset) {
-                $total = collect([
-                    $aset->kerahasiaan,
-                    $aset->integritas,
-                    $aset->ketersediaan,
-                    $aset->keaslian,
-                    $aset->kenirsangkalan,
-                ])->map(fn($v) => intval($v))->sum();
-
-                $range = RangeAset::where('nilai_bawah', '<=', $total)
-                    ->where('nilai_atas', '>=', $total)
-                    ->first();
-
-                $nilai = $range->nilai_akhir_aset ?? null;
-
-                if ($nilai === 'TINGGI') {
-                    $jumlahTinggi++;
-                } elseif ($nilai === 'SEDANG') {
-                    $jumlahSedang++;
-                } elseif ($nilai === 'RENDAH') {
-                    $jumlahRendah++;
-                }
-            }
-
-            $klasifikasi->jumlah_tinggi = $jumlahTinggi;
-            $klasifikasi->jumlah_sedang = $jumlahSedang;
-            $klasifikasi->jumlah_rendah = $jumlahRendah;
+            $klasifikasi->jumlah_tinggi = $summary['tinggi'];
+            $klasifikasi->jumlah_sedang = $summary['sedang'];
+            $klasifikasi->jumlah_rendah = $summary['rendah'];
         }
 
         $ranges = RangeAset::select('nilai_akhir_aset', 'deskripsi')->orderBy('nilai_atas')->get();
