@@ -350,7 +350,7 @@ class BidangAsetController extends Controller
         if (in_array('kondisi_aset', $fields))             $rules['kondisi_aset'] = 'required|in:Baik,Tidak Layak,Rusak';
 
         foreach (['kerahasiaan', 'integritas', 'ketersediaan'] as $ci) {
-            if (in_array($ci, $fields)) $rules[$ci] = 'required|in:1,2,3';
+            if (in_array($ci, $fields)) $rules[$ci] = 'required|in:0,1,2,3'; // 0 untuk N/A
         }
 
         if (in_array('status_personil', $fields))  $rules['status_personil'] = 'nullable|in:SDM,Pihak Ketiga';
