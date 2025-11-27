@@ -42,12 +42,18 @@
                 @csrf
                 @method('PUT')
 
+                @php
+                    $skip = ['kenirsangkalan', 'keaslian'];
+                @endphp
+
                 {{-- Field dinamis --}}
                 {{-- @foreach ($fieldList as $field)
                     @includeIf('opd.aset.fields.' . $field, ['aset' => $aset])
                 @endforeach --}}
 
                 @foreach ($fieldList as $field)
+                    @continue(in_array($field, $skip))
+
                     @includeIf('opd.aset.fields.' . $field, [
                         'options' => $fieldOptions,
                         'aset' => $aset,

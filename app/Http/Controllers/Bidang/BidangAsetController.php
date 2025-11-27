@@ -350,7 +350,7 @@ class BidangAsetController extends Controller
         if (in_array('kondisi_aset', $fields))             $rules['kondisi_aset'] = 'required|in:Baik,Tidak Layak,Rusak';
 
         foreach (['kerahasiaan', 'integritas', 'ketersediaan'] as $ci) {
-            if (in_array($ci, $fields)) $rules[$ci] = 'required|in:0,1,2,3'; // 0 untuk N/A
+            if (in_array($ci, $fields)) $rules[$ci] = 'required|in:1,2,3';
         }
 
         if (in_array('status_personil', $fields))  $rules['status_personil'] = 'nullable|in:SDM,Pihak Ketiga';
@@ -360,6 +360,14 @@ class BidangAsetController extends Controller
         if (in_array('unit_personil', $fields))    $rules['unit_personil'] = 'nullable|string|max:100';
 
         $validated = $request->validate($rules);
+
+        // Pastikan field CIAAA tersembunyi tetap punya nilai saat tidak dikirim dari form
+        if (in_array('keaslian', $fields) && !array_key_exists('keaslian', $validated)) {
+            $validated['keaslian'] = $aset->keaslian ?? 0;
+        }
+        if (in_array('kenirsangkalan', $fields) && !array_key_exists('kenirsangkalan', $validated)) {
+            $validated['kenirsangkalan'] = $aset->kenirsangkalan ?? 0;
+        }
 
         $allowedKeys = array_flip($fields);
         $payload     = array_intersect_key($validated, $allowedKeys);

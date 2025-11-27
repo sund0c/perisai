@@ -44,6 +44,10 @@
             <form action="{{ route('opd.aset.store', $klasifikasi->id) }}" method="POST">
                 @csrf
 
+                @php
+                    $skip = ['kenirsangkalan', 'keaslian'];
+                @endphp
+
                 {{-- Field dinamis --}}
                 {{-- @foreach ($fieldList as $field)
                     @includeIf('opd.aset.fields.' . $field)
@@ -52,6 +56,8 @@
 
 
                 @foreach ($fieldList as $field)
+                    @continue(in_array($field, $skip))
+
                     @includeIf('opd.aset.fields.' . $field, [
                         'options' => $fieldOptions,
                         'aset' => $aset ?? null, // pada create boleh null

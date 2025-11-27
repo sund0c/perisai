@@ -228,9 +228,9 @@ class AsetController extends Controller
         }
 
         // CIAAA
-        foreach (['kerahasiaan', 'integritas', 'ketersediaan', 'keaslian', 'kenirsangkalan'] as $ci) {
+        foreach (['kerahasiaan', 'integritas', 'ketersediaan'] as $ci) {
             if (in_array($ci, $fields)) {
-                $rules[$ci] = 'required|in:0,1,2,3'; // 0 untuk N/A
+                $rules[$ci] = 'required|in:1,2,3';
             }
         }
 
@@ -242,6 +242,14 @@ class AsetController extends Controller
         if (in_array('unit_personil', $fields))    $rules['unit_personil'] = 'nullable|string|max:100';
 
         $validated = $request->validate($rules);
+
+        // Field CIAAA yang disembunyikan di form tapi kolomnya wajib isi di DB
+        if (!array_key_exists('keaslian', $validated)) {
+            $validated['keaslian'] = 0;
+        }
+        if (!array_key_exists('kenirsangkalan', $validated)) {
+            $validated['kenirsangkalan'] = 0;
+        }
 
         // ---- Field tetap & anti-IDOR ----
         $validated['uuid']               = (string) Str::uuid();
@@ -393,8 +401,8 @@ class AsetController extends Controller
         if (in_array('status_aktif', $fields))             $rules['status_aktif'] = 'required|in:Aktif,Tidak Aktif';
         if (in_array('kondisi_aset', $fields))             $rules['kondisi_aset'] = 'required|in:Baik,Tidak Layak,Rusak';
 
-        foreach (['kerahasiaan', 'integritas', 'ketersediaan', 'keaslian', 'kenirsangkalan'] as $ci) {
-            if (in_array($ci, $fields)) $rules[$ci] = 'required|in:0,1,2,3'; // 0 untuk N/A
+        foreach (['kerahasiaan', 'integritas', 'ketersediaan'] as $ci) {
+            if (in_array($ci, $fields)) $rules[$ci] = 'required|in:1,2,3';
         }
 
         if (in_array('status_personil', $fields))  $rules['status_personil'] = 'nullable|in:SDM,Pihak Ketiga';
