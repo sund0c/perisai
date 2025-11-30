@@ -34,6 +34,7 @@ use App\Http\Controllers\Bidang\BidangKategoriSeController;
 use App\Http\Controllers\Bidang\BidangVitalitasSeController;
 use App\Http\Controllers\Bidang\BidangAsetController;
 use App\Http\Controllers\Bidang\BidangPtkkaController;
+use App\Http\Controllers\Bidang\BidangOpdController;
 
 //OPD
 use App\Http\Controllers\Opd\KategoriSeController;
@@ -188,6 +189,14 @@ Route::middleware(['SSOBrokerMiddleware', 'prevent-back-history', 'spatie_role_o
 });
 
 //============= Start of BIDANG ===========================
+
+Route::middleware(['SSOBrokerMiddleware', 'prevent-back-history', 'spatie_role_or_permission:bidang|admin'])->prefix('bidang/opd')->name('bidang.opd.')->group(function () {
+    Route::get('/', [BidangOpdController::class, 'index'])->name('index');
+    Route::get('/{opd:id}/view', [BidangOpdController::class, 'view'])->name('view');
+    Route::get('/{id}/pdf', [BidangOpdController::class, 'pdf'])->name('pdf');
+    Route::get('/{aset:uuid}/edit', [BidangOpdController::class, 'edit'])->name('edit');
+    Route::put('/{aset:uuid}', [BidangOpdController::class, 'update'])->name('update');
+});
 
 Route::middleware(['SSOBrokerMiddleware', 'prevent-back-history', 'spatie_role_or_permission:bidang|admin'])->prefix('bidang/aset')->name('bidang.aset.')->group(function () {
     Route::get('/', [BidangAsetController::class, 'index'])->name('index');

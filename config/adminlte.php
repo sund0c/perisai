@@ -318,9 +318,15 @@ return [
         ],
 
         // ===== BIDANG =====
+        // [
+        //     'text' => 'AsetOLD',
+        //     'route' => 'bidang.aset.index',
+        //     'icon'  => 'fas fa-fw fa-box',
+        //     'can'   => 'is-bidang',
+        // ],
         [
             'text' => 'Aset',
-            'route' => 'bidang.aset.index',
+            'route' => 'bidang.opd.index',
             'icon'  => 'fas fa-fw fa-box',
             'can'   => 'is-bidang',
         ],
