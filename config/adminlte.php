@@ -318,16 +318,16 @@ return [
         ],
 
         // ===== BIDANG =====
-        // [
-        //     'text' => 'AsetOLD',
-        //     'route' => 'bidang.aset.index',
-        //     'icon'  => 'fas fa-fw fa-box',
-        //     'can'   => 'is-bidang',
-        // ],
         [
-            'text' => 'Aset',
+            'text' => 'Aset per Klasifikasi',
+            'route' => 'bidang.aset.index',
+            'icon'  => 'fas fa-fw fa-th-large',
+            'can'   => 'is-bidang',
+        ],
+        [
+            'text' => 'Aset per OPD',
             'route' => 'bidang.opd.index',
-            'icon'  => 'fas fa-fw fa-box',
+            'icon'  => 'fas fa-fw fa-archive',
             'can'   => 'is-bidang',
         ],
         [
@@ -384,9 +384,15 @@ return [
 
         // ===== ADMIN =====
         [
-            'text' => 'Aset',
+            'text' => 'Aset per Klasifikasi',
             'route' => 'bidang.aset.index',
-            'icon'  => 'fas fa-fw fa-box',
+            'icon'  => 'fas fa-fw fa-th-large',
+            'can'   => 'is-admin',
+        ],
+        [
+            'text' => 'Aset per OPD',
+            'route' => 'bidang.opd.index',
+            'icon'  => 'fas fa-fw fa-archive',
             'can'   => 'is-admin',
         ],
         [
