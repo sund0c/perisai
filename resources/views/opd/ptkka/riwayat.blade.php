@@ -200,7 +200,8 @@
         $(function() {
             $('#ptkkaTable').DataTable({
                 pageLength: 50,
-                autoWidth: false
+                autoWidth: false,
+                stateSave: true
             });
         });
     </script>

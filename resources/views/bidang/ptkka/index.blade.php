@@ -216,6 +216,7 @@
         $(function() {
             const dtOptionsDefault = {
                 autoWidth: false,
+                stateSave: true,
                 pageLength: 25,
                 lengthChange: false,
                 searching: false,
@@ -229,6 +230,7 @@
 
             const dtOptionsRampung = {
                 autoWidth: false,
+                stateSave: true,
                 pageLength: 25,
                 lengthChange: true, // jumlah data per halaman ditampilkan
                 searching: true, // aktifkan search box

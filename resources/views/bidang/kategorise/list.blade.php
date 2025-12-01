@@ -107,6 +107,7 @@
         $(function() {
             $('#kategoriseTable').DataTable({
                 autoWidth: false,
+                stateSave: true,
                 columnDefs: [{
                         width: "50",
                         targets: 0

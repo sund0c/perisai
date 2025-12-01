@@ -78,9 +78,10 @@
     @endsection
     @section('js')
         <script>
-            $(function() {
+        $(function() {
                 $('#ptkkaTable').DataTable({
                     autoWidth: false,
+                    stateSave: true,
                     pageLength: 50
                 });
             });

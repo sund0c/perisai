@@ -76,8 +76,8 @@
     <script>
         $(function() {
             $('#rekomendasistandardTable').DataTable({
-                autoWidth: false
-
+                autoWidth: false,
+                stateSave: true
             });
         });
     </script>

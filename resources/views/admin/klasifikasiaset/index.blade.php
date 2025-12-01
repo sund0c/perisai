@@ -84,6 +84,7 @@
         $(function() {
             $('#klasifikasiTable').DataTable({
                 autoWidth: false,
+                stateSave: true,
                 columnDefs: [{
                         width: "30px",
                         targets: 0

@@ -75,7 +75,8 @@
     <script>
         $(function() {
             $('#kategoriTable').DataTable({
-                autoWidth: false
+                autoWidth: false,
+                stateSave: true
             });
         });
     </script>

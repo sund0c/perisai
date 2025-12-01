@@ -66,6 +66,7 @@
         $(function() {
             $('#fungsiTable').DataTable({
                 autoWidth: false,
+                stateSave: true,
                 pageLength: 50
             });
         });

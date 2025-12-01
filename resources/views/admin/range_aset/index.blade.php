@@ -85,6 +85,7 @@
     $(function () {
         $('#rangeasetTable').DataTable({
             autoWidth: false,
+            stateSave: true,
             columnDefs: [
                 { width: "100px", targets: 0 },
                 { width: "100px", targets: 1 },

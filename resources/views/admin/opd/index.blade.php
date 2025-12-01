@@ -77,6 +77,7 @@
     $(document).ready(function () {
         const table = $('#opdTable').DataTable({
             ordering: true,
+            stateSave: true,
             columnDefs: [
                 { orderable: false, targets: [0, 2] }
             ],
@@ -103,4 +104,3 @@
     });
 </script>
 @endsection
-

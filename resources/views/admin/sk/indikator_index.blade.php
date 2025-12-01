@@ -71,8 +71,8 @@
     <script>
         $(function() {
             $('#indikatorTable').DataTable({
-                autoWidth: false
-
+                autoWidth: false,
+                stateSave: true
             });
         });
     </script>

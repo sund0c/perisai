@@ -138,9 +138,10 @@
 @section('js')
     <script>
         $(function() {
-            $('#asetTable').DataTable({
-                autoWidth: false,
-                columnDefs: [{
+  $('#asetTable').DataTable({
+      autoWidth: false,
+      stateSave: true,
+      columnDefs: [{
                         width: "100px",
                         targets: 0
                     },

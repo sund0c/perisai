@@ -70,9 +70,10 @@
 @section('js')
     <script>
         $(function() {
-            $('#indikatorseTable').DataTable({
-                autoWidth: false,
-                columnDefs: [{
+  $('#indikatorseTable').DataTable({
+      autoWidth: false,
+      stateSave: true,
+      columnDefs: [{
                         width: "30px",
                         targets: 0
                     },

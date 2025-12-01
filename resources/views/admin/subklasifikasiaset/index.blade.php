@@ -75,6 +75,7 @@
         $(function() {
             $('#subklasifikasiTable').DataTable({
                 autoWidth: false,
+                stateSave: true,
                 columnDefs: [{
                         width: "300px",
                         targets: 0
