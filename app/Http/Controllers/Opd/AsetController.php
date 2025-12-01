@@ -120,7 +120,7 @@ class AsetController extends Controller
         $asets = Aset::where('klasifikasiaset_id', $klasifikasi->id)
             ->where('opd_id', $opdId)
             ->where('periode_id', $periodeAktif)
-            ->with('subklasifikasiaset')
+            ->with(['subklasifikasiaset', 'opd:id,namaopd'])
             ->get();
 
         $ranges = RangeAset::orderBy('nilai_bawah')->get();
