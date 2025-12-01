@@ -223,6 +223,7 @@ Route::middleware(['SSOBrokerMiddleware', 'prevent-back-history', 'spatie_role_o
     Route::get('/kategori/{kategori}', [BidangVitalitasSEController::class, 'show'])->name('show');
     Route::get('/export/rekap', [BidangVitalitasSEController::class, 'exportRekapPdf'])->name('export_rekap');
     Route::get('/export/pdf/{id}', [BidangVitalitasSEController::class, 'exportPdf'])->name('exportPdf');
+    Route::delete('/{id}', [BidangVitalitasSEController::class, 'destroy'])->name('destroy');
 });
 
 Route::middleware(['SSOBrokerMiddleware', 'prevent-back-history', 'spatie_role_or_permission:bidang|admin'])->prefix('bidang/ptkka')->name('bidang.ptkka.')->group(function () {

@@ -104,12 +104,20 @@
                             </td>
 
                             <td>
-
                                 <a href="{{ route('bidang.vitalitasse.exportPdf', $aset->id) }}"
-                                    class="btn btn-sm btn-primary">
+                                    class="btn btn-sm btn-primary me-1">
                                     <i class="fas fa-file-pdf"></i>
                                 </a>
-
+                                @if ($aset->vitalitasSe)
+                                    <form action="{{ route('bidang.vitalitasse.destroy', $aset->id) }}" method="POST"
+                                        onsubmit="return confirm('Hapus vitalitas SE aset ini?');" class="d-inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                @endif
                             </td>
 
                         </tr>
@@ -144,7 +152,7 @@
                     {
                         width: "100px",
                         targets: 4
-                    },
+                    }
                 ]
             });
         });

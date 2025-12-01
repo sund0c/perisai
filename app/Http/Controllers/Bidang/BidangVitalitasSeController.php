@@ -248,6 +248,31 @@ class BidangVitalitasSeController extends Controller
     }
 
 
+    public function destroy($id)
+    {
+        $aset = Aset::with('vitalitasSe')->findOrFail($id);
+
+        if (!$aset->vitalitasSe) {
+            return back()->with('error', 'Tidak ada data vitalitas SE untuk aset ini.');
+        }
+
+        try {
+            $aset->vitalitasSe->delete();
+
+            return back()->with('success', 'Vitalitas SE berhasil dihapus.');
+        } catch (QueryException $e) {
+            Log::warning('Bidang gagal menghapus vitalitas SE', [
+                'aset_id'    => $aset->id,
+                'mysql_code' => $e->errorInfo[1] ?? null,
+                'sql_state'  => $e->errorInfo[0] ?? null,
+                'driver_msg' => $e->errorInfo[2] ?? null,
+                'route'      => request()->path(),
+            ]);
+
+            return back()->with('error', 'Gagal menghapus vitalitas SE. Silakan coba lagi.');
+        }
+    }
+
 
     public function exportPdf($id)
     {
