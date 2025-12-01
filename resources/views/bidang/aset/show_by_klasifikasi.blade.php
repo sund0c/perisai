@@ -85,7 +85,7 @@
             <table id="asetTable" class="table table-bordered table-hover" style="width:100%; table-layout: fixed;">
                 <thead>
                     <tr>
-                        <th>Kode Aset</th>
+                        <th>#</th>
                         <th>Nama Aset</th>
                         <th>Sub Klasifikasi Aset</th>
                         <th>Pemilik Risiko</th>
@@ -94,12 +94,15 @@
                     </tr>
                 </thead>
                 <tbody>
+                    @php $no = 1; @endphp
                     @foreach ($asets as $aset)
                         <tr>
-                            <td>{{ $aset->kode_aset }}</td>
-                            <td>{{ $aset->nama_aset }}</td>
+                            <td>{{ $no++ }}</td>
+                            <td>{{ $aset->nama_aset }}
+                                <p class="small" style="margin-bottom: 0">{{ $aset->keterangan }}</p>
+                            </td>
                             <td>{{ $aset->subklasifikasiaset->subklasifikasiaset ?? '-' }}</td>
-                            <td>{{ $aset->opd->namaopd }}</td>
+                            <td>{{ $aset->opd->namaopd ?? '-' }}</td>
                             <td style="background-color: {{ $aset->warna_hexa }}; color: #fff; font-weight: bold;">
                                 {{ $aset->nilai_akhir_aset }}
                             </td>
@@ -116,7 +119,7 @@
                     @endforeach
                     @if ($asets->isEmpty())
                         <tr>
-                            <td colspan="4" class="text-center">Belum ada data aset untuk klasifikasi ini.</td>
+                            <td colspan="6" class="text-center">Belum ada data aset untuk klasifikasi ini.</td>
                         </tr>
                     @endif
                 </tbody>
@@ -144,8 +147,10 @@
         $(function() {
             $('#asetTable').DataTable({
                 autoWidth: false,
+                stateSave: true,
+                pageLength: 100,
                 columnDefs: [{
-                        width: "100px",
+                        width: "10px",
                         targets: 0
                     },
                     {
@@ -153,19 +158,19 @@
                         targets: 1
                     },
                     {
-                        width: "auto",
+                        width: "200px",
                         targets: 2
                     },
                     {
-                        width: "auto",
+                        width: "200px",
                         targets: 3
                     },
                     {
-                        width: "100px",
+                        width: "200px",
                         targets: 4
                     },
                     {
-                        width: "50px",
+                        width: "140px",
                         targets: 5
                     },
                 ]

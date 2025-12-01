@@ -115,25 +115,22 @@ class BidangAsetController extends Controller
         $klasifikasi = KlasifikasiAset::findOrFail($id);
         $subs  = $klasifikasi->subklasifikasi;
 
-        // Ambil aset untuk SEMUA OPD pada periode aktif, sekaligus relasi subklasifikasi
-        $asets = Aset::where('klasifikasiaset_id', $id)
-            ->where('periode_id', $periodeAktifId)
-            ->with('subklasifikasiaset')
-            ->get(['id', 'kode_aset', 'nama_aset', 'subklasifikasiaset_id', 'kerahasiaan', 'integritas', 'ketersediaan', 'keaslian', 'kenirsangkalan']);
-
-
+        // Ambil aset untuk SEMUA OPD pada periode aktif, sekaligus relasi yang diperlukan di view
         $asets = Aset::where('klasifikasiaset_id', $id)
             ->where('periode_id', $periodeAktifId)
             ->with([
-                'subklasifikasiaset', // sesuaikan nama kolom
+                'subklasifikasiaset',
                 'opd:id,namaopd',
+                'klasifikasi:id,klasifikasiaset',
             ])
             ->get([
                 'id',
-                'opd_id', // PENTING: harus di-select agar relasi opd() terikat
+                'opd_id', // relasi opd()
+                'klasifikasiaset_id', // relasi klasifikasi()
                 'uuid',
                 'kode_aset',
                 'nama_aset',
+                'keterangan',
                 'subklasifikasiaset_id',
                 'kerahasiaan',
                 'integritas',

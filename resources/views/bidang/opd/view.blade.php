@@ -147,7 +147,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="text-center">Belum ada data aset untuk klasifikasi ini.</td>
+                            <td colspan="6" class="text-center">Belum ada data aset untuk klasifikasi ini.</td>
                         </tr>
                     @endforelse
                 </tbody>
