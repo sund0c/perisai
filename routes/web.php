@@ -286,6 +286,12 @@ Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd', 'prev
         Route::get('/export/rekap', [AsetController::class, 'exportRekapPdf'])->name('export_rekap');
         Route::get('/export/rekapklas/{klasifikasiaset}', [AsetController::class, 'exportRekapKlasPdf'])
             ->name('export_rekap_klas');
+        Route::get('/klasifikasi/{klasifikasiaset}/export-excel', [AsetController::class, 'exportExcel'])
+            ->name('export_excel');
+        Route::get('/klasifikasi/{klasifikasiaset}/template-excel', [AsetController::class, 'templateExcel'])
+            ->name('template_excel');
+        Route::post('/klasifikasi/{klasifikasiaset}/import-excel', [AsetController::class, 'importExcel'])
+            ->name('import_excel');
         Route::get('/klasifikasi/{klasifikasiaset}', [AsetController::class, 'showByKlasifikasi'])
             ->name('show_by_klasifikasi');
         Route::get('/export/klasifikasi/{klasifikasiaset}', [AsetController::class, 'exportKlasifikasiPdf'])

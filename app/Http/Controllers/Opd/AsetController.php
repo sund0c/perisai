@@ -23,7 +23,11 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Arr;
+use Maatwebsite\Excel\Facades\Excel;
 use App\Traits\CalculatesAsetRange;
+use App\Exports\AsetExport;
+use App\Imports\AsetImport;
+use App\Exports\AsetTemplateExport;
 
 class AsetController extends Controller
 {
@@ -129,6 +133,108 @@ class AsetController extends Controller
         $namaOpd = auth()->user()->opd->namaopd ?? '-';
 
         return view('opd.aset.show_by_klasifikasi', compact('klasifikasi', 'asets', 'namaOpd', 'subs'));
+    }
+
+    public function exportExcel(KlasifikasiAset $klasifikasiaset)
+    {
+        $periodeAktifId = Periode::where('status', 'open')->value('id');
+        if (!$periodeAktifId) {
+            return back()->with('error', 'Tidak ada Periode dengan status OPEN.');
+        }
+
+        $opdId = auth()->user()->opd_id;
+
+        $asets = Aset::where('klasifikasiaset_id', $klasifikasiaset->id)
+            ->where('opd_id', $opdId)
+            ->where('periode_id', $periodeAktifId)
+            ->with(['subklasifikasiaset', 'opd'])
+            ->orderBy('nama_aset')
+            ->get();
+
+        // Susunan field mengikuti konfigurasi tampilan (sama seperti template)
+        $fieldsCfg    = $klasifikasiaset->tampilan_field_aset;
+        $fields       = is_array($fieldsCfg) ? $fieldsCfg : (json_decode($fieldsCfg ?? '[]', true) ?: []);
+        $hiddenFields = ['opd_id', 'klasifikasiaset_id', 'periode_id', 'kode_aset', 'kategori_se'];
+        $skipFields   = ['keaslian', 'kenirsangkalan'];
+        $fields       = array_values(array_diff($fields, array_merge($hiddenFields, $skipFields)));
+
+        $subs         = $klasifikasiaset->subklasifikasi->pluck('subklasifikasiaset')->toArray();
+        $fieldOptions = $this->fieldOptionsByKlasifikasi($klasifikasiaset->klasifikasiaset, $fields);
+
+        $fileName = 'aset_' . $klasifikasiaset->kodeklas . '_' . now()->format('Ymd_His') . '.xlsx';
+
+        return Excel::download(new AsetExport($asets, $fields, $klasifikasiaset->klasifikasiaset, $subs, $fieldOptions), $fileName);
+    }
+
+    public function importExcel(Request $request, KlasifikasiAset $klasifikasiaset)
+    {
+        $periodeAktifId = Periode::where('status', 'open')->value('id');
+        if (!$periodeAktifId) {
+            return back()->with('error', 'Tidak ada Periode dengan status OPEN.');
+        }
+
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,csv',
+        ]);
+
+        $opdId = auth()->user()->opd_id;
+
+        $prefix = strtoupper($klasifikasiaset->kodeklas ?? substr($klasifikasiaset->klasifikasiaset, 0, 2)) . '-';
+
+        // Susunan field yang dipakai di form (hilangkan field otomatis / disembunyikan)
+        $fieldsCfg    = $klasifikasiaset->tampilan_field_aset;
+        $fields       = is_array($fieldsCfg) ? $fieldsCfg : (json_decode($fieldsCfg ?? '[]', true) ?: []);
+        $hiddenFields = ['opd_id', 'klasifikasiaset_id', 'periode_id', 'kode_aset', 'kategori_se'];
+        $skipFields   = ['keaslian', 'kenirsangkalan']; // selalu 0 otomatis
+        $fields       = array_values(array_diff($fields, array_merge($hiddenFields, $skipFields)));
+
+        $importer = new AsetImport(
+            $klasifikasiaset->id,
+            $periodeAktifId,
+            $opdId,
+            $prefix,
+            fn(int $opdParam, string $pref) => $this->generateKodeAsetForOpd($opdParam, $pref),
+            $fields
+        );
+
+        try {
+            Excel::import($importer, $request->file('file'));
+        } catch (\Throwable $e) {
+            report($e);
+            return back()->with('error', 'Import gagal diproses. Pastikan format file sudah sesuai.');
+        }
+
+        $failures = $importer->failures();
+        if ($failures && $failures->isNotEmpty()) {
+            $messages = $failures->map(function ($failure) {
+                $col = $failure->attribute();
+                $msg = implode('; ', $failure->errors());
+                return "Baris {$failure->row()}: {$col} - {$msg}";
+            })->implode(' | ');
+
+            return back()->with('error', 'Sebagian baris gagal diimport: ' . $messages);
+        }
+
+        return back()->with('success', 'Import aset berhasil diproses.');
+    }
+
+    public function templateExcel(KlasifikasiAset $klasifikasiaset)
+    {
+        $fileName = 'template_aset_' . $klasifikasiaset->kodeklas . '.xlsx';
+
+        $subs = $klasifikasiaset->subklasifikasi->pluck('subklasifikasiaset')->toArray();
+
+        // Susunan field mengikuti konfigurasi tampilan form (minus field otomatis)
+        $fieldsCfg    = $klasifikasiaset->tampilan_field_aset;
+        $fields       = is_array($fieldsCfg) ? $fieldsCfg : (json_decode($fieldsCfg ?? '[]', true) ?: []);
+        $hiddenFields = ['opd_id', 'klasifikasiaset_id', 'periode_id', 'kode_aset', 'kategori_se'];
+        $skipFields   = ['keaslian', 'kenirsangkalan']; // diisi otomatis 0 pada penyimpanan
+        $fields       = array_values(array_diff($fields, array_merge($hiddenFields, $skipFields)));
+
+        // Ambil opsi CIA sesuai klasifikasi (sama seperti form create)
+        $fieldOptions = $this->fieldOptionsByKlasifikasi($klasifikasiaset->klasifikasiaset, $fields);
+
+        return Excel::download(new AsetTemplateExport($subs, $fields, $fieldOptions, $klasifikasiaset->klasifikasiaset), $fileName);
     }
 
     // public function create($klasifikasiId)
