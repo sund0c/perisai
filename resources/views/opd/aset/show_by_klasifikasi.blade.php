@@ -254,6 +254,12 @@
                     },
                 ]
             });
+
+            // Tampilkan nama file di custom file input modal import
+            $('#file_import').on('change', function() {
+                var fileName = this.files && this.files.length ? this.files[0].name : 'Pilih file...';
+                $(this).next('.custom-file-label').text(fileName);
+            });
         });
     </script>
 @endsection
