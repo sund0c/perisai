@@ -117,10 +117,13 @@
                                     class="btn btn-outline-success">
                                     <i class="fas fa-file-excel"></i> Template Excel
                                 </a>
+                                <small class="text-muted mb-2">Unduh template untuk referensi kolom yang benar sebelum
+                                    mengisi data.</small>
                                 <a href="{{ route('opd.aset.export_excel', ['klasifikasiaset' => $klasifikasi]) }}"
                                     class="btn btn-success">
                                     <i class="fas fa-file-excel"></i> Export Excel
                                 </a>
+                                <small class="text-muted mb-2">Export data aset saat ini sebagai contoh atau arsip.</small>
                                 @if (($kunci ?? null) !== 'locked')
                                     <form action="{{ route('opd.aset.import_excel', ['klasifikasiaset' => $klasifikasi]) }}"
                                         method="POST" enctype="multipart/form-data" class="p-3 border rounded"
@@ -137,8 +140,8 @@
                                                     class="custom-file-input">
                                                 <label class="custom-file-label" for="file_import">Pilih file...</label>
                                             </div>
-                                            <small class="form-text text-muted mt-1">Maksimalkan akurasi dengan memakai
-                                                template terbaru.</small>
+                                            <small class="form-text text-muted mt-1">Gunakan template terbaru, isi sesuai
+                                                dropdown yang tersedia, lalu unggah di sini.</small>
                                         </div>
                                         <button type="submit" class="btn btn-primary btn-block">
                                             <i class="fas fa-file-import"></i> Import Excel
