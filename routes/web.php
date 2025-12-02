@@ -292,6 +292,8 @@ Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd', 'prev
             ->name('template_excel');
         Route::post('/klasifikasi/{klasifikasiaset}/import-excel', [AsetController::class, 'importExcel'])
             ->name('import_excel');
+        Route::post('/klasifikasi/{klasifikasiaset}/bulk-delete', [AsetController::class, 'bulkDestroy'])
+            ->name('bulk_destroy');
         Route::get('/klasifikasi/{klasifikasiaset}', [AsetController::class, 'showByKlasifikasi'])
             ->name('show_by_klasifikasi');
         Route::get('/export/klasifikasi/{klasifikasiaset}', [AsetController::class, 'exportKlasifikasiPdf'])

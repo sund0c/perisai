@@ -582,6 +582,41 @@ class AsetController extends Controller
         }
     }
 
+    public function bulkDestroy(Request $request, KlasifikasiAset $klasifikasiaset)
+    {
+        $periodeAktifId = Periode::where('status', 'open')->value('id');
+        if (!$periodeAktifId) {
+            return back()->with('error', 'Tidak ada Periode dengan status OPEN.');
+        }
+
+        $opdId = auth()->user()->opd_id;
+
+        $validated = $request->validate([
+            'aset_ids' => 'required|array|min:1',
+            'aset_ids.*' => 'integer',
+        ]);
+
+        $asets = Aset::whereIn('id', $validated['aset_ids'])
+            ->where('opd_id', $opdId)
+            ->where('klasifikasiaset_id', $klasifikasiaset->id)
+            ->where('periode_id', $periodeAktifId)
+            ->get();
+
+        if ($asets->isEmpty()) {
+            return back()->with('error', 'Aset tidak ditemukan atau bukan milik OPD Anda.');
+        }
+
+        foreach ($asets as $aset) {
+            $this->authorize('delete', $aset);
+        }
+
+        DB::transaction(function () use ($asets) {
+            $asets->each->delete();
+        });
+
+        return back()->with('success', $asets->count() . ' aset berhasil dihapus.');
+    }
+
 
     public function exportRekapPdf()
     {

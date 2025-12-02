@@ -34,6 +34,13 @@
         display: inline;
         margin: 0;
     }
+
+    /* Perbesar checkbox bulk delete agar mudah diklik */
+    .bulk-check {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
 </style>
 
 @section('content_header')
@@ -77,26 +84,30 @@
     <div class="card">
         <div class="card-body">
             <div class="d-flex mb-3" style="gap: 10px;">
-                <a href="{{ route('opd.aset.index') }}" class="btn btn-sm btn-secondary mb-3 me-2">
+                <a href="{{ route('opd.aset.index') }}" class="btn btn-sm btn-secondary mb-3 me-2 hide-when-select">
                     <i class="fas fa-arrow-left"></i> Kembali
                 </a>
 
                 {{-- WAJIB: kirim param "klasifikasiaset" --}}
                 <a href="{{ route('opd.aset.export_rekap_klas', ['klasifikasiaset' => $klasifikasi]) }}"
-                    class="btn btn-sm btn-danger mb-3">
+                    class="btn btn-sm btn-danger mb-3 hide-when-select">
                     <i class="fas fa-file-pdf"></i> Export PDF
                 </a>
 
-                <button type="button" class="btn btn-sm btn-outline-success mb-3" data-toggle="modal"
+                <button type="button" class="btn btn-sm btn-outline-success mb-3 hide-when-select" data-toggle="modal"
                     data-target="#excelModal">
                     <i class="fas fa-file-excel"></i> Import
                 </button>
 
                 @if (($kunci ?? null) !== 'locked')
                     <a href="{{ route('opd.aset.create', ['klasifikasiaset' => $klasifikasi]) }}"
-                        class="btn btn-sm btn-success mb-3">
+                        class="btn btn-sm btn-success mb-3 hide-when-select">
                         <i class="fas fa-plus"></i> Tambah Aset
                     </a>
+                    <button type="button" class="btn btn-sm btn-danger mb-3 d-none"
+                        id="bulkDeleteBtn">
+                        <i class="fas fa-trash"></i> Hapus Terpilih
+                    </button>
                 @endif
             </div>
 
@@ -157,6 +168,11 @@
             <table id="asetTable" class="table table-bordered table-hover" style="width:100%; table-layout: fixed;">
                 <thead>
                     <tr>
+                        @if (($kunci ?? null) !== 'locked')
+                            <th style="width:35px;" class="text-center align-middle">
+                                <input type="checkbox" id="checkAll" class="bulk-check">
+                            </th>
+                        @endif
                         <th>#</th>
                         <th>Nama Aset</th>
                         <th>Sub Klasifikasi Aset</th>
@@ -169,6 +185,12 @@
                     @php $no = 1; @endphp
                     @forelse ($asets as $aset)
                         <tr>
+                            @if (($kunci ?? null) !== 'locked')
+                                <td class="text-center align-middle">
+                                    <input type="checkbox" name="aset_ids[]" value="{{ $aset->id }}"
+                                        class="row-check bulk-check">
+                                </td>
+                            @endif
                             <td>{{ $no++ }}</td>
                             <td>{{ $aset->nama_aset }}
                                 <p class="small" style="margin-bottom: 0">{{ $aset->keterangan }}</p>
@@ -203,11 +225,19 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="text-center">Belum ada data aset untuk klasifikasi ini.</td>
+                            <td colspan="{{ ($kunci ?? null) === 'locked' ? 6 : 7 }}" class="text-center">Belum ada data aset untuk klasifikasi ini.</td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
+
+            @if (($kunci ?? null) !== 'locked')
+                <form id="bulkDeleteForm" action="{{ route('opd.aset.bulk_destroy', ['klasifikasiaset' => $klasifikasi]) }}"
+                    method="POST" class="d-none">
+                    @csrf
+                </form>
+            @endif
+
             <br>
             <b>Keterangan Sub Klasifikasi Aset</b>
             <div class="matik-list" style="font-size:0.9em">
@@ -228,41 +258,83 @@
 @section('js')
     <script>
         $(function() {
+            var isLocked = @json(($kunci ?? null) === 'locked');
+
             $('#asetTable').DataTable({
                 autoWidth: false,
                 stateSave: true,
-                columnDefs: [{
-                        width: "10px",
-                        targets: 0
-                    },
-                    {
-                        width: "auto",
-                        targets: 1
-                    },
-                    {
-                        width: "200px",
-                        targets: 2
-                    },
-                    {
-                        width: "200px",
-                        targets: 3
-                    },
-                    {
-                        width: "100px",
-                        targets: 4
-                    },
-                    {
-                        width: "140px",
-                        targets: 5
-                    },
+                columnDefs: isLocked ? [
+                    { width: "10px", targets: 0 },
+                    { width: "auto", targets: 1 },
+                    { width: "200px", targets: 2 },
+                    { width: "200px", targets: 3 },
+                    { width: "100px", targets: 4 },
+                    { width: "140px", targets: 5 },
+                ] : [
+                    { width: "40px", targets: 0 },
+                    { width: "10px", targets: 1 },
+                    { width: "auto", targets: 2 },
+                    { width: "200px", targets: 3 },
+                    { width: "200px", targets: 4 },
+                    { width: "100px", targets: 5 },
+                    { width: "140px", targets: 6 },
                 ]
             });
 
-            // Tampilkan nama file di custom file input modal import
             $('#file_import').on('change', function() {
                 var fileName = this.files && this.files.length ? this.files[0].name : 'Pilih file...';
                 $(this).next('.custom-file-label').text(fileName);
             });
+
+            if (!isLocked) {
+                $('#checkAll').on('change', function() {
+                    $('.row-check').prop('checked', $(this).is(':checked'));
+                    toggleBulkDeleteBtn();
+                    toggleOtherButtons();
+                });
+                $('.row-check').on('change', function() {
+                    if (!$(this).is(':checked')) {
+                        $('#checkAll').prop('checked', false);
+                    }
+                    toggleBulkDeleteBtn();
+                    toggleOtherButtons();
+                });
+
+                $('#bulkDeleteBtn').on('click', function(e) {
+                    e.preventDefault();
+                    const checked = $('.row-check:checked');
+                    if (checked.length === 0) {
+                        alert('Pilih minimal satu aset untuk dihapus.');
+                        return;
+                    }
+                    if (!confirm('Yakin hapus aset terpilih?')) {
+                        return;
+                    }
+
+                    const form = $('#bulkDeleteForm');
+                    form.find('input[name="aset_ids[]"]').remove();
+                    checked.each(function() {
+                        $('<input>', {
+                            type: 'hidden',
+                            name: 'aset_ids[]',
+                            value: $(this).val()
+                        }).appendTo(form);
+                    });
+                    form.submit();
+                });
+
+                function toggleBulkDeleteBtn() {
+                    const hasSelection = $('.row-check:checked').length > 0;
+                    $('#bulkDeleteBtn').toggleClass('d-none', !hasSelection);
+                }
+
+                function toggleOtherButtons() {
+                    const hasSelection = $('.row-check:checked').length > 0;
+                    $('.hide-when-select').toggleClass('d-none', hasSelection);
+                }
+
+                toggleOtherButtons();
+            }
         });
     </script>
 @endsection
