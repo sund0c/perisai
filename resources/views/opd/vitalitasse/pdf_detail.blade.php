@@ -7,7 +7,7 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 12px;
+            margin-top: 0px;
         }
 
         table th,
@@ -19,14 +19,6 @@
 
         th {
             background-color: #eeeeee;
-        }
-
-        .font-dejavu {
-            font-family: 'DejaVu Sans', sans-serif;
-        }
-
-        .f12 {
-            font-size: 14px;
         }
 
         h2,
@@ -37,35 +29,21 @@
             padding: 0;
         }
 
-        h3 {
-            margin-bottom: 10px;
-        }
-
-        h4 {
-            margin-bottom: 2px;
-            padding-bottom: 0;
-        }
-
         ol {
             margin-top: 0;
             padding-top: 0;
             margin-bottom: 0;
             padding-bottom: 0;
+            font-size: 12px;
         }
 
         body {
             font-family: sans-serif;
+            font-size: 14px;
+        }
+
+        .small {
             font-size: 12px;
-        }
-
-        .underline {
-            text-decoration: underline;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
         }
 
         td {
@@ -76,81 +54,24 @@
 
         .label {
             width: 20%;
-            font-weight: bold;
+            /* font-weight: bold; */
             background-color: #f5f5f5;
         }
 
         .value {
             width: 60%;
         }
-    </style>
-    <style>
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 12px;
-        }
-
-        table th,
-        table td {
-            border: 1px solid #333;
-            padding: 5px;
-            text-align: left;
-        }
-
-        th {
-            background-color: #eeeeee;
-        }
-
-        .font-dejavu {
-            font-family: 'DejaVu Sans', sans-serif;
-        }
-
-        .f12 {
-            font-size: 14px;
-        }
-
-        h2,
-        h3,
-        h4,
-        {
-        margin: 0;
-        padding: 0;
-        }
-
-
-
-
-        h4 {
-            margin-bottom: 2px;
-            padding-bottom: 0;
-        }
-
-        ol {
-            margin-top: 0;
-            padding-top: 0;
-            margin-bottom: 0;
-            padding-bottom: 0;
-        }
-
-        body {
-            font-family: sans-serif;
-            font-size: 12px;
-        }
-
-        .underline {
-            text-decoration: underline;
-        }
 
         @page {
-            margin: 190px 50px 70px 50px;
+            margin: 110px 50px 50px 50px;
         }
+
 
         .header {
             position: fixed;
-            top: -160px;
+            top: -90px;
             left: 0px;
-            right: 5px;
+            right: 0px;
             text-align: left;
         }
 
@@ -160,158 +81,128 @@
             right: -30;
             width: 150px;
         }
-
-        .header .subs {
-            margin-top: -5px;
-            line-height: 1.2;
-            font-size: 0.9em;
-            margin-right: 0px;
-            /* ruang kosong supaya teks turun & tidak timpa gambar */
-        }
-
-        .header h2,
-        .header h3 {
-            margin: 6px 0;
-        }
-
-
-        .matik-list ul {
-            margin: 0;
-            padding-left: 1.2rem;
-            /* default untuk nested */
-        }
-
-        /* level pertama */
-        .matik-list>ul {
-            padding-left: 1em;
-            /* mepet kiri */
-            list-style-type: disc;
-            /* bullet bulat */
-        }
-
-        /* level kedua */
-        .matik-list>ul>li>ul {
-            padding-left: 1.5rem;
-            list-style-type: square;
-            font-size: 0.8em;
-        }
     </style>
 </head>
 
 <body>
     <div class="header">
-        <table width="100%" style="border:none;">
+        <table width="100%" style="margin:0;padding:0;">
             <tr>
                 <!-- KIRI: judul + subs (tetap) -->
                 <td style="vertical-align: top;border:none;">
-                    <h2>Status Vitalitas SE :: Tahun {{ $tahunAktifGlobal ?? '-' }}</h2>
-                    <h3>Pemilik Risiko: {{ strtoupper($namaOpd) }}</h3>
+                    <h2 style="margin-top:40px;">STATUS VITAL SE :: Tahun {{ $tahunAktifGlobal ?? '-' }}
+                    </h2>
 
-                    <div class="subs">
-                        Pemilik Risiko bertanggungjawab terhadap proses bisnis/layanannya dengan cara pengelolaan aset
-                        yaitu dari
-                        mulai melakukan Pengukuran Nilai Aset, Kategorisasi SE termasuk pemenuhan standar, Pemetaan
-                        Risiko, Analisa
-                        Risiko, pembuatan Rencana Tindak Lanjut dan implementasi mitigasi risiko, sampai menjadi
-                        <i>Lead Auditee</i> dalam Audit Keamanan
-                    </div>
                 </td>
 
                 <!-- KANAN: dua logo sejajar -->
                 <td style="width: 100px; vertical-align: top; text-align: right; white-space: nowrap;border:none;">
                     <img src="{{ public_path('images/logobaliprovcsirt.png') }}" alt="Logo"
                         style="height:70px; vertical-align: top; margin-right:0px;">
-                    <img src="{{ public_path('images/tlp/tlp_teaser_amber_strict.jpg') }}" alt="TLP:GREEN"
+                    <img src="{{ public_path('images/tlp/tlp_teaser_amber_strict.jpg') }}" alt="TLP:AMBER+STRICT"
                         style="height:70px; vertical-align: top;">
                 </td>
             </tr>
         </table>
-        <p><strong>Nama Aset: {{ $aset->nama_aset }}</strong></p>
-        <p><strong>Subklasifikasi:</strong> {{ $aset->subklasifikasiaset->subklasifikasiaset ?? '-' }}</p>
-    </div>
-
-
-
-
-    <table>
-        <thead>
+        <table>
             <tr>
-                <th style="text-align: center;width:7%">NO</th>
-                <th width="30%">INDIKATOR</th>
-                <th>KETERANGAN</th>
+                <td class="label">
+                    Kode Aset
+                </td>
+                <td class="value">
+                    <strong>{{ $aset->kode_aset }}</strong>
+                </td>
             </tr>
-        </thead>
-        <tbody>
-            @php $no=1;@endphp
-            @foreach ($indikators as $indikator)
-                @php
-                    $kodeJawaban = strtoupper($vitalitasSe->jawaban[$indikator->kode]['jawaban'] ?? '');
-                    $keterangan = $vitalitasSe->jawaban[$indikator->kode]['keterangan'] ?? '';
+            <tr>
+                <td class="label">
+                    Nama Aset
+                </td>
+                <td class="value">
+                    <strong>{{ $aset->nama_aset }}</strong>
+                </td>
+            </tr>
+            <tr>
+                <td class="label">
+                    Pemilik Aset
+                </td>
+                <td class="value">
+                    <strong>{{ $aset->opd->namaopd }}</strong>
+                </td>
+            </tr>
+            <tr>
+                <td class="label">
+                    Status Vital Aset
+                </td>
+                <td class="value">
+                    <strong>{{ strtoupper($kategoriLabel) }}</strong>
+                </td>
+            </tr>
+        </table></br>
+        <h4>FORM VITAL:</h4>
 
-                    // Ambil teks opsi sesuai pilihan
-                    $jawaban = match ($kodeJawaban) {
-                        'A' => $indikator->opsi_a,
-                        'B' => $indikator->opsi_b,
-                        'C' => $indikator->opsi_c,
-                        'D' => $indikator->opsi_d,
-                        default => '-',
-                    };
-                @endphp
 
+
+
+        <table>
+            <thead>
                 <tr>
-                    <td style="text-align: center;height: 40px;">{{ $no++ }}</td>
-                    <td>{{ $indikator->pertanyaan }}</td>
-                    <td>
-                        {{ $jawaban }}<br>
-                        @if ($keterangan)
-                            <em>{{ $keterangan }}</em>
-                        @endif
-                    </td>
+                    <th style="text-align: center;width:7%">NO</th>
+                    <th width="30%">INDIKATOR</th>
+                    <th>KETERANGAN</th>
                 </tr>
-            @endforeach
-        </tbody>
-    </table><BR>
+            </thead>
+            <tbody>
+                @php $no=1;@endphp
+                @foreach ($indikators as $indikator)
+                    @php
+                        $kodeJawaban = strtoupper($vitalitasSe->jawaban[$indikator->kode]['jawaban'] ?? '');
+                        $keterangan = $vitalitasSe->jawaban[$indikator->kode]['keterangan'] ?? '';
 
-    <p>
-        <strong>Status SE: <span class="badge"
-                style="background-color: {{ $warna }}; color: {{ $warnatext }};">
-                {{ strtoupper($kategoriLabel) }} (Skor:{{ $skor }})
-            </span>
-        </strong>
+                        // Ambil teks opsi sesuai pilihan
+                        $jawaban = match ($kodeJawaban) {
+                            'A' => $indikator->opsi_a,
+                            'B' => $indikator->opsi_b,
+                            'C' => $indikator->opsi_c,
+                            'D' => $indikator->opsi_d,
+                            default => '-',
+                        };
+                    @endphp
 
+                    <tr>
+                        <td style="text-align: center;height: 40px;">{{ $no++ }}</td>
+                        <td>{{ $indikator->pertanyaan }}</td>
+                        <td>
+                            {{ $jawaban }}<br>
+                            @if ($keterangan)
+                                <em>{{ $keterangan }}</em>
+                            @endif
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table><BR>
 
-    </p>
-    <BR>
-    <h4>CATATAN</h4>
-    <ol>
-        <li>
-            Pengukuran ini adalah self-assessment dari sudut pemilik aset/risiko.
-            Seluruh aset harus diajukan ke BSSN untuk dilakukan evaluasi. Aset yang terkonfirmasi termasuk dalam aset
-            Vital oleh BSSN, akan ditetapkan oleh Kepala BSSN.
-        </li>
-        <li>Kode TLP (Traffic Light Protocol) dipakai untuk mengklasifikasikan sensitifitas informasi, supaya jelas
-            sejauh mana informasi boleh dibagikan.
-            TLP:AMBER+STRICT berarti berisi informasi cukup sensitif. Hanya untuk internal organisasi penerima,
-            tidak boleh
-            keluar.
-        </li>
-        <li>PERISAI adalah sistem elektronik untuk melakukan <b>PE</b>ngelolaan <b>RIS</b>iko <b>A</b>set
-            <b>I</b>nformasi di lingkup Pemerintah Provinsi Bali. PERISAI dikelola oleh
-            Dinas Kominfos Provinsi Bali (Contact: Bidang Persandian)
-        </li>
-        <li>SE adalah sistem elektronik yaitu dalam PERISAI adalah Aset Informasi dengan klasifikasi [PL] Perangkat
-            Lunak.</li>
-        <li>Semua informasi tentang aset ini dapat berubah sesuai dengan reviu dan pemutahiran data PERISAI yang
-            dilakukan minimal sekali setahun oleh Pemilik Risiko. Pemutahiran akan dilakukan serempak, menunggu
-            jadwal dari Diskominfos Prov Bali. </li>
-        {{-- <li>SE adalah sistem elektronik yaitu dalam PERISAI adalah <strong>aset dengan klasifikasi [PL] Perangkat
-                Lunak.</strong> Contoh SE adalah
-            website, aplikasi
-            berbasis web, mobile, sistem operasi dan utility.</li>
-        <li>Semua informasi tentang aset ini dapat berubah sesuai dengan review dan pemutahiran data PERISAI <b>yang
-                dilakukan minimal sekali setahun oleh Pemilik Risiko. Pemutahiran akan dilakukan serempak, menunggu
-                informasi dari Diskominfos Prov Bali.</b> </li> --}}
-    </ol>
+        <h4>CATATAN</h4>
+        <ol>
+            <li>
+                Pengukuran ini adalah self-assessment oleh Pemilik Aset.
+                Seluruh aset harus diajukan ke BSSN untuk dilakukan evaluasi dan konfirmasi. Aset yang terkonfirmasi
+                termasuk dalam
+                aset
+                Vital oleh BSSN, akan ditetapkan oleh Kepala BSSN.
+            </li>
+            <li>Dokumen ini menggunakan Kode TLP:AMBER+STRICT mengindikasikan mengandung informasi yang cukup sensitif.
+                Informasi di dalam dokumen ini hanya boleh didistribusikan kepada Pemilik Aset dan Dinas Kominfos Prov
+                Bali.
+                Tidak boleh diberikan secara langsung dan atau otomatis ke pihak lain.
+            </li>
+            <li>PERISAI adalah sistem elektronik untuk membantu pengelolaan risiko aset informasi di lingkup Pemprov
+                Bali
+                agar menjadi lebih efektif dengan mengusung konsep RISE : Recognise.Identify.Secure.Enhanced. PERISAI
+                dikelola oleh Bidang Persandian Dinas Kominfos Provinsi Bali.
+            </li>
+            <li>Data status vital aset ini dimutahirkan setahun sekali</li>
+        </ol>
 </body>
 
 </html>

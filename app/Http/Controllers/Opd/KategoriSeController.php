@@ -48,17 +48,17 @@ class KategoriSeController extends Controller
         //     ->with('kategoriSe')
         //     ->get();
 
-$asetPL = Aset::whereHas('subklasifikasiaset', function ($q) {
-        $q->whereIn('subklasifikasiaset', [
-            'Aplikasi berbasis Website',
-            'Aplikasi berbasis Mobile',
-            'Aplikasi berbasis Desktop'
-        ]);
-    })
-    ->where('opd_id', $userOpdId)
-    ->where('periode_id', $periodeAktifId)   // filter periode aktif
-    ->with(['kategoriSe', 'subklasifikasiaset']) // sekalian eager load subklas
-    ->get();
+        $asetPL = Aset::whereHas('subklasifikasiaset', function ($q) {
+            $q->whereIn('subklasifikasiaset', [
+                'Aplikasi berbasis Website',
+                'Aplikasi berbasis Mobile',
+                'Aplikasi berbasis Desktop'
+            ]);
+        })
+            ->where('opd_id', $userOpdId)
+            ->where('periode_id', $periodeAktifId)   // filter periode aktif
+            ->with(['kategoriSe', 'subklasifikasiaset']) // sekalian eager load subklas
+            ->get();
 
 
         // Ambil semua range kategori dari tabel range_ses
@@ -135,7 +135,7 @@ $asetPL = Aset::whereHas('subklasifikasiaset', function ($q) {
         ]);
     }
 
-    public function exportRekapPdf()
+    public function exportRekapPdf_old()
     {
         $userOpdId = auth()->user()->opd_id;
         $namaOpd = auth()->user()->opd->namaopd ?? '-';
@@ -153,17 +153,17 @@ $asetPL = Aset::whereHas('subklasifikasiaset', function ($q) {
         //     ->with('kategoriSe')
         //     ->get();
 
-$asetPL = Aset::whereHas('subklasifikasiaset', function ($q) {
-        $q->whereIn('subklasifikasiaset', [
-            'Aplikasi berbasis Website',
-            'Aplikasi berbasis Mobile',
-            'Aplikasi berbasis Desktop'
-        ]);
-    })
-    ->where('opd_id', $userOpdId)
-    ->where('periode_id', $periodeAktifId)   // filter periode aktif
-    ->with(['kategoriSe', 'subklasifikasiaset']) // sekalian eager load subklas
-    ->get();
+        $asetPL = Aset::whereHas('subklasifikasiaset', function ($q) {
+            $q->whereIn('subklasifikasiaset', [
+                'Aplikasi berbasis Website',
+                'Aplikasi berbasis Mobile',
+                'Aplikasi berbasis Desktop'
+            ]);
+        })
+            ->where('opd_id', $userOpdId)
+            ->where('periode_id', $periodeAktifId)   // filter periode aktif
+            ->with(['kategoriSe', 'subklasifikasiaset']) // sekalian eager load subklas
+            ->get();
 
         $rangeSes = RangeSe::all();
         // Normalisasi helper
@@ -233,8 +233,75 @@ $asetPL = Aset::whereHas('subklasifikasiaset', function ($q) {
 
         $pdf = PDF::loadView('opd.kategorise.export_rekap_pdf', compact('strategis', 'tinggi', 'rendah', 'belum', 'total', 'namaOpd', 'kategoriMeta'))
             ->setPaper('A4', 'portrait');
-    PdfFooter::add_right_corner_footer($pdf);
+        PdfFooter::add_right_corner_footer($pdf);
         return $pdf->download('rekap_kategorise_' . date('Ymd_His') . '.pdf');
+    }
+
+    public function exportRekapPdf()
+    {
+        $userOpdId = auth()->user()->opd_id;
+        $namaOpd = auth()->user()->opd->namaopd ?? '-';
+
+        $query = Aset::query()
+            ->where('opd_id', $userOpdId)
+            // ->where('periode_id', $periodeAktifId) // aktifkan jika perlu filter periode
+            ->whereHas('subklasifikasiaset', function ($q) {
+                $q->whereIn('subklasifikasiaset', [
+                    'Aplikasi berbasis Website',
+                    'Aplikasi berbasis Mobile',
+                    'Aplikasi berbasis Desktop'
+                ]);
+            })
+            ->with([
+                'subklasifikasiaset:id,subklasifikasiaset,klasifikasi_aset_id',
+                'kategoriSe:id,aset_id,skor_total,jawaban',
+            ]);
+
+
+        $data = $query->get();
+        $rangeSes = RangeSe::all();
+
+        // Ranking kategori untuk sorting
+        $orderKategori = [
+            'STRATEGIS'        => 1,
+            'TINGGI'        => 2,
+            'RENDAH'        => 3,
+            'Belum Dinilai' => 4,
+        ];
+
+        $sorted = $data->sort(function ($a, $b) use ($rangeSes, $orderKategori) {
+
+            // Tentukan kategori aset A
+            $katA = $a->kategoriSe
+                ? $rangeSes->first(function ($r) use ($a) {
+                    return $a->kategoriSe->skor_total >= $r->nilai_bawah &&
+                        $a->kategoriSe->skor_total <= $r->nilai_atas;
+                })->nilai_akhir_aset ?? 'Belum Dinilai'
+                : 'Belum Dinilai';
+
+            // Tentukan kategori aset B
+            $katB = $b->kategoriSe
+                ? $rangeSes->first(function ($r) use ($b) {
+                    return $b->kategoriSe->skor_total >= $r->nilai_bawah &&
+                        $b->kategoriSe->skor_total <= $r->nilai_atas;
+                })->nilai_akhir_aset ?? 'Belum Dinilai'
+                : 'Belum Dinilai';
+
+            // 1. Sort kategori dulu
+            $cmp = $orderKategori[$katA] <=> $orderKategori[$katB];
+            if ($cmp !== 0) return $cmp;
+
+            // 2. Sort nama aset ASC
+            return strcmp($a->nama_aset, $b->nama_aset);
+        });
+
+        $data = $sorted->values(); // reset keys
+
+
+        $pdf = PDF::loadView('opd.kategorise.export_rekap_pdf', compact('data', 'namaOpd', 'rangeSes'))
+            ->setPaper('A4', 'landscape');
+        PdfFooter::add_right_corner_footer($pdf);
+        return $pdf->stream('rekap_kategorise_' . date('Ymd_His') . '.pdf');
     }
 
     public function exportRekapKategoriPdf($kategori)
@@ -251,20 +318,20 @@ $asetPL = Aset::whereHas('subklasifikasiaset', function ($q) {
         //     ->where('opd_id', $userOpdId)
         //     ->with(['subklasifikasiaset', 'kategoriSe']);
 
-$query = Aset::query()
-    ->where('opd_id', $userOpdId)
-    // ->where('periode_id', $periodeAktifId) // aktifkan jika perlu filter periode
-    ->whereHas('subklasifikasiaset', function ($q) {
-        $q->whereIn('subklasifikasiaset', [
-            'Aplikasi berbasis Website',
-            'Aplikasi berbasis Mobile',
-            'Aplikasi berbasis Desktop'
-        ]);
-    })
-    ->with([
-        'subklasifikasiaset:id,subklasifikasiaset,klasifikasi_aset_id',
-        'kategoriSe:id,aset_id,skor_total,jawaban',
-    ]);
+        $query = Aset::query()
+            ->where('opd_id', $userOpdId)
+            // ->where('periode_id', $periodeAktifId) // aktifkan jika perlu filter periode
+            ->whereHas('subklasifikasiaset', function ($q) {
+                $q->whereIn('subklasifikasiaset', [
+                    'Aplikasi berbasis Website',
+                    'Aplikasi berbasis Mobile',
+                    'Aplikasi berbasis Desktop'
+                ]);
+            })
+            ->with([
+                'subklasifikasiaset:id,subklasifikasiaset,klasifikasi_aset_id',
+                'kategoriSe:id,aset_id,skor_total,jawaban',
+            ]);
 
 
 
@@ -285,9 +352,9 @@ $query = Aset::query()
 
 
         $pdf = PDF::loadView('opd.kategorise.export_rekap_kategori_pdf', compact('data', 'kategori', 'namaOpd', 'rangeSes'))
-            ->setPaper('A4', 'potrait');
-    PdfFooter::add_right_corner_footer($pdf);
-        return $pdf->download('kategorise_pernilai_' . date('Ymd_His') . '.pdf');
+            ->setPaper('A4', 'landscape');
+        PdfFooter::add_right_corner_footer($pdf);
+        return $pdf->stream('kategorise_pernilai_' . date('Ymd_His') . '.pdf');
     }
 
     public function syncFromPrevious(Request $request)
@@ -432,20 +499,20 @@ $query = Aset::query()
         //     ->whereHas('klasifikasi', fn($q) => $q->where('klasifikasiaset', 'PERANGKAT LUNAK'))
         //     ->with('kategoriSe:id,aset_id,skor_total,jawaban'); // cukup field penting
 
-   $query = Aset::query()
-        ->where('opd_id', $userOpdId)
-        ->where('periode_id', $periodeAktifId)
-        ->whereHas('subklasifikasiaset', function ($q) {
-            $q->whereIn('subklasifikasiaset', [
-                'Aplikasi berbasis Website',
-                'Aplikasi berbasis Mobile',
-                'Aplikasi berbasis Desktop'
+        $query = Aset::query()
+            ->where('opd_id', $userOpdId)
+            ->where('periode_id', $periodeAktifId)
+            ->whereHas('subklasifikasiaset', function ($q) {
+                $q->whereIn('subklasifikasiaset', [
+                    'Aplikasi berbasis Website',
+                    'Aplikasi berbasis Mobile',
+                    'Aplikasi berbasis Desktop'
+                ]);
+            })
+            ->with([
+                'kategoriSe:id,aset_id,skor_total,jawaban',
+                'subklasifikasiaset:id,subklasifikasiaset,klasifikasi_aset_id'
             ]);
-        })
-        ->with([
-            'kategoriSe:id,aset_id,skor_total,jawaban',
-            'subklasifikasiaset:id,subklasifikasiaset,klasifikasi_aset_id'
-        ]);
 
 
         // filter kategori
@@ -505,6 +572,7 @@ $query = Aset::query()
         $range = $rangeSes->first(fn($r) => $skor >= $r->nilai_bawah && $skor <= $r->nilai_atas);
 
         $kategoriLabel = $range->nilai_akhir_aset ?? 'BELUM DINILAI';
+        $deskripsiLabel = $range->deskripsi ?? '-';
         $warna         = $range->warna_hexa ?? '#888888';
 
         // 7) Render PDF
@@ -517,10 +585,11 @@ $query = Aset::query()
             'warna',
             'skor',
             'namaOpd',
+            'deskripsiLabel'
         ))
             ->setPaper('a4', 'portrait');
-    PdfFooter::add_right_corner_footer($pdf);
-        return $pdf->download('penilaian_kategori_se_' . now()->format('Ymd_His') . '.pdf');
+        PdfFooter::add_right_corner_footer($pdf);
+        return $pdf->stream('penilaian_kategori_se_' . now()->format('Ymd_His') . '.pdf');
     }
 
 

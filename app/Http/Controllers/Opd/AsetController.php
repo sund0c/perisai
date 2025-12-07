@@ -10,14 +10,11 @@ use App\Models\RangeAset;
 use App\Models\KlasifikasiAset;
 use App\Models\Periode;
 use App\Models\SubKlasifikasiAset;
-use App\Models\KonfigurasiField;
 use Illuminate\Http\Request;
 use PDF;
 use App\Services\PdfFooter;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
-use Dompdf\FontMetrics;
-
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -33,14 +30,10 @@ class AsetController extends Controller
 {
     use CalculatesAsetRange;
 
-
     public function __construct()
     {
-        // Otomatis otorisasi semua method resource berbasis Policy Aset
         $this->authorizeResource(Aset::class, 'aset');
     }
-
-
 
     private function fieldOptionsByKlasifikasi(string $klasifikasi, array $fields): array
     {
@@ -128,11 +121,21 @@ class AsetController extends Controller
             ->get();
 
         $ranges = RangeAset::orderBy('nilai_bawah')->get();
+
         $this->applyRangeAttributes($asets, $ranges);
+        $badges = $asets->mapWithKeys(function ($aset) {
+            return [
+                $aset->id => [
+                    'c' => $this->badgeCIA($aset->kerahasiaan),
+                    'i' => $this->badgeCIA($aset->integritas),
+                    'a' => $this->badgeCIA($aset->ketersediaan),
+                ],
+            ];
+        });
 
         $namaOpd = auth()->user()->opd->namaopd ?? '-';
 
-        return view('opd.aset.show_by_klasifikasi', compact('klasifikasi', 'asets', 'namaOpd', 'subs'));
+        return view('opd.aset.show_by_klasifikasi', compact('klasifikasi', 'asets', 'namaOpd', 'subs', 'badges'));
     }
 
     public function exportExcel(KlasifikasiAset $klasifikasiaset)
@@ -237,27 +240,6 @@ class AsetController extends Controller
         return Excel::download(new AsetTemplateExport($subs, $fields, $fieldOptions, $klasifikasiaset->klasifikasiaset), $fileName);
     }
 
-    // public function create($klasifikasiId)
-    // {
-    //     $klasifikasi = KlasifikasiAset::findOrFail($klasifikasiId);
-    //     $subklasifikasis = SubKlasifikasiAset::where('klasifikasi_aset_id', $klasifikasiId)->get();
-
-    //     // Ambil semua field yang dikonfigurasi untuk ditampilkan
-    //     $fieldList = $klasifikasi->tampilan_field_aset;
-    //     if (!is_array($fieldList)) {
-    //         $fieldList = json_decode($fieldList, true) ?? [];
-    //     }
-
-    //     // Hapus field yang seharusnya disembunyikan karena otomatis
-    //     $hiddenFields = ['opd_id', 'klasifikasiaset_id', 'periode_id', 'kode_aset', 'kategori_se'];
-    //     $fieldList = array_diff($fieldList, $hiddenFields);
-
-    //     $namaOpd = auth()->user()->opd->namaopd ?? '-';
-
-
-    //     return view('opd.aset.create', compact('klasifikasi', 'subklasifikasis', 'fieldList', 'namaOpd'));
-    // }
-
     public function create($klasifikasiId)
     {
         $klasifikasi = KlasifikasiAset::findOrFail($klasifikasiId);
@@ -288,8 +270,6 @@ class AsetController extends Controller
             'fieldOptions'
         ));
     }
-
-
 
     public function store(Request $request, KlasifikasiAset $klasifikasiaset)
     {
@@ -370,7 +350,7 @@ class AsetController extends Controller
             'opd_id' => $validated['opd_id'],
         ]);
         Log::warning('----------Pesan peringatan--------------');
-        
+
 
         // Prefix dari klasifikasi (misal: "SK-" atau berdasarkan kode klasifikasi)
         $prefix = strtoupper($klasifikasiaset->kodeklas ?? substr($klasifikasiaset->klasifikasiaset, 0, 2)) . '-';
@@ -408,31 +388,6 @@ class AsetController extends Controller
             return back()->withInput()->with('error', 'Terjadi kesalahan. Silakan coba lagi atau hubungi admin.');
         }
     }
-
-
-    // public function edit(Aset $aset)
-    // {
-    //     // Akses hanya untuk pemilik OPD (lihat AsetPolicy@update)
-    //     $this->authorize('update', $aset);
-
-    //     // Ambil relasi yang dibutuhkan (lebih hemat query)
-    //     $aset->load(['klasifikasi.subklasifikasi', 'subklasifikasiaset']);
-
-    //     $klasifikasi       = $aset->klasifikasi;
-    //     $subklasifikasis   = $klasifikasi->subklasifikasi; // dari relasi, tidak perlu query manual
-
-    //     // Field list bisa tersimpan sebagai JSON di DB → pastikan array
-    //     $fieldListRaw = $klasifikasi->tampilan_field_aset;
-    //     $fieldList    = is_array($fieldListRaw) ? $fieldListRaw : (json_decode($fieldListRaw ?? '[]', true) ?: []);
-
-    //     // Saring field yang tidak perlu diedit
-    //     $hiddenFields = ['opd_id', 'klasifikasiaset_id', 'periode_id', 'kode_aset', 'kategori_se'];
-    //     $fieldList    = array_values(array_diff($fieldList, $hiddenFields));
-
-    //     $namaOpd = auth()->user()->opd->namaopd ?? '-';
-
-    //     return view('opd.aset.edit', compact('aset', 'namaOpd', 'klasifikasi', 'fieldList', 'subklasifikasis'));
-    // }
 
     public function edit(Aset $aset)
     {
@@ -473,7 +428,6 @@ class AsetController extends Controller
             'fieldOptions'   // ← KIRIM KE VIEW
         ));
     }
-
 
     public function update(Request $request, Aset $aset)
     {
@@ -617,8 +571,7 @@ class AsetController extends Controller
         return back()->with('success', $asets->count() . ' aset berhasil dihapus.');
     }
 
-
-    public function exportRekapPdf()
+    public function exportRekapPdf_old()
     {
 
         $periodeAktifId = Periode::where('status', 'open')->value('id');
@@ -658,12 +611,116 @@ class AsetController extends Controller
 
         $pdf = PDF::loadView('opd.aset.export_rekap_pdf', compact('klasifikasis', 'namaOpd', 'ranges'))
             ->setPaper('A4', 'portrait');
-    PdfFooter::add_right_corner_footer($pdf);
+        PdfFooter::add_right_corner_footer($pdf);
 
         return $pdf->download('rekapaset_' . date('YmdHis') . '.pdf');
     }
 
-    public function exportRekapKlasPdf(KlasifikasiAset $klasifikasiaset)
+    public function exportRekapPdf()
+    {
+        ini_set('memory_limit', '512M');
+        ini_set('max_execution_time', 300);
+
+        $periodeAktifId = Periode::where('status', 'open')->value('id');
+        if (!$periodeAktifId) {
+            return back()->with('error', 'Tidak ada Periode dengan status OPEN.');
+        }
+
+        // $opdId = Auth::user()->opd_id;
+
+        // $asets = Aset::where('opd_id', $opdId)
+        //     ->where('periode_id', $periodeAktifId)
+        //     ->with('subklasifikasiaset')
+        //     ->orderBy('kode_aset')
+        //     ->get();
+
+
+
+        // SORTING: nilai akhir DESC, lalu subklasifikasi ASC
+        // $asets = $asets->sort(function ($a, $b) {
+        //     $cmp = $b->nilai_akhir_aset <=> $a->nilai_akhir_aset;
+        //     if ($cmp !== 0) {
+        //         return $cmp;
+        //     }
+        //     return strcmp(
+        //         $a->subklasifikasiaset->subklasifikasiaset ?? '',
+        //         $b->subklasifikasiaset->subklasifikasiaset ?? ''
+        //     );
+        //     $klasA = $a->subklasifikasiaset->klasifikasiAset->klasifikasiaset ?? '';
+        //     $klasB = $b->subklasifikasiaset->klasifikasiAset->klasifikasiaset ?? '';
+        // })->values();
+
+        $opdId   = Auth::user()->opd_id;
+        $namaOpd = Auth::user()->opd->namaopd ?? '-';
+
+        // === Ambil Data Aset + Relasi Lengkap ===
+        $asets = Aset::where('opd_id', $opdId)
+            ->where('periode_id', $periodeAktifId)
+            ->with([
+                'subklasifikasiaset.klasifikasi' // relasi yang benar
+            ])
+            ->orderBy('kode_aset')
+            ->get();
+
+        // === Hitung warna & nilai akhir ===
+        $ranges = RangeAset::orderBy('nilai_bawah')->get();
+        $this->applyRangeAttributes($asets, $ranges);
+
+        // === SORTING GABUNGAN ===
+        $asets = $asets->sort(function ($a, $b) {
+
+            // 1️⃣ Sort nilai akhir aset DESC
+            $cmp = $b->nilai_akhir_aset <=> $a->nilai_akhir_aset;
+            if ($cmp !== 0) return $cmp;
+
+            // 2️⃣ Sort nama klasifikasi ASC
+            $klasA = $a->subklasifikasiaset->klasifikasi->klasifikasiaset ?? '';
+            $klasB = $b->subklasifikasiaset->klasifikasi->klasifikasiaset ?? '';
+            $cmp = strcmp($klasA, $klasB);
+            if ($cmp !== 0) return $cmp;
+
+            // 3️⃣ Sort nama subklasifikasi ASC
+            $subA = $a->subklasifikasiaset->subklasifikasiaset ?? '';
+            $subB = $b->subklasifikasiaset->subklasifikasiaset ?? '';
+            $cmp = strcmp($subA, $subB);
+            if ($cmp !== 0) return $cmp;
+
+            // 4️⃣ Sort nama aset ASC
+            return strcmp($a->nama_aset ?? '', $b->nama_aset ?? '');
+        })->values();
+
+        // $namaOpd = Auth::user()->opd->namaopd ?? '-';
+
+        $ranges = RangeAset::orderBy('nilai_bawah')->get();
+
+        $this->applyRangeAttributes($asets, $ranges);
+
+        $badges = $asets->mapWithKeys(function ($aset) {
+            return [
+                $aset->id => [
+                    'c' => $this->badgeCIA($aset->kerahasiaan),
+                    'i' => $this->badgeCIA($aset->integritas),
+                    'a' => $this->badgeCIA($aset->ketersediaan),
+                ],
+            ];
+        });
+
+        //dd($asets->toArray());
+
+        // return view(
+        //     'opd.aset.export_rekap_pdf',
+        //     compact('asets', 'namaOpd',  'badges')
+        // );
+
+        $pdf = Pdf::loadView('opd.aset.export_rekap_pdf', compact('asets', 'namaOpd',  'badges'))
+            ->setPaper('A4', 'landscape');
+
+        PdfFooter::add_right_corner_footer($pdf);
+
+        return $pdf->stream('rekapaset_' . date('YmdHis') . '.pdf');
+    }
+
+    public function exportRekapKlasPdf(KlasifikasiAset $klasifikasiaset) //print rekap OPD
     {
         $periodeAktifId = Periode::where('status', 'open')->value('id');
         if (!$periodeAktifId) {
@@ -681,18 +738,45 @@ class AsetController extends Controller
             ->with('subklasifikasiaset')
             ->orderBy('kode_aset')
             ->get();
+        //$aset->nilai_akhir_aset
 
         $namaOpd = Auth::user()->opd->namaopd ?? '-';
 
-        $pdf = Pdf::loadView('opd.aset.export_rekap_klas_pdf', compact('klasifikasi', 'asets', 'namaOpd', 'subs'))
-            ->setPaper('A4', 'portrait');
+        $ranges = RangeAset::orderBy('nilai_bawah')->get();
 
-    PdfFooter::add_right_corner_footer($pdf);
+        $this->applyRangeAttributes($asets, $ranges);
+
+        // SORTING: nilai akhir DESC, lalu subklasifikasi ASC
+        $asets = $asets->sort(function ($a, $b) {
+            $cmp = $b->nilai_akhir_aset <=> $a->nilai_akhir_aset;
+            if ($cmp !== 0) {
+                return $cmp;
+            }
+            return strcmp(
+                $a->subklasifikasiaset->subklasifikasiaset ?? '',
+                $b->subklasifikasiaset->subklasifikasiaset ?? ''
+            );
+        })->values();
+
+        $badges = $asets->mapWithKeys(function ($aset) {
+            return [
+                $aset->id => [
+                    'c' => $this->badgeCIA($aset->kerahasiaan),
+                    'i' => $this->badgeCIA($aset->integritas),
+                    'a' => $this->badgeCIA($aset->ketersediaan),
+                ],
+            ];
+        });
+
+        $pdf = Pdf::loadView('opd.aset.export_rekap_klas_pdf', compact('klasifikasi', 'asets', 'namaOpd', 'subs', 'badges'))
+            ->setPaper('A4', 'landscape');
+
+        PdfFooter::add_right_corner_footer($pdf);
         $filename = 'rekapasetklas_' . now()->format('YmdHis') . '.pdf';
-        return $pdf->download($filename);
+        return $pdf->stream($filename);
     }
 
-    public function pdf(Aset $aset)
+    public function pdf(Aset $aset) //Profil Aset Informasi
     {
         // $aset otomatis di-resolve dari UUID (karena rute {aset:uuid})
         $aset->load(['klasifikasi.subklasifikasi', 'subklasifikasiaset']);
@@ -705,7 +789,7 @@ class AsetController extends Controller
         $fieldList    = is_array($fieldListRaw) ? $fieldListRaw : (json_decode($fieldListRaw ?? '[]', true) ?: []);
 
         // Sembunyikan field yang tidak perlu dicetak
-        $hiddenFields = ['opd_id', 'klasifikasiaset_id', 'periode_id', 'kode_aset', 'kategori_se'];
+        $hiddenFields = ['opd_id', 'klasifikasiaset_id', 'periode_id',  'kategori_se'];
         $fieldList    = array_values(array_diff($fieldList, $hiddenFields));
 
         $ranges = RangeAset::orderBy('nilai_bawah')->get();
@@ -724,9 +808,9 @@ class AsetController extends Controller
             'ranges'
         ))->setPaper('A4', 'portrait'); // 'portrait' (bukan 'potrait')
 
-    PdfFooter::add_right_corner_footer($pdf);
+        PdfFooter::add_right_corner_footer($pdf);
 
-        return $pdf->download('nilaiaset_' . strtolower(str_replace('-', '', $aset->kode_aset)) . '_' . date('YmdHis') . '.pdf');
+        return $pdf->stream('profilaset_' . strtolower(str_replace('-', '', $aset->kode_aset)) . '_' . date('YmdHis') . '.pdf');
     }
 
 

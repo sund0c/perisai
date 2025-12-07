@@ -85,7 +85,7 @@ class VitalitasSeController extends Controller
         ]);
     }
 
-    public function exportRekapPdf()
+    public function exportRekapPdf_old()
     {
         $userOpdId = auth()->user()->opd_id;
         $namaOpd = auth()->user()->opd->namaopd ?? '-';
@@ -145,6 +145,78 @@ class VitalitasSeController extends Controller
         return $pdf->download('rekap_vitalitasse_' . date('Ymd_His') . '.pdf');
     }
 
+    public function exportRekapPdf()
+    {
+        $user = auth()->user();
+        $userOpdId = $user->opd_id;
+        $namaOpd   = $user->opd->namaopd ?? '-';
+
+        $periodeAktifId = Periode::where('status', 'open')->value('id');
+        if (! $periodeAktifId) {
+            abort(409, 'Tidak ada periode yang berstatus open.');
+        }
+        // $query = Aset::query()
+        //     ->where('opd_id', $userOpdId)
+        //     ->where('periode_id', $periodeAktifId)
+        //     ->whereHas('subklasifikasiaset', function ($q) {
+        //         $q->whereIn('subklasifikasiaset', [
+        //             'Aplikasi berbasis Website',
+        //             'Aplikasi berbasis Mobile',
+        //             'Aplikasi berbasis Desktop',
+        //         ]);
+        //     })
+        //     ->with([
+        //         'vitalitasSe:id,aset_id,skor_total,jawaban',
+        //         'subklasifikasiaset:id,subklasifikasiaset,klasifikasi_aset_id'
+        //     ]);
+
+        // // filter kategori
+        // if ($kategori === 'belum') {
+        //     $query->doesntHave('vitalitasSe');
+        // } else {
+        //     $query->whereHas('vitalitasSe', function ($q) use ($kategori) {
+        //         $q->whereNotNull('skor_total');
+
+        //         if ($kategori === 'vital') {
+        //             // Skor >= 15
+        //             $q->where('skor_total', '>=', 15);
+        //         } else {
+        //             // Semua skor di bawah 15 dianggap Tidak Vital
+        //             $q->where('skor_total', '<', 15);
+        //         }
+        //     });
+        // }
+
+        $query = Aset::query()
+            ->select('asets.*', 'vitalitas_ses.skor_total')
+            ->leftJoin('vitalitas_ses', 'vitalitas_ses.aset_id', '=', 'asets.id')
+            ->where('asets.opd_id', $userOpdId)
+            ->where('asets.periode_id', $periodeAktifId)
+            ->whereHas('subklasifikasiaset', function ($q) {
+                $q->whereIn('subklasifikasiaset', [
+                    'Aplikasi berbasis Website',
+                    'Aplikasi berbasis Mobile',
+                    'Aplikasi berbasis Desktop',
+                ]);
+            })
+            ->with([
+                'vitalitasSe:id,aset_id,skor_total,jawaban',
+                'subklasifikasiaset:id,subklasifikasiaset,klasifikasi_aset_id'
+            ])
+            ->orderByDesc('vitalitas_ses.skor_total')
+            ->orderBy('asets.nama_aset', 'ASC');
+
+
+        // $data = $query->orderBy('nama_aset')->get();
+        $data = $query->get();
+        $rangeSes = RangeSe::all();
+
+        $pdf = PDF::loadView('opd.vitalitasse.export_rekap_pdf', compact('data', 'namaOpd'))
+            ->setPaper('A4', 'landscape');
+        PdfFooter::add_right_corner_footer($pdf);
+        return $pdf->stream('rekap_vitalitasse_' . date('Ymd_His') . '.pdf');
+    }
+
     public function exportRekapKategoriPdf($kategori)
     {
         $allowed = ['vital', 'novital', 'belum']; // tambah 'total' kalau perlu
@@ -196,9 +268,9 @@ class VitalitasSeController extends Controller
         $rangeSes = RangeSe::all();
 
         $pdf = PDF::loadView('opd.vitalitasse.export_rekap_kategori_pdf', compact('data', 'kategori', 'namaOpd'))
-            ->setPaper('A4', 'potrait');
+            ->setPaper('A4', 'landscape');
         PdfFooter::add_right_corner_footer($pdf);
-        return $pdf->download('vitalitasse_pernilai_' . date('Ymd_His') . '.pdf');
+        return $pdf->stream('vitalitasse_pernilai_' . date('Ymd_His') . '.pdf');
     }
 
     public function syncFromPrevious(Request $request)
@@ -439,7 +511,7 @@ class VitalitasSeController extends Controller
         ))
             ->setPaper('a4', 'portrait');
         PdfFooter::add_right_corner_footer($pdf);
-        return $pdf->download('penilaian_vitalitas_se_' . now()->format('Ymd_His') . '.pdf');
+        return $pdf->stream('penilaian_vitalitas_se_' . now()->format('Ymd_His') . '.pdf');
     }
 
 

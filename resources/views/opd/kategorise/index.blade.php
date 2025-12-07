@@ -1,6 +1,6 @@
 @extends('adminlte::page')
 
-@section('title', 'Rekap Kategori SE')
+@section('title', 'Kategorisasi SE')
 
 <style>
     .matik-list ul {
@@ -25,12 +25,10 @@
     }
 </style>
 @section('content_header')
-    <h1>Kategori Sistem Elektronik</h1>
+    <h1>Kategorisasi SE</h1>
     <div style="line-height:1.2; font-size: 0.9em">
-        Sistem Elektronik (SE) dalam PERISAI adalah <strong>ASET INFORMASI dengan klasifikasi [PL] Perangkat
-            Lunak.</strong> Contoh SE adalah
-        website, aplikasi
-        berbasis web, mobile, sistem operasi dan utility.
+        Sistem Elektronik (SE) dalam PERISAI adalah ASET INFORMASI dengan klasifikasi [PL] Perangkat
+        Lunak khusus Aplikasi berbasis Website, Mobile dan Desktop.
     </div>
 @endsection
 
@@ -54,9 +52,9 @@
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex mb-3" style="gap: 10px;">
-                        <a href="{{ route('opd.kategorise.export_rekap') }}" class="btn btn-danger btn-sm">
+                        <a href="{{ route('opd.kategorise.export_rekap') }}" class="btn btn-danger btn-sm" target="_blank">
 
-                            <i class="fas fa-file-pdf"></i> Export PDF
+                            <i class="fas fa-file-pdf"></i> Export PDF Lengkap
                         </a>
                     </div>
                     <table class="table table-bordered text-center" style="width:100%">
@@ -114,7 +112,7 @@
                         </tbody>
                     </table>
                     <br>
-                    <b>Keterangan Kategori Sistem Elektronik:</b>
+                    <b>Keterangan</b>
                     <div class="matik-list">
                         <ul>
                             <li><b>STRATEGIS: </b>{{ data_get($kategoriMeta, 'STRATEGIS.deskripsi', '-') }}</li>

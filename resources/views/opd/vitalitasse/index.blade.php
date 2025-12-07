@@ -25,12 +25,10 @@
     }
 </style>
 @section('content_header')
-    <h1>Vitalitas Sistem Elektronik</h1>
+    <h1>Status Vital SE</h1>
     <div style="line-height:1.2; font-size: 0.9em">
-        Sistem Elektronik (SE) dalam PERISAI adalah <strong>ASET INFORMASI dengan klasifikasi [PL] Perangkat
-            Lunak.</strong> Contoh SE adalah
-        website, aplikasi
-        berbasis web, mobile, sistem operasi dan utility.
+        Sistem Elektronik (SE) dalam PERISAI adalah ASET INFORMASI dengan klasifikasi [PL] Perangkat
+        Lunak khusus Aplikasi berbasis Website, Mobile dan Desktop.
     </div>
 @endsection
 
@@ -54,9 +52,9 @@
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex mb-3" style="gap: 10px;">
-                        <a href="{{ route('opd.vitalitasse.export_rekap') }}" class="btn btn-danger btn-sm">
+                        <a href="{{ route('opd.vitalitasse.export_rekap') }}" class="btn btn-danger btn-sm" target="_blank">
 
-                            <i class="fas fa-file-pdf"></i> Export PDF
+                            <i class="fas fa-file-pdf"></i> Export PDF LENGKAP
                         </a>
                     </div>
                     <table class="table table-bordered text-center" style="width:100%">
@@ -79,7 +77,7 @@
                             </tr>
 
                             <tr class="bg-success text-white" style="text-align: left">
-                                <td style="text-align: left"><b>Aset Tidak Vital</b>
+                                <td style="text-align: left"><b>Aset Non Vital</b>
                                 </td>
                                 <td style="vertical-align: middle; text-align: center;">
                                     <a class="btn btn-light btn-sm px-4"
@@ -109,8 +107,8 @@
                     <br>
                     <b>Keterangan</b>
                     <div class="matik-list">
-                        Pengukuran ini adalah self-assessment dari sudut pemilik aset/risiko.
-                        Seluruh aset harus diajukan ke BSSN untuk dilakukan evaluasi.
+                        Pengukuran status vital aset adalah self-assessment dari sudut Pemilik Aset.
+                        Seluruh aset harus diajukan ke BSSN untuk mendapatkan validasi dan konfirmasi.
                         Aset yang terkonfirmasi termasuk dalam aset Vital oleh BSSN, akan ditetapkan oleh Kepala BSSN.
                     </div>
 
@@ -139,7 +137,7 @@
 
     <script>
         const pieData = {
-            labels: ['VITAL', 'TIDAK VITAL', 'BELUM DINILAI'],
+            labels: ['VITAL', 'Non Vital', 'belum dinilai'],
             datasets: [{
                 data: [{{ $vital }}, {{ $novital }}, {{ $belum }}],
                 backgroundColor: ['#dc3545', '#28a745', '#6c757d'],

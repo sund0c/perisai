@@ -35,6 +35,30 @@ trait CalculatesAsetRange
         }
     }
 
+    protected function badgeCIA($nilai): string
+    {
+        $label = [
+            '1' => 'R',
+            '2' => 'S',
+            '3' => 'T',
+        ][$nilai] ?? '-';
+
+        $warna = [
+            '1' => 'background-color:#28a745;color:#fff;', // Hijau
+            '2' => 'background-color:#ffc107;color:#000;', // Kuning
+            '3' => 'background-color:#dc3545;color:#fff;', // Merah
+        ][$nilai] ?? 'background-color:#ccc;color:#000;';
+
+        return '<span style="padding:3px 8px; border-radius:4px; font-weight:bold; ' .
+            $warna .
+            '">' .
+            $label .
+            '</span>';
+    }
+
+
+
+
     /**
      * Tambahkan atribut range lalu hitung ringkasan jumlah per kategori (TINGGI/SEDANG/RENDAH).
      *

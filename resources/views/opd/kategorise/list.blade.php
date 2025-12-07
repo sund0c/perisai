@@ -3,7 +3,7 @@
 @section('title', 'Kategori SE ' . strtoupper($kategori))
 
 @section('content_header')
-    <h1>Sistem Elektronik Kategori {{ strtoupper($kategori) }}</h1>
+    <h1>Kategori SE: {{ strtoupper($kategori) }}</h1>
 @endsection
 
 @section('content_top_nav_left')
@@ -44,7 +44,7 @@
                     ← Kembali
                 </a>
                 <a href="{{ route('opd.kategorise.export_rekap_kategori', ['kategori' => $kategori]) }}"
-                    class="btn btn-danger mb-3">
+                    class="btn btn-danger mb-3" target="_blank">
 
                     <i class="fas fa-file-pdf"></i> Export PDF
                 </a>
@@ -53,21 +53,29 @@
 
                 <thead>
                     <tr>
+                        <th>#</th>
                         <th>Nama Aset</th>
                         <th>Sub Klasifikasi</th>
                         <th>Lokasi</th>
-                        <th>Skor Kategori</th>
+                        <th>Penyedia</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
+                    @php $no = 1; @endphp
                     @foreach ($data as $aset)
                         <tr>
-                            <td>{{ $aset->nama_aset }}</td>
+                            <td>{{ $no++ }}</td>
+                            <td>{{ $aset->nama_aset }}
+                                <p class="small" style="margin-bottom: 0">{{ $aset->keterangan }}</p>
+                            </td>
                             <td>{{ $aset->subklasifikasiaset->subklasifikasiaset ?? '-' }}</td>
-                            <td>{{ $aset->lokasi }}</td>
-                            <td>
-                                {{-- {{ $aset->kategoriSe->skor_total ?? 'BELUM DINILAI' }} --}}
+                            <td>{{ $aset->lokasi }}
+                                <p class="small" style="margin-bottom: 0">{{ $aset->link_url }}</p>
+
+                            </td>
+                            <td>{{ $aset->penyedia_aset ?? '-' }}</td>
+                            {{-- <td>
                                 @php
                                     $skor = $aset->kategoriSe->skor_total ?? null;
 
@@ -99,12 +107,12 @@
                                             ')</span>';
                                     }
                                 @endphp
-                            </td>
+                            </td> --}}
 
                             <td>
 
                                 <a href="{{ route('opd.kategorise.exportPdf', $aset->uuid) }}"
-                                    class="btn btn-sm btn-primary">
+                                    class="btn btn-sm btn-primary" target="_blank">
                                     <i class="fas fa-file-pdf"></i>
                                 </a>
                                 @if ($kunci !== 'locked')
@@ -129,7 +137,7 @@
                 autoWidth: false,
                 stateSave: true,
                 columnDefs: [{
-                        width: "auto",
+                        width: "10px",
                         targets: 0
                     },
                     {
@@ -137,16 +145,20 @@
                         targets: 1
                     },
                     {
-                        width: "100px",
+                        width: "300px",
                         targets: 2
                     },
                     {
-                        width: "100px",
+                        width: "300px",
                         targets: 3
                     },
                     {
-                        width: "100px",
+                        width: "300px",
                         targets: 4
+                    },
+                    {
+                        width: "90px",
+                        targets: 5
                     },
                 ]
             });

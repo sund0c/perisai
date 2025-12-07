@@ -42,6 +42,8 @@ use App\Http\Controllers\Opd\VitalitasSeController;
 use App\Http\Controllers\SubKlasifikasiAsetController;
 use App\Http\Controllers\IndikatorKategoriSeController;
 
+use App\Http\Controllers\Admin\BackupDbController;
+
 
 // FOR TESTING PURPOSES
 use App\Http\Controllers\ExampleController;
@@ -186,6 +188,11 @@ Route::middleware(['SSOBrokerMiddleware', 'prevent-back-history', 'spatie_role_o
     Route::resource('periodes', PeriodeController::class);
     Route::post('periodes/{periode}/activate', [PeriodeController::class, 'activate'])
         ->name('periodes.activate');
+});
+
+Route::middleware(['SSOBrokerMiddleware', 'prevent-back-history', 'spatie_role_or_permission:admin'])->prefix('admin/backup')->name('admin.backup.')->group(function () {
+    Route::get('/', [BackupDbController::class, 'index'])->name('index');
+    Route::get('/download/{filename}', [BackupDbController::class, 'download'])->name('download');
 });
 
 //============= Start of BIDANG ===========================

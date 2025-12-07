@@ -369,9 +369,9 @@ return [
             'can'   => 'is-opd',
         ],
         [
-            'text' => 'Vitalitas SE',
+            'text' => 'SE Vital',
             'route' => 'opd.vitalitasse.index',
-            'icon'  => 'fas fa-fw fa-heartbeat',
+            'icon'  => 'fas fa-fw fa-exclamation',
             'can'   => 'is-opd',
         ],
         // UPDATED: hide ptkka
@@ -455,6 +455,13 @@ return [
             'route' => 'periodes.index',
             'icon'  => 'fas fa-calendar-check',
             'can'   => 'is-admin',
+        ],
+
+        [
+            'text' => 'Backup Database',
+            'route' => 'admin.backup.index',
+            'icon'  => 'fas fa-database',
+            'can'   => 'is-admin', // opsional, kalau mau hanya admin
         ],
     ],
 

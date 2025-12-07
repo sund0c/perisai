@@ -1,6 +1,6 @@
 @extends('adminlte::page')
 
-@section('title', 'Rekap Aset per Klasifikasi')
+@section('title', 'Aset Informasi')
 <style>
     .matik-list ul {
         margin: 0;
@@ -26,8 +26,8 @@
 @section('content_header')
     <h1>Aset</h1>
     <div style="line-height:1.2; font-size: 0.9em">
-        Aset dalam PERISAI adalah <strong>ASET INFORMASI yang mendukung kinerja organisasi dalam menjalakan proses
-            bisnis/layanannya.</strong>
+        Aset dalam PERISAI adalah ASET INFORMASI yang mendukung kinerja organisasi dalam menjalankan proses
+        bisnis/layanannya.
     </div>
 @endsection
 
@@ -49,8 +49,9 @@
             <div class="card">
                 <div class="card-body">
                     <div style="gap: 10px;">
-                        <a href="{{ route('opd.aset.export_rekap') }}" class="btn btn-danger btn-sm mb-3 me-2">
-                            <i class="fas fa-file-pdf"></i> Export PDF</a>
+                        <a href="{{ route('opd.aset.export_rekap') }}" class="btn btn-danger btn-sm mb-3 me-2"
+                            target="_blank">
+                            <i class="fas fa-file-pdf"></i> Export PDF Lengkap</a>
 
                         @if (($kunci ?? null) !== 'locked')
                             @if (!empty($canSync) && $canSync)
@@ -71,7 +72,7 @@
                                 <th rowspan="2" style="vertical-align: middle; text-align: center;">Klasifikasi Aset</th>
                                 <th style="width:20%;vertical-align: middle; text-align: center;" rowspan="2">Jumlah Aset
                                 </th>
-                                <th colspan="3">Nilai Aset</th>
+                                <th colspan="3">Nilai Kritikalitas Aset</th>
                             </tr>
                             <tr>
                                 <th style="background-color: #FF0000; color: white;width:10%">TINGGI</th>
@@ -157,9 +158,12 @@
             <div class="card">
                 <div class="card-body">
                     @php
-                        $tTinggi = (int) ($totalTinggi ?? 0);
-                        $tSedang = (int) ($totalSedang ?? 0);
-                        $tRendah = (int) ($totalRendah ?? 0);
+                        // $tTinggi = (int) ($totalTinggi ?? 0);
+                        // $tSedang = (int) ($totalSedang ?? 0);
+                        // $tRendah = (int) ($totalRendah ?? 0);
+                        $tTinggi = $klasifikasis->sum('jumlah_tinggi') ?? 0;
+                        $tSedang = $klasifikasis->sum('jumlah_sedang') ?? 0;
+                        $tRendah = $klasifikasis->sum('jumlah_rendah') ?? 0;
                     @endphp
                     <div style="width: 100%;margin: auto;">
                         <canvas id="pieChart" data-tinggi="{{ $tTinggi }}" data-sedang="{{ $tSedang }}"
@@ -168,7 +172,7 @@
                     <br>
 
                     <div class="matik-list">
-                        <b>Keterangan Nilai Aset (CIAAN): </b>
+                        <b>Keterangan Kritikalitas Aset : </b>
                         <ol style="padding-left: 20px; margin-left: 0;">
                             @foreach ($ranges ?? collect() as $range)
                                 <li><b>{{ $range->nilai_akhir_aset }} :</b> {{ $range->deskripsi }}</li>
@@ -205,7 +209,6 @@
                     borderWidth: 2
                 }]
             };
-
             const pieOptions = {
                 responsive: true,
                 maintainAspectRatio: true,

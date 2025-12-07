@@ -90,7 +90,7 @@
 
                 {{-- WAJIB: kirim param "klasifikasiaset" --}}
                 <a href="{{ route('opd.aset.export_rekap_klas', ['klasifikasiaset' => $klasifikasi]) }}"
-                    class="btn btn-sm btn-danger mb-3 hide-when-select">
+                    class="btn btn-sm btn-danger mb-3 hide-when-select" target="_blank">
                     <i class="fas fa-file-pdf"></i> Export PDF
                 </a>
 
@@ -104,8 +104,7 @@
                         class="btn btn-sm btn-success mb-3 hide-when-select">
                         <i class="fas fa-plus"></i> Tambah Aset
                     </a>
-                    <button type="button" class="btn btn-sm btn-danger mb-3 d-none"
-                        id="bulkDeleteBtn">
+                    <button type="button" class="btn btn-sm btn-danger mb-3 d-none" id="bulkDeleteBtn">
                         <i class="fas fa-trash"></i> Hapus Terpilih
                     </button>
                 @endif
@@ -136,7 +135,8 @@
                                 </a>
                                 <small class="text-muted mb-2">Export data aset saat ini sebagai contoh atau arsip.</small>
                                 @if (($kunci ?? null) !== 'locked')
-                                    <form action="{{ route('opd.aset.import_excel', ['klasifikasiaset' => $klasifikasi]) }}"
+                                    <form
+                                        action="{{ route('opd.aset.import_excel', ['klasifikasiaset' => $klasifikasi]) }}"
                                         method="POST" enctype="multipart/form-data" class="p-3 border rounded"
                                         style="background: #f8f9fa;">
                                         @csrf
@@ -147,8 +147,8 @@
                                                 <span>File Import (.xlsx / .csv)</span>
                                             </label>
                                             <div class="custom-file">
-                                                <input type="file" name="file" id="file_import" accept=".xlsx,.csv" required
-                                                    class="custom-file-input">
+                                                <input type="file" name="file" id="file_import" accept=".xlsx,.csv"
+                                                    required class="custom-file-input">
                                                 <label class="custom-file-label" for="file_import">Pilih file...</label>
                                             </div>
                                             <small class="form-text text-muted mt-1">Gunakan template terbaru, isi sesuai
@@ -165,6 +165,25 @@
                 </div>
             </div>
 
+            {{-- @php
+                function badgeCIA($nilai)
+                {
+                    $label = ['1' => 'R', '2' => 'S', '3' => 'T'][$nilai] ?? '-';
+                    $warna =
+                        [
+                            '1' => 'background-color:#28a745;color:#fff;', // Hijau
+                            '2' => 'background-color:#ffc107;color:#000;', // Kuning
+                            '3' => 'background-color:#dc3545;color:#fff;', // Merah
+                        ][$nilai] ?? 'background-color:#ccc;color:#000;';
+
+                    return '<span style="padding:3px 8px; border-radius:4px; font-weight:bold; ' .
+                        $warna .
+                        '">' .
+                        $label .
+                        '</span>';
+                }
+            @endphp --}}
+
             <table id="asetTable" class="table table-bordered table-hover" style="width:100%; table-layout: fixed;">
                 <thead>
                     <tr>
@@ -175,9 +194,12 @@
                         @endif
                         <th>#</th>
                         <th>Nama Aset</th>
-                        <th>Sub Klasifikasi Aset</th>
-                        <th>Pemilik Risiko</th>
-                        <th>Nilai Aset (CIA)</th>
+                        <th>Sub Klasifikasi</th>
+                        <th>Lokasi</th>
+                        <th>C</th>
+                        <th>I</th>
+                        <th>A</th>
+                        <th>Kritikalitas</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
@@ -195,14 +217,24 @@
                             <td>{{ $aset->nama_aset }}
                                 <p class="small" style="margin-bottom: 0">{{ $aset->keterangan }}</p>
                             </td>
-                            <td>{{ optional($aset->subklasifikasiaset)->subklasifikasiaset ?? '-' }}</td>
-                            <td>{{ $aset->opd->namaopd ?? '-' }}</td>
+                            <td>{{ optional($aset->subklasifikasiaset)->subklasifikasiaset ?? '-' }}
+                                <p class="small" style="margin-bottom: 0">{{ $aset->spesifikasi_aset }}</p>
+                            </td>
+                            <td>{{ $aset->lokasi ?? '-' }}
+                                <p class="small" style="margin-bottom: 0">{{ $aset->format_penyimpanan }}</p>
+                                <p class="small" style="margin-bottom: 0">{{ $aset->link_url }}</p>
+                            </td>
+                            <td>{!! $badges[$aset->id]['c'] !!}</td>
+                            <td>{!! $badges[$aset->id]['i'] !!}</td>
+                            <td>{!! $badges[$aset->id]['a'] !!}</td>
+
+
                             <td style="background-color: {{ $aset->warna_hexa }}; color: #fff; font-weight: bold;">
                                 {{ $aset->nilai_akhir_aset }}
                             </td>
                             <td class="actions-cell align-middle text-nowrap">
                                 <a href="{{ route('opd.aset.pdf', ['aset' => $aset->uuid]) }}"
-                                    class="btn btn-sm btn-success">
+                                    class="btn btn-sm btn-success" target="_blank">
                                     <i class="fas fa-file-pdf"></i>
                                 </a>
 
@@ -225,15 +257,17 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="{{ ($kunci ?? null) === 'locked' ? 6 : 7 }}" class="text-center">Belum ada data aset untuk klasifikasi ini.</td>
+                            <td colspan="{{ ($kunci ?? null) === 'locked' ? 6 : 7 }}" class="text-center">Belum ada data
+                                aset untuk klasifikasi ini.</td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
 
             @if (($kunci ?? null) !== 'locked')
-                <form id="bulkDeleteForm" action="{{ route('opd.aset.bulk_destroy', ['klasifikasiaset' => $klasifikasi]) }}"
-                    method="POST" class="d-none">
+                <form id="bulkDeleteForm"
+                    action="{{ route('opd.aset.bulk_destroy', ['klasifikasiaset' => $klasifikasi]) }}" method="POST"
+                    class="d-none">
                     @csrf
                 </form>
             @endif
@@ -263,21 +297,82 @@
             $('#asetTable').DataTable({
                 autoWidth: false,
                 stateSave: true,
-                columnDefs: isLocked ? [
-                    { width: "10px", targets: 0 },
-                    { width: "auto", targets: 1 },
-                    { width: "200px", targets: 2 },
-                    { width: "200px", targets: 3 },
-                    { width: "100px", targets: 4 },
-                    { width: "140px", targets: 5 },
-                ] : [
-                    { width: "40px", targets: 0 },
-                    { width: "10px", targets: 1 },
-                    { width: "auto", targets: 2 },
-                    { width: "200px", targets: 3 },
-                    { width: "200px", targets: 4 },
-                    { width: "100px", targets: 5 },
-                    { width: "140px", targets: 6 },
+                columnDefs: isLocked ? [{
+                        width: "10px",
+                        targets: 0
+                    },
+                    {
+                        width: "auto",
+                        targets: 1
+                    },
+                    {
+                        width: "200px",
+                        targets: 2
+                    },
+                    {
+                        width: "200px",
+                        targets: 3
+                    },
+                    {
+                        width: "50px",
+                        targets: 4
+                    },
+                    {
+                        width: "50px",
+                        targets: 5
+                    },
+                    {
+                        width: "50px",
+                        targets: 6
+                    },
+                    {
+                        width: "100px",
+                        targets: 7
+                    },
+                    {
+                        width: "140px",
+                        targets: 8
+                    },
+                ] : [{
+                        width: "40px",
+                        targets: 0
+                    },
+                    {
+                        width: "10px",
+                        targets: 1
+                    },
+                    {
+                        width: "auto",
+                        targets: 2
+                    },
+                    {
+                        width: "auto",
+                        targets: 3
+                    },
+                    {
+                        width: "auto",
+                        targets: 4
+                    },
+                    {
+                        width: "20px",
+                        targets: 5
+                    },
+                    {
+                        width: "20px",
+                        targets: 6
+                    },
+                    {
+                        width: "20px",
+                        targets: 7
+                    },
+                    {
+                        width: "90px",
+                        targets: 8
+                    },
+                    {
+                        width: "90px",
+                        targets: 9
+                    },
                 ]
             });
 

@@ -27,8 +27,8 @@
 @section('content_header')
     <h1>Aset Pemprov Bali</h1>
     <div style="line-height:1.2; font-size: 0.9em">
-        Aset dalam PERISAI adalah <strong>ASET INFORMASI yang mendukung kinerja organisasi dalam menjalakan proses
-            bisnis/layanannya.</strong>
+        Aset dalam PERISAI adalah ASET INFORMASI yang mendukung kinerja organisasi dalam menjalakan proses
+        bisnis/layanannya.
     </div>
 @endsection
 
@@ -77,7 +77,7 @@
                                             [{{ $klasifikasi->kodeklas }}] {{ $klasifikasi->klasifikasiaset }}
                                         </a>
                                     </td>
-                                   <td style="vertical-align: middle; text-align: center;">
+                                    <td style="vertical-align: middle; text-align: center;">
                                         {{ $klasifikasi->jumlah_aset ?? 0 }}
                                     </td>
                                     <td
@@ -133,7 +133,7 @@
             </div>
         </div>
         <div class="col-md-5">
-<div class="card">
+            <div class="card">
                 <div class="card-body">
                     @php
                         $tTinggi = (int) ($totalTinggi ?? 0);

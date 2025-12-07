@@ -30,10 +30,15 @@
         <li>Yang dimaksud dengan <b>Aset</b> dalam PERISAI adalah <b>ASET INFORMASI</b> yang mendukung kinerja organisasi
             dalam menjalakan proses bisnis/layanannya.</b>
         </li>
-        <li><b>Pemilik Risiko</b> adalah pihak yang bertanggung jawab terhadap proses bisnis secara keseluruhan yang terkait
-            dengan aset atau yang bertanggungjawab penuh mengelola aset. Dalam hal melakukan pengelolaan aset Pemilik Risiko
-            dapat
-            meminta bantuan/menunjuk organisasi lain untuk membantu secara teknis.</li>
+        <li><b>Pemilik Aset</b> adalah Perangkat Daerah, mempunyai kewajiban untuk bertanggungjawab terhadap proses
+            bisnis/layanannya, pengelolaan aset informasi, pengukuran
+            nilai aset,
+            klasifikasi aset, kategorisasi Sistem Elektronik, penilaian vitalitas, penilaian kepatuhan,
+            pemetaan risiko, analisis risiko, serta penyusunan dan implementasi mitigasi risiko.</li>
+        <li><b>Pemilik Risiko</b> adalah Kepala Perangkat Daerah / UPTD, mempunyai kewajiban untuk bertanggungjawab
+            menyetujui rencana mitigasi risiko, menetapkan tingkat risiko yang
+            dapat diterima (acceptable risk), menyetujui residual risk, serta memastikan dukungan sumber daya yang
+            diperlukan.</li>
         <li>Periode pemutahiran data Aset Informasi pada PERISAI wajib dilakukan sekali setahun oleh Pemilik
             Risiko.</li>
     </ul>
@@ -44,7 +49,7 @@
     <div class="card">
         <div class="card-body">
             <h5>Kepada Yth <b>{{ auth()->user()->opd->namaopd }},</b> sebagai salah satu Perangkat Daerah di Pemprov Bali
-                yang sekaligus menjadi <b>Pemilik Risiko Aset Informasi</b>, sangat penting untuk
+                yang menjadi <b>Pemilik Aset Informasi</b>, sangat penting untuk
                 mengetahui hal-hal sebagai berikut : </h5>
             <ol>
                 <li>Pemprov Bali telah mempunyai kebijakan keamanan yaitu <B>KEPGUB BALI
@@ -53,23 +58,11 @@
                         ASET KEAMANAN INFORMASI DAN STANDAR TEKNIS
                         DAN PROSEDUR KEAMANAN SPBE DI LINGKUNGAN PEMPROV BALI</b>. Seluruh aset informasi baik Sistem
                     Elektronik, Perangkat Keras dan lainnya, wajib mematuhi standar di
-                    atas</li>
-                {{-- <li>Khusus untuk aset Perangkat Lunak /Sistem Elektronik /Aplikasi, harus dilakukan uji keamanan atau IT
-                    Security Assessment
-                    (ITSA) secara berkala.
-                    ITSA dari Dinas Kominfos terbagi dalam 3(tiga) tahapan yaitu T1.Black-Box (sebelum pertama publish),
-                    T2.PTKKA dan T3.Grey-Box (PoC dari PTKKA).
-                    Laporan hasil ITSA akan menghasilkan rekomendasi terkait keberlangsungan operasional aset. Tidak menutup
-                    kemungkinan aset akan dinonaktifkan jika ditemukan berdampak risiko kritis (terutama yang menyangkut
-                    kebocoran data sensitif).</li> --}}
-                <li>Pemutahiran data Aset Informasi dalam PERISAI wajib dilakukan setiap tahun sekali. Analisa
-                    risiko Aset Informasi dan
-                    review tindak lanjutnya wajib dilakukan setiap 6 bulan sekali (semester). Periode akan dibuka secara
-                    serentak oleh Dinas Kominfos Prov Balli</li>
-                <li><b>{{ auth()->user()->opd->namaopd }}</b> sebagai pemilik risiko Aset Informasi bertanggungjawab
-                    penuh terhadap upaya pengamanan aset keamanan
-                    informasinya sendiri dengan tetap berkoordinasi
-                    dengan Dinas Kominfos Prov Bali. </li>
+                    atas.</li>
+
+                <li>Untuk memastikan keamanan aset, pemutahiran seluruh data dan informasi yang ada di dalam PERISAI wajib
+                    dilakukan minimal 1(satu) tahun sekali.</li>
+
                 <li>Dalam rangka mematuhi amanat UU No 27 tahun 2022 tentang Pelindungan Data Pribadi, agar masing-masing
                     Perangkat Daerah/UPTD termasuk
                     <b>{{ auth()->user()->opd->namaopd }}</b> dapat menunjuk Pejabat Pengendali Data Pribadinya yang akan
@@ -85,7 +78,7 @@
                 </li>
 
             </ol>
-            <h1>#sec_rityWithoutUisNotCompleted! #jagaRuangSiber</h1>
+            <h1>RISE Now ! [RECOGNISE.IDENTIFY.SECURE.ENHANCED]</h1>
         </div>
 
     </div>
