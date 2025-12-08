@@ -479,6 +479,7 @@ class VitalitasSeController extends Controller
         $indikators = IndikatorVitalitasSe::orderBy('urutan')->get();
 
         $skorRaw = $vitalitasSe->skor_total ?? null;
+        $skor = null; // default supaya compact() selalu punya variabel
 
         if (is_null($skorRaw)) {
             $kategoriLabel = 'BELUM DINILAI';

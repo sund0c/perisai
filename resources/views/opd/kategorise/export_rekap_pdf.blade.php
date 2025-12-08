@@ -161,23 +161,26 @@
                     </td>
 
 
-                    {{-- {{ $aset->kategoriSe->skor_total ?? 'BELUM DINILAI' }} --}}
                     @php
                         $skor = $aset->kategoriSe->skor_total ?? null;
 
-                        if ($skor === null) {
-                            echo '<span class="badge badge-secondary">BELUM DINILAI</span>';
-                        } else {
+                        // Default jika belum dinilai
+                        $warna = '#999';
+                        $label = 'BELUM DINILAI';
+                        $warnaTeks = '#000';
+
+                        if ($skor !== null) {
                             $range = $rangeSes->first(function ($r) use ($skor) {
                                 return $skor >= $r->nilai_bawah && $skor <= $r->nilai_atas;
                             });
 
-                            $warna = $range->warna_hexa ?? '#999';
-                            $label = $range->nilai_akhir_aset ?? 'TIDAK DIKETAHUI';
-                            $warnaTeks = '#000';
+                            if ($range) {
+                                $warna = $range->warna_hexa ?? $warna;
+                                $label = $range->nilai_akhir_aset ?? $label;
+                            }
                         }
                     @endphp
-                    <td style="background-color: {{ $warna }}; color: #fff; font-weight: bold;">
+                    <td style="background-color: {{ $warna }}; color: {{ $warnaTeks }}; font-weight: bold;">
                         {{ $label }}
                     </td>
 
