@@ -85,61 +85,37 @@ class BidangVitalitasSeController extends Controller
 
     public function exportRekapPdf()
     {
-        $userOpdId = auth()->user()->opd_id;
-        $namaOpd = auth()->user()->opd->namaopd ?? '-';
-
-        // Ambil periode aktif
         $periodeAktifId = Periode::where('status', 'open')->value('id');
         if (!$periodeAktifId) {
-            // bebas: bisa redirect balik dengan flash message juga
             abort(409, 'Tidak ada periode yang berstatus open.');
         }
 
-        $asetPL = Aset::whereHas('subklasifikasiaset', function ($q) {
-            $q->whereIn('subklasifikasiaset', [
-                'Aplikasi berbasis Website',
-                'Aplikasi berbasis Mobile',
-                'Aplikasi berbasis Desktop',
-            ]);
-        })
-            ->where('periode_id', $periodeAktifId)   // filter periode aktif
-            ->with(['vitalitasSe', 'subklasifikasiaset']) // sekalian eager load subklas
+        $data = Aset::query()
+            ->select('asets.*', 'vitalitas_ses.skor_total')
+            ->leftJoin('vitalitas_ses', 'vitalitas_ses.aset_id', '=', 'asets.id')
+            ->where('asets.periode_id', $periodeAktifId)
+            ->whereHas('subklasifikasiaset', function ($q) {
+                $q->whereIn('subklasifikasiaset', [
+                    'Aplikasi berbasis Website',
+                    'Aplikasi berbasis Mobile',
+                    'Aplikasi berbasis Desktop',
+                ]);
+            })
+            ->with([
+                'vitalitasSe:id,aset_id,skor_total,jawaban',
+                'subklasifikasiaset:id,subklasifikasiaset,klasifikasi_aset_id',
+                'opd:id,namaopd',
+            ])
+            ->orderByDesc('vitalitas_ses.skor_total')
+            ->orderBy('asets.nama_aset', 'ASC')
             ->get();
 
+        $namaOpd = 'SEMUA OPD';
 
-        // Inisialisasi penghitung kategori
-        $kategoriCount = [
-            'VITAL' => 0,
-            'Tidak Vital' => 0,
-            'BELUM' => 0,
-            'TOTAL' => $asetPL->count()
-        ];
-
-        foreach ($asetPL as $aset) {
-            $skor = $aset->vitalitasSe->skor_total ?? null;
-
-            if ($skor === null) {
-                $kategoriCount['BELUM']++;
-                continue;
-            }
-
-            $namaKategori = ($skor >= 15) ? 'VITAL' : 'Tidak Vital';
-            $kategoriCount[$namaKategori] = ($kategoriCount[$namaKategori] ?? 0) + 1;
-        }
-
-
-        $vital = $kategoriCount['VITAL'];
-        $novital = $kategoriCount['Tidak Vital'];
-        $total = $kategoriCount['TOTAL'];
-        $belum = $kategoriCount['BELUM'];
-
-        $namaOpd = auth()->user()->opd->namaopd ?? '-';
-
-
-        $pdf = PDF::loadView('bidang.vitalitasse.export_rekap_pdf', compact('vital', 'novital', 'belum', 'total', 'namaOpd'))
-            ->setPaper('A4', 'portrait');
+        $pdf = PDF::loadView('bidang.vitalitasse.export_rekap_pdf', compact('data', 'namaOpd'))
+            ->setPaper('A4', 'landscape');
         PdfFooter::add_right_corner_footer($pdf);
-        return $pdf->download('rekap_vitalitasse_' . date('Ymd_His') . '.pdf');
+        return $pdf->stream('rekap_vitalitasse_' . date('Ymd_His') . '.pdf');
     }
 
     public function exportRekapKategoriPdf($kategori)
@@ -158,7 +134,9 @@ class BidangVitalitasSeController extends Controller
             abort(409, 'Tidak ada periode yang berstatus open.');
         }
         $query = Aset::query()
-            ->where('periode_id', $periodeAktifId)
+            ->select('asets.*', 'vitalitas_ses.skor_total')
+            ->leftJoin('vitalitas_ses', 'vitalitas_ses.aset_id', '=', 'asets.id')
+            ->where('asets.periode_id', $periodeAktifId)
             ->whereHas('subklasifikasiaset', function ($q) {
                 $q->whereIn('subklasifikasiaset', [
                     'Aplikasi berbasis Website',
@@ -168,7 +146,8 @@ class BidangVitalitasSeController extends Controller
             })
             ->with([
                 'vitalitasSe:id,aset_id,skor_total,jawaban',
-                'subklasifikasiaset:id,subklasifikasiaset,klasifikasi_aset_id'
+                'subklasifikasiaset:id,subklasifikasiaset,klasifikasi_aset_id',
+                'opd:id,namaopd',
             ]);
 
         // filter kategori
@@ -188,12 +167,15 @@ class BidangVitalitasSeController extends Controller
             });
         }
 
-        $data = $query->orderBy('nama_aset')->get();
+        $data = $query
+            ->orderByDesc('vitalitas_ses.skor_total')
+            ->orderBy('asets.nama_aset')
+            ->get();
 
         $pdf = PDF::loadView('bidang.vitalitasse.export_rekap_kategori_pdf', compact('data', 'kategori', 'namaOpd'))
-            ->setPaper('A4', 'potrait');
+            ->setPaper('A4', 'landscape');
         PdfFooter::add_right_corner_footer($pdf);
-        return $pdf->download('vitalitasse_pernilai_' . date('Ymd_His') . '.pdf');
+        return $pdf->stream('vitalitasse_pernilai_' . date('Ymd_His') . '.pdf');
     }
 
     public function show($kategori)

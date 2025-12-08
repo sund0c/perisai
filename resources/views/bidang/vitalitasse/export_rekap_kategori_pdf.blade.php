@@ -3,12 +3,12 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Rekap Vitalitas SE</title>
+    <title>Rekap Vitalitas SE per Kategori</title>
     <style>
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 12px;
+            font-size: 14px;
         }
 
         table th,
@@ -22,55 +22,20 @@
             background-color: #eeeeee;
         }
 
-        .font-dejavu {
-            font-family: 'DejaVu Sans', sans-serif;
-        }
-
-        .f12 {
-            font-size: 14px;
-        }
-
-        h2,
-        h3,
-        h4,
-        {
-        margin: 0;
-        padding: 0;
-        }
-
-
-
-
-        h4 {
-            margin-bottom: 2px;
-            padding-bottom: 0;
-        }
-
-        ol {
-            margin-top: 0;
-            padding-top: 0;
-            margin-bottom: 0;
-            padding-bottom: 0;
-        }
-
         body {
             font-family: sans-serif;
             font-size: 12px;
         }
 
-        .underline {
-            text-decoration: underline;
-        }
-
         @page {
-            margin: 170px 50px 70px 50px;
+            margin: 160px 50px 70px 50px;
         }
 
         .header {
             position: fixed;
-            top: -120px;
+            top: -130px;
             left: 0px;
-            right: 5px;
+            right: 0px;
             text-align: left;
         }
 
@@ -81,39 +46,9 @@
             width: 150px;
         }
 
-        .header .subs {
-            margin-top: -5px;
-            line-height: 1.2;
-            font-size: 0.9em;
-            margin-right: 0px;
-            /* ruang kosong supaya teks turun & tidak timpa gambar */
-        }
-
         .header h2,
         .header h3 {
             margin: 6px 0;
-        }
-
-
-        .matik-list ul {
-            margin: 0;
-            padding-left: 1.2rem;
-            /* default untuk nested */
-        }
-
-        /* level pertama */
-        .matik-list>ul {
-            padding-left: 1em;
-            /* mepet kiri */
-            list-style-type: disc;
-            /* bullet bulat */
-        }
-
-        /* level kedua */
-        .matik-list>ul>li>ul {
-            padding-left: 1.5rem;
-            list-style-type: square;
-            font-size: 0.8em;
         }
     </style>
 </head>
@@ -123,19 +58,16 @@
         <table width="100%" style="border:none;">
             <tr>
                 @php
-                    $kategori = strtolower($kategori);
-
-                    $label =
-                        [
-                            'vital' => 'Vital',
-                            'novital' => 'Tidak Vital',
-                            'belum' => 'Belum Dinilai',
-                        ][$kategori] ?? 'Tidak Diketahui';
+                    $kategoriLower = strtolower($kategori);
+                    $labelKategori = [
+                        'vital' => 'Vital',
+                        'novital' => 'Tidak Vital',
+                        'belum' => 'Belum Dinilai',
+                    ][$kategoriLower] ?? 'Tidak Diketahui';
                 @endphp
                 <td style="vertical-align: top;border:none;">
-                    <h2>Rekap Vitalitas SE ({{ $label }}) :: Tahun {{ $tahunAktifGlobal ?? '-' }}</h2>
+                    <h2>Rekap Vitalitas SE ({{ $labelKategori }}) :: Tahun {{ $tahunAktifGlobal ?? '-' }}</h2>
                     <h3>Pemerintah Provinsi Bali</h3>
-
                 </td>
 
                 <!-- KANAN: dua logo sejajar -->
@@ -150,51 +82,62 @@
     </div>
 
 
-
-
     <table class="table table-bordered text-center" style="width:100%">
         <thead class="font-weight-bold">
             <tr>
-                <th>Nama Aset</th>
-                <th>Sub Klasifikasi</th>
-                <th>Lokasi</th>
-                <th>Vitalitas</th>
+                <th style="width: 30px;">NO</th>
+                <th style="width: 90px;">KODE ASET</th>
+                <th style="width: 160px;">NAMA ASET</th>
+                <th style="width: 160px;">OPD</th>
+                <th style="width: 180px;">SUB KLASIFIKASI</th>
+                <th style="width: 160px;">LOKASI</th>
+                <th style="width: 110px;">VITALITAS</th>
             </tr>
         </thead>
         <tbody>
+            @php $no=1;@endphp
             @foreach ($data as $aset)
+                @php
+                    $skor = $aset->vitalitasSe->skor_total ?? null;
+
+                    $label = 'BELUM DINILAI';
+                    $warna = '#6c757d'; // abu
+                    $warnaTeks = '#fff';
+
+                    if (!is_null($skor)) {
+                        if ($skor >= 15) {
+                            $label = 'VITAL';
+                            $warna = '#dc3545'; // merah
+                        } else {
+                            $label = 'Tidak Vital';
+                            $warna = '#28a745'; // hijau
+                        }
+                    }
+                @endphp
                 <tr>
-                    <td>{{ $aset->nama_aset }}</td>
-                    <td>{{ $aset->subklasifikasiaset->subklasifikasiaset ?? '-' }}</td>
-                    <td>{{ $aset->lokasi }}</td>
-                    <td>
-                        @php
-                            $skor = $aset->vitalitasSe->skor_total ?? null;
-
-                            if (is_null($skor)) {
-                                $label = 'BELUM DINILAI';
-                                $warna = '#6c757d'; // abu
-                                $warnaTeks = '#fff';
-                            } elseif ($skor >= 15) {
-                                $label = 'VITAL';
-                                $warna = '#dc3545'; // merah
-                                $warnaTeks = '#fff';
-                            } else {
-                                $label = 'Tidak Vital';
-                                $warna = '#28a745'; // hijau
-                                $warnaTeks = '#fff';
-                            }
-                        @endphp
-
-                        <span class="badge" style="background-color: {{ $warna }}; color: {{ $warnaTeks }};">
-                            {{ $skor }} ({{ $label }})
-                        </span>
+                    <td style="text-align: right">{{ $no++ }}</td>
+                    <td>{{ $aset->kode_aset }}</td>
+                    <td>{{ $aset->nama_aset }}</br>
+                        <small>{{ $aset->keterangan }}</small>
+                    </td>
+                    <td>{{ $aset->opd->namaopd ?? '-' }}</td>
+                    <td>{{ $aset->subklasifikasiaset->subklasifikasiaset ?? '-' }}</br>
+                        <small>{{ $aset->spesifikasi_aset }}</small>
+                    </td>
+                    <td>{{ $aset->lokasi }}</br>
+                        <small>{{ $aset->link_url }}</small>
+                    </td>
+                    <td style="background-color: {{ $warna }}; color: {{ $warnaTeks }}; font-weight: bold;">
+                        {{ $label }}
+                        @if (!is_null($skor))
+                            <br><small>Skor: {{ $skor }}</small>
+                        @endif
                     </td>
                 </tr>
             @endforeach
         </tbody>
     </table>
-    <BR>
+    <br>
     <h4>Catatan</h4>
     <ol>
         <li>Pengukuran ini adalah self-assessment dari sudut pemilik aset/risiko.
