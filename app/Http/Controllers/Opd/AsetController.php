@@ -26,6 +26,12 @@ use App\Exports\AsetExport;
 use App\Imports\AsetImport;
 use App\Exports\AsetTemplateExport;
 
+use App\Models\KategoriSe;
+use App\Models\RangeSe;
+use App\Models\IndikatorKategoriSe;
+
+
+
 class AsetController extends Controller
 {
     use CalculatesAsetRange;
@@ -87,12 +93,156 @@ class AsetController extends Controller
             $klasifikasi->jumlah_rendah = $summary['rendah'];
         }
 
+        $barLabels = $klasifikasis->pluck('kodeklas');      // nama klasifikasi
+        $barTotals = $klasifikasis->pluck('jumlah_aset');          // total aset per klasifikasi (sudah difilter opd+periode)
+
         $namaOpd = auth()->user()->opd->namaopd ?? '-';
 
         $canSync = !Aset::where('opd_id', $opdId)
             ->where('periode_id', $periodeAktifId)
             ->exists();
         $ranges = RangeAset::select('nilai_akhir_aset', 'deskripsi')->orderBy('nilai_atas')->get();
+
+        //KategoriSE
+
+        $asetPL = Aset::whereHas('subklasifikasiaset', function ($q) {
+            $q->whereIn('subklasifikasiaset', [
+                'Aplikasi berbasis Website',
+                'Aplikasi berbasis Mobile',
+                'Aplikasi berbasis Desktop'
+            ]);
+        })
+            ->where('opd_id', $opdId)
+            ->where('periode_id', $periodeAktifId)   // filter periode aktif
+            ->with(['kategoriSe', 'subklasifikasiaset']) // sekalian eager load subklas
+            ->get();
+
+
+        // Ambil semua range kategori dari tabel range_ses
+        $rangeSes = RangeSe::all();
+
+        // Normalisasi helper
+        $norm = fn($v) => strtoupper(trim((string) $v));
+
+        // Bangun mapping yang tahan spasi/kapitalisasi
+        $kategoriMeta = collect(['STRATEGIS', 'TINGGI', 'RENDAH'])->mapWithKeys(function ($K) use ($rangeSes, $norm) {
+            $row = $rangeSes->first(fn($r) => $norm($r->nilai_akhir_aset) === $K);
+            return [
+                $K => [
+                    'label'     => $K,
+                    'deskripsi' => $row->deskripsi ?? '-',
+                ],
+            ];
+        })->toArray();
+
+        // Tambahan khusus
+        $kategoriMeta['BELUM'] = [
+            'label'     => 'BELUM DINILAI',
+            'deskripsi' => 'Belum ada skor (belum dilakukan penilaian).',
+        ];
+        $kategoriMeta['TOTAL'] = [
+            'label'     => 'TOTAL',
+            'deskripsi' => 'Jumlah seluruh aset perangkat lunak pada periode aktif.',
+        ];
+
+
+
+        // Inisialisasi penghitung kategori
+        $kategoriCount = [
+            'STRATEGIS' => 0,
+            'TINGGI' => 0,
+            'RENDAH' => 0,
+            'BELUM' => 0,
+            'TOTAL' => $asetPL->count()
+        ];
+
+        foreach ($asetPL as $aset) {
+            $skor = $aset->kategoriSe->skor_total ?? null;
+
+            if ($skor === null) {
+                $kategoriCount['BELUM']++;
+                continue;
+            }
+
+            // Tentukan kategori berdasarkan skor dan range
+            $kategori = $rangeSes->first(function ($range) use ($skor) {
+                return $skor >= $range->nilai_bawah && $skor <= $range->nilai_atas;
+            });
+
+            if ($kategori) {
+                $namaKategori = strtoupper($kategori->nilai_akhir_aset); // contoh: TINGGI
+                if (isset($kategoriCount[$namaKategori])) {
+                    $kategoriCount[$namaKategori]++;
+                } else {
+                    $kategoriCount[$namaKategori] = 1;
+                }
+            }
+        }
+
+
+        $tinggi = $kategoriCount['TINGGI'] ?? 0;
+        $strategis = $kategoriCount['STRATEGIS'] ?? 0;
+        $rendah = $kategoriCount['RENDAH'] ?? 0;
+        $belum = $kategoriCount['BELUM'];
+        $total = $kategoriCount['TOTAL'];
+        $kategoriMeta = $kategoriMeta;
+        $rangeSes    = $rangeSes;
+
+        // vital
+        $asetPL1 = Aset::whereHas('subklasifikasiaset', function ($q) {
+            $q->whereIn('subklasifikasiaset', [
+                'Aplikasi berbasis Website',
+                'Aplikasi berbasis Mobile',
+                'Aplikasi berbasis Desktop',
+            ]);
+        })
+            ->where('opd_id', $opdId)
+            ->where('periode_id', $periodeAktifId)   // filter periode aktif
+            ->with(['vitalitasSe', 'subklasifikasiaset']) // sekalian eager load subklas
+            ->get();
+
+
+        // Inisialisasi penghitung kategori
+        $kategoriCount1 = [
+            'VITAL' => 0,
+            'Tidak Vital' => 0,
+            'BELUM' => 0,
+            'TOTAL' => $asetPL->count()
+        ];
+
+
+
+        // foreach ($asetPL1 as $aset) {
+        //     $skor1 = $aset->vitalitasSe->skor_total ?? null;
+
+        //     if ($skor1 === null) {
+        //         $kategoriCount1['BELUM']++;
+        //         continue;
+        //     }
+
+        //     $namaKategori1 = ($skor >= 15) ? 'VITAL' : 'Tidak Vital';
+        //     $kategoriCount1[$namaKategori1] = ($kategoriCount1[$namaKategori1] ?? 0) + 1;
+        // }
+
+        foreach ($asetPL1 as $aset) {
+            $skor1 = $aset->vitalitasSe->skor_total ?? null;
+
+            if ($skor1 === null) {
+                $kategoriCount1['BELUM']++;
+                continue;
+            }
+
+            // SEBELUMNYA: $namaKategori1 = ($skor >= 15) ? 'VITAL' : 'Tidak Vital';
+            $namaKategori1 = ($skor1 >= 15) ? 'VITAL' : 'Tidak Vital';
+
+            $kategoriCount1[$namaKategori1] = ($kategoriCount1[$namaKategori1] ?? 0) + 1;
+        }
+
+
+        $vital1 = $kategoriCount1['VITAL'] ?? 0;
+        $novital1 = $kategoriCount1['Tidak Vital'] ?? 0;
+        $belum1 = $kategoriCount1['BELUM'];
+        $total1 = $kategoriCount1['TOTAL'];
 
         return view('opd.aset.index', compact(
             'klasifikasis',
@@ -101,7 +251,21 @@ class AsetController extends Controller
             'totalSedang',
             'totalRendah',
             'canSync',
-            'ranges'
+            'ranges',
+            'tinggi',
+            'strategis',
+            'rendah',
+            'belum',
+            'total',
+            'kategoriMeta',
+            'rangeSes',
+            'vital1',
+            'novital1',
+            'belum1',
+            'total1',
+            'barLabels',
+            'barTotals'
+
         ));
     }
 

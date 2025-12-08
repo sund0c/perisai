@@ -40,7 +40,7 @@
     <div class="card">
         <div class="card-body table-responsive">
             <div class="d-flex mb-3" style="gap: 10px;">
-                <a href="{{ route('opd.kategorise.index') }}" class="btn btn-secondary mb-3 me-2">
+                <a href="{{ route('opd.aset.index') }}" class="btn btn-secondary mb-3 me-2">
                     ← Kembali
                 </a>
                 <a href="{{ route('opd.kategorise.export_rekap_kategori', ['kategori' => $kategori]) }}"
@@ -145,15 +145,15 @@
                         targets: 1
                     },
                     {
-                        width: "300px",
+                        width: "auto",
                         targets: 2
                     },
                     {
-                        width: "300px",
+                        width: "auto",
                         targets: 3
                     },
                     {
-                        width: "300px",
+                        width: "auto",
                         targets: 4
                     },
                     {

@@ -48,7 +48,7 @@
     <div class="card">
         <div class="card-body table-responsive">
             <div class="d-flex mb-3" style="gap: 10px;">
-                <a href="{{ route('opd.vitalitasse.index') }}" class="btn btn-secondary mb-3 me-2">
+                <a href="{{ route('opd.aset.index') }}" class="btn btn-secondary mb-3 me-2">
                     ← Kembali
                 </a>
                 <a href="{{ route('opd.vitalitasse.export_rekap_kategori', ['kategori' => $kategori]) }}"
@@ -84,7 +84,7 @@
                             </td>
                             <td>{{ $aset->penyedia_aset ?? '-' }}</td>
                             {{-- <td>
-                                {{ $aset->vitalitasSe->skor_total ?? 'BELUM DINILAI' }} 
+                                {{ $aset->vitalitasSe->skor_total ?? 'BELUM DINILAI' }}
                                 @php
                                     $skor = $aset->vitalitasSe->skor_total ?? null;
 
@@ -145,15 +145,15 @@
                         targets: 1
                     },
                     {
-                        width: "300px",
+                        width: "auto",
                         targets: 2
                     },
                     {
-                        width: "300px",
+                        width: "auto",
                         targets: 3
                     },
                     {
-                        width: "300px",
+                        width: "auto",
                         targets: 4
                     },
                     {

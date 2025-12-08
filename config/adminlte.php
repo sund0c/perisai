@@ -224,9 +224,9 @@ return [
     */
 
     'sidebar_mini' => 'lg',
-    'sidebar_collapse' => false,
+    'sidebar_collapse' => true,
     'sidebar_collapse_auto_size' => false,
-    'sidebar_collapse_remember' => false,
+    'sidebar_collapse_remember' => true,
     'sidebar_collapse_remember_no_transition' => true,
     'sidebar_scrollbar_theme' => 'os-theme-light',
     'sidebar_scrollbar_auto_hide' => 'l',
@@ -362,18 +362,18 @@ return [
             'icon'  => 'fas fa-fw fa-server',
             'can'   => 'is-opd',
         ],
-        [
-            'text' => 'Kategori SE',
-            'route' => 'opd.kategorise.index',
-            'icon'  => 'fas fa-fw fa-tags',
-            'can'   => 'is-opd',
-        ],
-        [
-            'text' => 'SE Vital',
-            'route' => 'opd.vitalitasse.index',
-            'icon'  => 'fas fa-fw fa-exclamation',
-            'can'   => 'is-opd',
-        ],
+        // [
+        //     'text' => 'Kategori SE',
+        //     'route' => 'opd.kategorise.index',
+        //     'icon'  => 'fas fa-fw fa-tags',
+        //     'can'   => 'is-opd',
+        // ],
+        // [
+        //     'text' => 'SE Vital',
+        //     'route' => 'opd.vitalitasse.index',
+        //     'icon'  => 'fas fa-fw fa-exclamation',
+        //     'can'   => 'is-opd',
+        // ],
         // UPDATED: hide ptkka
         // [
         //     'text' => 'PTKKA',
