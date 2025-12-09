@@ -143,7 +143,8 @@
             <button type="submit" class="btn btn-primary">
                 <i class="fas fa-save"></i> Simpan Penilaian
             </button>
-            <a href="{{ route('opd.vitalitasse.index') }}" class="btn btn-secondary">
+            <a href="{{ route('opd.vitalitasse.show_by_kategori', ['kategori' => $kategori ?? request('kategori', 'belum')]) }}"
+                class="btn btn-secondary">
                 <i class="fas fa-arrow-left"></i> Kembali
             </a>
         </div>

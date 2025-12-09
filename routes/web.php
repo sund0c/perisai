@@ -327,7 +327,7 @@ Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd', 'prev
     ->prefix('opd/kategorise')
     ->name('opd.kategorise.')
     ->group(function () {
-        // Route::get('/', [KategoriSeController::class, 'index'])->name('index');
+        Route::get('/', [KategoriSeController::class, 'index'])->name('index');
         Route::get('/export/rekap', [KategoriSeController::class, 'exportRekapPdf'])->name('export_rekap');
         Route::get('/kategori/{kategori}', [KategoriSeController::class, 'showByKategori'])
             ->whereIn('kategori', ['strategis', 'tinggi', 'rendah', 'belum', 'total'])
@@ -350,7 +350,7 @@ Route::middleware(['SSOBrokerMiddleware', 'spatie_role_or_permission:opd', 'prev
     ->prefix('opd/vitalitasse')
     ->name('opd.vitalitasse.')
     ->group(function () {
-        // Route::get('/', [VitalitasSeController::class, 'index'])->name('index');
+        Route::get('/', [VitalitasSeController::class, 'index'])->name('index');
         Route::get('/export/rekap', [VitalitasSeController::class, 'exportRekapPdf'])->name('export_rekap');
         Route::get('/kategori/{kategori}', [VitalitasSeController::class, 'showByKategori'])
             ->whereIn('kategori', ['vital', 'novital', 'belum', 'total'])
