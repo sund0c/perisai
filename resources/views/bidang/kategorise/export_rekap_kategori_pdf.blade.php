@@ -3,12 +3,12 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Rekap Kategori SE</title>
+    <title>Rekap Kategori per Kategori</title>
     <style>
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 12px;
+            font-size: 14px;
         }
 
         table th,
@@ -22,24 +22,16 @@
             background-color: #eeeeee;
         }
 
-        .font-dejavu {
-            font-family: 'DejaVu Sans', sans-serif;
-        }
-
-        .f12 {
-            font-size: 14px;
-        }
-
         h2,
         h3,
-        h4,
-        {
-        margin: 0;
-        padding: 0;
+        h4 {
+            margin: 0;
+            padding: 0;
         }
 
-
-
+        h3 {
+            margin-bottom: 10px;
+        }
 
         h4 {
             margin-bottom: 2px;
@@ -62,15 +54,16 @@
             text-decoration: underline;
         }
 
+
         @page {
-            margin: 170px 50px 70px 50px;
+            margin: 160px 50px 70px 50px;
         }
 
         .header {
             position: fixed;
-            top: -120px;
+            top: -130px;
             left: 0px;
-            right: 5px;
+            right: 0px;
             text-align: left;
         }
 
@@ -86,34 +79,11 @@
             line-height: 1.2;
             font-size: 0.9em;
             margin-right: 0px;
-            /* ruang kosong supaya teks turun & tidak timpa gambar */
         }
 
         .header h2,
         .header h3 {
             margin: 6px 0;
-        }
-
-
-        .matik-list ul {
-            margin: 0;
-            padding-left: 1.2rem;
-            /* default untuk nested */
-        }
-
-        /* level pertama */
-        .matik-list>ul {
-            padding-left: 1em;
-            /* mepet kiri */
-            list-style-type: disc;
-            /* bullet bulat */
-        }
-
-        /* level kedua */
-        .matik-list>ul>li>ul {
-            padding-left: 1.5rem;
-            list-style-type: square;
-            font-size: 0.8em;
         }
     </style>
 </head>
@@ -122,19 +92,28 @@
     <div class="header">
         <table width="100%" style="border:none;">
             <tr>
-                <!-- KIRI: judul + subs (tetap) -->
                 <td style="vertical-align: top;border:none;">
-                    <h2>Rekap Kategori SE ({{ strtoupper($kategori) }}) :: Tahun {{ $tahunAktifGlobal ?? '-' }}</h2>
-                    <h3>Pemerintah Provinsi Bali</h3>
+                    <h2 style="margin:0;">KATEGORI SE {{ strtoupper($kategori) }} :: Tahun
+                        {{ $tahunAktifGlobal ?? '-' }}
+                    </h2>
+                    <h3 style="margin:0;">Pemilik Aset: {{ strtoupper($namaOpd) }}</h3>
 
-
+                    <div class="subs" style="margin-top:2px;">
+                        Pemilik Aset bertanggung jawab terhadap proses bisnis/layanannya, pengelolaan aset informasi,
+                        pengukuran nilai aset,
+                        klasifikasi aset, kategorisasi Sistem Elektronik, penilaian vitalitas, penilaian kepatuhan,
+                        pemetaan risiko, analisis risiko, serta penyusunan dan implementasi mitigasi risiko.</br>
+                        Kepala OPD/UPTD sebagai Pemilik Risiko bertanggung jawab untuk menyetujui rencana
+                        mitigasi risiko, menetapkan tingkat risiko yang
+                        dapat diterima (acceptable risk), menyetujui residual risk, serta memastikan dukungan sumber
+                        daya yang diperlukan.
+                    </div>
                 </td>
 
-                <!-- KANAN: dua logo sejajar -->
                 <td style="width: 100px; vertical-align: top; text-align: right; white-space: nowrap;border:none;">
                     <img src="{{ public_path('images/logobaliprovcsirt.png') }}" alt="Logo"
                         style="height:70px; vertical-align: top; margin-right:0px;">
-                    <img src="{{ public_path('images/tlp/tlp_teaser_green.jpg') }}" alt="TLP:GREEN"
+                    <img src="{{ public_path('images/tlp/tlp_teaser_amber_strict.jpg') }}" alt="TLP:AMBER+STRICT"
                         style="height:70px; vertical-align: top;">
                 </td>
             </tr>
@@ -142,78 +121,77 @@
     </div>
 
 
+
     <table class="table table-bordered text-center" style="width:100%">
         <thead class="font-weight-bold">
             <tr>
-                <th>Kode Aset</th>
-                <th>Nama Aset</th>
-                <th>Sub Klasifikasi</th>
-                <th>Pemilik Aset</th>
-                <th>Kategorisasi</th>
+                <th style="width: 30px;">NO</th>
+                <th style="width: 90px;">KODE ASET</th>
+                <th style="width: auto;">NAMA ASET</th>
+                <th style="width: 160px;">OPD</th>
+                <th style="width: 160px;">SUB KLASIFIKASI</th>
+                <th style="width: 160px;">LOKASI</th>
+                <th style="width: 100px;">KATEGORI</th>
             </tr>
         </thead>
         <tbody>
+            @php $no=1;@endphp
             @foreach ($data as $aset)
                 <tr>
+                    <td style="text-align: right">{{ $no++ }}</td>
                     <td>{{ $aset->kode_aset }}</td>
-                    <td>{{ $aset->nama_aset }}</td>
-                    <td>{{ $aset->subklasifikasiaset->subklasifikasiaset ?? '-' }}</td>
-                    <td>{{ $aset->opd->namaopd }}</td>
-                    <td>
-                        {{-- {{ $aset->kategoriSe->skor_total ?? 'BELUM DINILAI' }} --}}
-                        @php
-                            $skor = $aset->kategoriSe->skor_total ?? null;
-
-                            if ($skor === null) {
-                                echo '<span class="badge badge-secondary">BELUM DINILAI</span>';
-                            } else {
-                                $range = $rangeSes->first(function ($r) use ($skor) {
-                                    return $skor >= $r->nilai_bawah && $skor <= $r->nilai_atas;
-                                });
-
-                                $warna = $range->warna_hexa ?? '#999';
-                                $label = $range->nilai_akhir_aset ?? 'TIDAK DIKETAHUI';
-
-                                //     echo '<span class="badge" style="background-color: ' .
-                                //         $warna .
-                                //         '; color: #fff;">' .
-                                //         $skor .
-                                //         ' (' .
-                                //         strtoupper($label) .
-                                //         ')</span>';
-                                // }
-                                echo $skor . ' (' . strtoupper($label) . ')';
-                            }
-                        @endphp
+                    <td>{{ $aset->nama_aset }}</br>
+                        <small>{{ $aset->keterangan }}</small>
                     </td>
+                    <td>{{ optional($aset->opd)->namaopd ?? '-' }}</td>
+                    <td>{{ optional($aset->subklasifikasiaset)->subklasifikasiaset ?? '-' }}</br>
+                        <small>{{ $aset->spesifikasi_aset }}</small>
+                    </td>
+                    <td>{{ $aset->lokasi }}</br>
+                        <small>{{ $aset->link_url }}</small>
+                    </td>
+
+
+                    @php
+                        $skor = $aset->kategoriSe->skor_total ?? null;
+
+                        $warna = '#999';
+                        $label = 'BELUM DINILAI';
+                        $warnaTeks = '#000';
+
+                        if ($skor !== null) {
+                            $range = $rangeSes->first(function ($r) use ($skor) {
+                                return $skor >= $r->nilai_bawah && $skor <= $r->nilai_atas;
+                            });
+
+                            if ($range) {
+                                $warna = $range->warna_hexa ?? $warna;
+                                $label = $range->nilai_akhir_aset ?? $label;
+                            }
+                        }
+                    @endphp
+                    <td style="background-color: {{ $warna }}; color: {{ $warnaTeks }}; font-weight: bold;">
+                        {{ $label }}
+                    </td>
+
                 </tr>
             @endforeach
         </tbody>
     </table>
-    <BR><BR><BR>
-    <h4>Catatan</h4>
+    <BR>
+    <h4>CATATAN</h4>
     <ol>
-        <li>Kode TLP (Traffic Light Protocol) dipakai untuk mengklasifikasikan sensitifitas informasi, supaya jelas
-            sejauh mana informasi boleh dibagikan.
-            TLP:GREEN = Pengungkapan terbatas, penerima dapat menyebarkan ini dalam komunitasnya.
-            Sumber dapat menggunakan TLP:GREEN ketika informasi berguna untuk meningkatkan kesadaran dalam
-            komunitas mereka yang lebih luas. Penerima dapat berbagi informasi TLP:GREEN dengan rekan dan
-            organisasi mitra dalam komunitas mereka, tetapi tidak melalui saluran yang dapat diakses publik.
-            Informasi TLP:GREEN tidak boleh dibagikan di luar komunitas. Jika "komunitas" tidak ditentukan,
-            asumsikan komunitas keamanan/pertahanan siber.
+        <li>Dokumen ini menggunakan Kode TLP:AMBER+STRICT mengindikasikan mengandung informasi yang cukup sensitif.
+            Informasi di dalam dokumen ini hanya boleh didistribusikan kepada Pemilik Aset dan Dinas Kominfos Prov Bali.
+            Tidak boleh diberikan secara langsung dan atau otomatis ke pihak lain.
         </li>
-        <li>PERISAI adalah sistem elektronik untuk melakukan <b>PE</b>ngelolaan <b>RIS</b>iko <b>A</b>set
-            <b>I</b>nformasi di lingkup Pemerintah Provinsi Bali. PERISAI dikelola oleh
-            Dinas Kominfos Provinsi Bali (Contact: Bidang Persandian)
+        <li>PERISAI adalah sistem elektronik untuk membantu pengelolaan risiko aset informasi di lingkup Pemprov Bali
+            agar menjadi lebih efektif dengan mengusung konsep RISE : Recognise.Identify.Secure.Enhanced. PERISAI
+            dikelola oleh Bidang Persandian Dinas Kominfos Provinsi Bali.
         </li>
-        <li>SE adalah sistem elektronik yaitu dalam PERISAI adalah <strong>aset dengan klasifikasi [PL] Perangkat
-                Lunak.</strong> Contoh SE adalah
-            website, aplikasi
-            berbasis web, mobile, sistem operasi dan utility.</li>
-        <li>Semua informasi tentang aset ini dapat berubah sesuai dengan reviu dan pemutahiran data PERISAI yang
-            dilakukan minimal sekali setahun oleh Pemilik Risiko. Pemutahiran akan dilakukan serempak, menunggu
-            jadwal dari Diskominfos Prov Bali. </li>
+        <li>Kategorisasi SE dimutahirkan setahun sekali</li>
     </ol>
+
 </body>
 
 </html>
