@@ -297,6 +297,6 @@ class BidangVitalitasSeController extends Controller
         ))
             ->setPaper('A4', 'potrait');
         PdfFooter::add_right_corner_footer($pdf);
-        return $pdf->download('penilaianvitalitasse_' . date('Ymd_His') . '.pdf');
+        return $pdf->stream('penilaianvitalitasse_' . date('Ymd_His') . '.pdf');
     }
 }

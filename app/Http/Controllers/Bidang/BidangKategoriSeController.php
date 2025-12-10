@@ -3,63 +3,65 @@
 namespace App\Http\Controllers\Bidang;
 
 use App\Http\Controllers\Controller;
-
 use App\Models\Aset;
 use App\Models\KategoriSe;
 use App\Models\RangeSe;
 use App\Models\IndikatorKategoriSe;
-//use Illuminate\Http\Request;
 use PDF;
 use App\Services\PdfFooter;
 use App\Models\Periode;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Log;
 
-// use App\Models\KlasifikasiAset;
-// use App\Models\Periode;
-
 class BidangKategoriSeController extends Controller
 {
     public function index()
     {
-        // Label cakupan data
         $namaOpd = 'SEMUA OPD';
 
-        // Ambil semua aset dengan klasifikasi PERANGKAT LUNAK dari seluruh OPD
-        // $asetPL = Aset::whereHas('klasifikasi', function ($q) {
-        //     $q->where('klasifikasiaset', 'PERANGKAT LUNAK');
-        // })
-        //     ->with('kategoriSe') // agar skor_total tersedia tanpa N+1
-        //     ->get();
-
-   $periodeAktifId = Periode::where('status', 'open')->value('id');
+        $periodeAktifId = Periode::where('status', 'open')->value('id');
         if (!$periodeAktifId) {
-            // bebas: bisa redirect balik dengan flash message juga
             abort(409, 'Tidak ada periode yang berstatus open.');
         }
-$asetPL = Aset::whereHas('subklasifikasiaset', function ($q) {
-        $q->whereIn('subklasifikasiaset', [
-            'Aplikasi berbasis Website',
-            'Aplikasi berbasis Mobile',
-            'Aplikasi berbasis Desktop'
-        ]);
-    })
-    ->where('periode_id', $periodeAktifId)   // filter periode aktif
-    ->with(['kategoriSe', 'subklasifikasiaset']) // sekalian eager load subklas
-    ->get();
 
+        $asetPL = Aset::whereHas('subklasifikasiaset', function ($q) {
+            $q->whereIn('subklasifikasiaset', [
+                'Aplikasi berbasis Website',
+                'Aplikasi berbasis Mobile',
+                'Aplikasi berbasis Desktop'
+            ]);
+        })
+            ->where('periode_id', $periodeAktifId)
+            ->with(['kategoriSe', 'subklasifikasiaset'])
+            ->get();
 
-
-        // Ambil semua range kategori SE
         $rangeSes = RangeSe::all();
 
-        // Inisialisasi counter
+        $norm = fn($v) => strtoupper(trim((string) $v));
+        $kategoriMeta = collect(['STRATEGIS', 'TINGGI', 'RENDAH'])->mapWithKeys(function ($K) use ($rangeSes, $norm) {
+            $row = $rangeSes->first(fn($r) => $norm($r->nilai_akhir_aset) === $K);
+            return [
+                $K => [
+                    'label'     => $K,
+                    'deskripsi' => $row->deskripsi ?? '-',
+                ],
+            ];
+        })->toArray();
+        $kategoriMeta['BELUM'] = [
+            'label'     => 'BELUM DINILAI',
+            'deskripsi' => 'Belum ada skor (belum dilakukan penilaian).',
+        ];
+        $kategoriMeta['TOTAL'] = [
+            'label'     => 'TOTAL',
+            'deskripsi' => 'Jumlah seluruh aset perangkat lunak pada periode aktif.',
+        ];
+
         $kategoriCount = [
             'STRATEGIS' => 0,
-            'TINGGI' => 0,
-            'RENDAH' => 0,
-            'BELUM'  => 0,
-            'TOTAL'  => $asetPL->count(),
+            'TINGGI'    => 0,
+            'RENDAH'    => 0,
+            'BELUM'     => 0,
+            'TOTAL'     => $asetPL->count(),
         ];
 
         foreach ($asetPL as $aset) {
@@ -70,31 +72,29 @@ $asetPL = Aset::whereHas('subklasifikasiaset', function ($q) {
                 continue;
             }
 
-            // Tentukan kategori berdasarkan range
-            $range = $rangeSes->first(function ($r) use ($skor) {
-                return $skor >= $r->nilai_bawah && $skor <= $r->nilai_atas;
+            $kategori = $rangeSes->first(function ($range) use ($skor) {
+                return $skor >= $range->nilai_bawah && $skor <= $range->nilai_atas;
             });
 
-            if ($range) {
-                $namaKategori = strtoupper($range->nilai_akhir_aset); // TINGGI/SEDANG/RENDAH
+            if ($kategori) {
+                $namaKategori = strtoupper($kategori->nilai_akhir_aset);
                 if (isset($kategoriCount[$namaKategori])) {
                     $kategoriCount[$namaKategori]++;
                 } else {
                     $kategoriCount[$namaKategori] = 1;
                 }
-            } else {
-                // Jika skor tidak jatuh ke range manapun, anggap BELUM
-                $kategoriCount['BELUM']++;
             }
         }
 
         return view('bidang.kategorise.index', [
-            'strategis' => $kategoriCount['STRATEGIS'] ?? 0,
-            'tinggi'  => $kategoriCount['TINGGI'] ?? 0,
-            'rendah'  => $kategoriCount['RENDAH'] ?? 0,
-            'belum'   => $kategoriCount['BELUM'],
-            'total'   => $kategoriCount['TOTAL'],
-            'namaOpd' => $namaOpd,
+            'strategis'    => $kategoriCount['STRATEGIS'] ?? 0,
+            'tinggi'       => $kategoriCount['TINGGI'] ?? 0,
+            'rendah'       => $kategoriCount['RENDAH'] ?? 0,
+            'belum'        => $kategoriCount['BELUM'],
+            'total'        => $kategoriCount['TOTAL'],
+            'namaOpd'      => $namaOpd,
+            'kategoriMeta' => $kategoriMeta,
+            'rangeSes'     => $rangeSes,
         ]);
     }
 
@@ -102,37 +102,32 @@ $asetPL = Aset::whereHas('subklasifikasiaset', function ($q) {
     public function show($kategori)
     {
         $namaOpd = 'SEMUA OPD';
-        $kategori = strtolower($kategori); // 'strategis' | 'tinggi' | 'rendah' | 'belum' | 'total'
+        $kategori = strtolower($kategori);
+
         $periodeAktifId = Periode::where('status', 'open')->value('id');
-        if (! $periodeAktifId) {
+        if (!$periodeAktifId) {
             abort(409, 'Tidak ada periode yang berstatus open.');
         }
+
         $range = null;
         if (in_array($kategori, ['strategis', 'tinggi', 'rendah'])) {
             $range = RangeSe::whereRaw('LOWER(nilai_akhir_aset) = ?', [$kategori])->first();
         }
 
-        // $query = Aset::whereHas('klasifikasi', function ($q) {
-        //     $q->where('klasifikasiaset', 'PERANGKAT LUNAK');
-        // })
-        //     ->with(['subklasifikasiaset', 'kategoriSe', 'opd']); // tambah opd jika ingin ditampilkan di view
-
-
-   $query = Aset::query()
-        ->where('periode_id', $periodeAktifId)
-        ->whereHas('subklasifikasiaset', function ($q) {
-            $q->whereIn('subklasifikasiaset', [
-                'Aplikasi berbasis Website',
-                'Aplikasi berbasis Mobile',
-                'Aplikasi berbasis Desktop'
+        $query = Aset::query()
+            ->where('periode_id', $periodeAktifId)
+            ->whereHas('subklasifikasiaset', function ($q) {
+                $q->whereIn('subklasifikasiaset', [
+                    'Aplikasi berbasis Website',
+                    'Aplikasi berbasis Mobile',
+                    'Aplikasi berbasis Desktop'
+                ]);
+            })
+            ->with([
+                'kategoriSe:id,aset_id,skor_total,jawaban',
+                'subklasifikasiaset:id,subklasifikasiaset,klasifikasi_aset_id',
+                'opd'
             ]);
-        })
-        ->with([
-            'kategoriSe:id,aset_id,skor_total,jawaban',
-            'subklasifikasiaset:id,subklasifikasiaset,klasifikasi_aset_id','opd'
-        ]);
-
-
 
         if ($range) {
             $query->whereHas('kategoriSe', function ($q) use ($range) {
@@ -141,138 +136,111 @@ $asetPL = Aset::whereHas('subklasifikasiaset', function ($q) {
             });
         } elseif ($kategori === 'belum') {
             $query->doesntHave('kategoriSe');
-        } else {
-            // 'total' atau kategori tak dikenal → tampilkan semua aset PL (tanpa filter kategori)
-            // tidak perlu ubah query
         }
+
         $data = $query->get();
         $rangeSes = RangeSe::all();
+
         return view('bidang.kategorise.list', compact('data', 'kategori', 'namaOpd', 'rangeSes'));
     }
 
 
     public function exportRekapPdf()
     {
-        // Label cakupan data
-        $namaOpd = 'SEMUA OPD';
+        $namaOpd = 'PEMERINTAH PROVINSI BALI';
 
-        // Ambil semua aset PERANGKAT LUNAK dari seluruh OPD
-        $asetPL = Aset::whereHas('klasifikasi', function ($q) {
-            $q->where('klasifikasiaset', 'PERANGKAT LUNAK');
-        })
-            ->with(['kategoriSe:id,aset_id,skor_total']) // ambil skor_total saja biar ringan
-            ->get(['id']); // kolom minimal
+        $data = Aset::query()
+            ->whereHas('subklasifikasiaset', function ($q) {
+                $q->whereIn('subklasifikasiaset', [
+                    'Aplikasi berbasis Website',
+                    'Aplikasi berbasis Mobile',
+                    'Aplikasi berbasis Desktop'
+                ]);
+            })
+            ->with([
+                'subklasifikasiaset:id,subklasifikasiaset,klasifikasi_aset_id',
+                'kategoriSe:id,aset_id,skor_total,jawaban',
+                'opd:id,namaopd',
+            ])
+            ->get();
 
-        // Ambil range kategori dari DB (TINGGI/SEDANG/RENDAH)
-        $ranges = RangeSe::all()->keyBy(function ($r) {
-            return strtoupper($r->nilai_akhir_aset); // TINGGI/SEDANG/RENDAH
+        $rangeSes = RangeSe::all();
+
+        $orderKategori = [
+            'STRATEGIS'     => 1,
+            'TINGGI'        => 2,
+            'RENDAH'        => 3,
+            'Belum Dinilai' => 4,
+        ];
+
+        $sorted = $data->sort(function ($a, $b) use ($rangeSes, $orderKategori) {
+            $katA = $a->kategoriSe
+                ? $rangeSes->first(function ($r) use ($a) {
+                    return $a->kategoriSe->skor_total >= $r->nilai_bawah &&
+                        $a->kategoriSe->skor_total <= $r->nilai_atas;
+                })->nilai_akhir_aset ?? 'Belum Dinilai'
+                : 'Belum Dinilai';
+
+            $katB = $b->kategoriSe
+                ? $rangeSes->first(function ($r) use ($b) {
+                    return $b->kategoriSe->skor_total >= $r->nilai_bawah &&
+                        $b->kategoriSe->skor_total <= $r->nilai_atas;
+                })->nilai_akhir_aset ?? 'Belum Dinilai'
+                : 'Belum Dinilai';
+
+            $cmp = $orderKategori[$katA] <=> $orderKategori[$katB];
+            if ($cmp !== 0) {
+                return $cmp;
+            }
+
+            return strcmp($a->nama_aset, $b->nama_aset);
         });
 
-        // Helper untuk cek skor masuk range
-        $inRange = function (?int $skor, $range) {
-            if ($skor === null || !$range) return false;
-            return $skor >= $range->nilai_bawah && $skor <= $range->nilai_atas;
-        };
+        $data = $sorted->values();
 
-        // Hitung kategori
-        $strategis = $asetPL->filter(function ($a) use ($ranges, $inRange) {
-            $skor = $a->kategoriSe->skor_total ?? null;
-            return $inRange($skor, $ranges['STRATEGIS'] ?? null);
-        })->count();
-
-        $tinggi = $asetPL->filter(function ($a) use ($ranges, $inRange) {
-            $skor = $a->kategoriSe->skor_total ?? null;
-            return $inRange($skor, $ranges['TINGGI'] ?? null);
-        })->count();
-
-        $rendah = $asetPL->filter(function ($a) use ($ranges, $inRange) {
-            $skor = $a->kategoriSe->skor_total ?? null;
-            return $inRange($skor, $ranges['RENDAH'] ?? null);
-        })->count();
-
-        $belum = $asetPL->filter(fn($a) => is_null($a->kategoriSe))->count();
-        $total = $asetPL->count();
-
-        // Buat PDF (A4 dalam points) + footer style "render → page_script"
-        $pdf = PDF::loadView('bidang.kategorise.export_rekap_pdf', compact(
-            'strategis',
-            'tinggi',
-            'rendah',
-            'belum',
-            'total',
-            'namaOpd'
-        ))
-            ->setPaper([0, 0, 595.28, 841.89], 'portrait');
-    PdfFooter::add_right_corner_footer($pdf);
-        return $pdf->download('kategorisepemprovbali_' . date('Ymd_His') . '.pdf');
+        $pdf = PDF::loadView('bidang.kategorise.export_rekap_pdf', compact('data', 'namaOpd', 'rangeSes'))
+            ->setPaper('A4', 'landscape');
+        PdfFooter::add_right_corner_footer($pdf);
+        return $pdf->stream('rekap_kategorise_' . date('Ymd_His') . '.pdf');
     }
 
     public function exportRekapKategoriPdf($kategori)
     {
-        // Label cakupan data
-        $namaOpd = 'SEMUA OPD';
+        $namaOpd = 'PEMERINTAH PROVINSI BALI';
 
-        // Normalisasi kategori
-        $kategori = strtolower($kategori); // 'tinggi' | 'sedang' | 'rendah' | 'belum' | 'total'
+        $kategori = strtolower($kategori);
+        $range = RangeSe::whereRaw('LOWER(nilai_akhir_aset) = ?', [$kategori])->first();
 
-        // (Opsional) Batasi ke Periode aktif
-        // $periodeAktifId = Periode::where('status', 'open')->value('id');
-
-        // Ambil range dari DB untuk kategori selain 'belum'/'total'
-        $range = null;
-        if (in_array($kategori, ['tinggi', 'sedang', 'rendah'])) {
-            $range = RangeSe::whereRaw('LOWER(nilai_akhir_aset) = ?', [$kategori])->first();
-        }
-
-        // Query aset PERANGKAT LUNAK dari seluruh OPD
-        // $query = Aset::whereHas('klasifikasi', function ($q) {
-        //     $q->where('klasifikasiaset', 'PERANGKAT LUNAK');
-        // })
-        //     // ->where('periode_id', $periodeAktifId) // aktifkan jika perlu filter periode
-        //     ->with(['subklasifikasiaset', 'kategoriSe', 'opd']);
-
-          $periodeAktifId = Periode::where('status', 'open')->value('id');
-        if (! $periodeAktifId) {
-            abort(409, 'Tidak ada periode yang berstatus open.');
-        }
-
-$query = Aset::query()
-    ->where('periode_id', $periodeAktifId) // aktifkan jika perlu filter periode
-    ->whereHas('subklasifikasiaset', function ($q) {
-        $q->whereIn('subklasifikasiaset', [
-            'Aplikasi berbasis Website',
-            'Aplikasi berbasis Mobile',
-            'Aplikasi berbasis Desktop'
-        ]);
-    })
-    ->with([
-        'subklasifikasiaset:id,subklasifikasiaset,klasifikasi_aset_id',
-        'kategoriSe:id,aset_id,skor_total,jawaban','opd'
-    ]);
-
-
+        $query = Aset::query()
+            ->whereHas('subklasifikasiaset', function ($q) {
+                $q->whereIn('subklasifikasiaset', [
+                    'Aplikasi berbasis Website',
+                    'Aplikasi berbasis Mobile',
+                    'Aplikasi berbasis Desktop'
+                ]);
+            })
+            ->with([
+                'subklasifikasiaset:id,subklasifikasiaset,klasifikasi_aset_id',
+                'kategoriSe:id,aset_id,skor_total,jawaban',
+                'opd:id,namaopd',
+            ]);
 
         if ($range) {
-            // Filter berdasarkan skor_total sesuai range kategori
             $query->whereHas('kategoriSe', function ($q) use ($range) {
                 $q->where('skor_total', '>=', $range->nilai_bawah)
                     ->where('skor_total', '<=', $range->nilai_atas);
             });
         } elseif ($kategori === 'belum') {
-            // Belum dinilai: tidak punya relasi kategoriSe
             $query->doesntHave('kategoriSe');
-        } else {
-            // 'total' atau kategori tidak dikenal → tampilkan semua tanpa filter tambahan
         }
 
         $data = $query->get();
         $rangeSes = RangeSe::all();
 
-        // Buat PDF: A4 (points) + footer via render → page_script
         $pdf = PDF::loadView('bidang.kategorise.export_rekap_kategori_pdf', compact('data', 'kategori', 'namaOpd', 'rangeSes'))
-            ->setPaper([0, 0, 595.28, 841.89], 'portrait');
-    PdfFooter::add_right_corner_footer($pdf);
-        return $pdf->download('kategorisepernilai_' . date('Ymd_His') . '.pdf');
+            ->setPaper('A4', 'landscape');
+        PdfFooter::add_right_corner_footer($pdf);
+        return $pdf->stream('kategorisepernilai_' . date('Ymd_His') . '.pdf');
     }
 
 
@@ -290,20 +258,21 @@ $query = Aset::query()
         });
 
         $kategoriLabel = $range->nilai_akhir_aset ?? 'BELUM DINILAI';
+        $deskripsiLabel = $range->deskripsi ?? '-';
         $warna = $range->warna_hexa ?? '#888';
-
 
         $pdf = PDF::loadView('bidang.kategorise.pdf_detail', compact(
             'aset',
             'kategoriSe',
             'indikators',
             'kategoriLabel',
+            'deskripsiLabel',
             'warna',
             'skor'
         ))
             ->setPaper('A4', 'potrait');
-    PdfFooter::add_right_corner_footer($pdf);
-        return $pdf->download('penilaiankategorise_' . date('Ymd_His') . '.pdf');
+        PdfFooter::add_right_corner_footer($pdf);
+        return $pdf->stream('penilaiankategorise_' . date('Ymd_His') . '.pdf');
     }
 
 
@@ -321,7 +290,7 @@ $query = Aset::query()
             return back()->with('success', 'Kategori SE berhasil dihapus.');
         } catch (QueryException $e) {
             Log::warning('Bidang gagal menghapus kategori SE', [
-                'aset_id' => $aset->id,
+                'aset_id'    => $aset->id,
                 'mysql_code' => $e->errorInfo[1] ?? null,
                 'sql_state'  => $e->errorInfo[0] ?? null,
                 'driver_msg' => $e->errorInfo[2] ?? null,

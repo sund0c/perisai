@@ -139,7 +139,7 @@
             </td>
             <td class="value">
                 <strong>{{ strtoupper($kategoriLabel) }}</strong>
-                <p class="small" style="margin-bottom: 0">{{ $deskripsiLabel }}</p>
+                <p class="small" style="margin-bottom: 0">{{ $deskripsiLabel ?? '-' }}</p>
             </td>
         </tr>
     </table></br>

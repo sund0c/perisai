@@ -187,51 +187,72 @@ class BidangAsetController extends Controller
 
     public function exportRekapPdf()
     {
-        // Periode aktif wajib ada
+        ini_set('memory_limit', '512M');
+        ini_set('max_execution_time', 300);
+
         $periodeAktifId = Periode::where('status', 'open')->value('id');
         if (!$periodeAktifId) {
-            // Boleh ganti ke redirect/flash sesuai selera
-            $klasifikasis = collect();
-            $namaOpd = 'SEMUA OPD';
-            $pdf = PDF::loadView('bidang.aset.export_rekap_pdf', compact('klasifikasis', 'namaOpd'))
-                ->setPaper('A4', 'portrait');
-            return $pdf->download('rekap_aset_' . date('Ymd_His') . '.pdf');
+            return back()->with('error', 'Tidak ada Periode dengan status OPEN.');
         }
 
-        // Hitung jumlah aset per klasifikasi untuk SEMUA OPD (dibatasi periode aktif)
-        $klasifikasis = KlasifikasiAset::withCount([
-            'asets as jumlah_aset' => function ($query) use ($periodeAktifId) {
-                $query->where('periode_id', $periodeAktifId);
-            }
-        ])->get();
+        // Ambil seluruh aset pada periode aktif lintas OPD
+        $asets = Aset::where('periode_id', $periodeAktifId)
+            ->with([
+                'subklasifikasiaset.klasifikasi',
+                'klasifikasi:id,klasifikasiaset',
+                'opd:id,namaopd',
+            ])
+            ->orderBy('kode_aset')
+            ->get();
 
-        // Ambil range sekali (diasumsikan jumlah range sedikit)
         $ranges = RangeAset::orderBy('nilai_bawah')->get();
+        $this->applyRangeAttributes($asets, $ranges);
 
-        foreach ($klasifikasis as $klasifikasi) {
-            // Ambil aset di klasifikasi ini untuk SEMUA OPD pada periode aktif
-            $asets = Aset::where('klasifikasiaset_id', $klasifikasi->id)
-                ->where('periode_id', $periodeAktifId)
-                ->get(['kerahasiaan', 'integritas', 'ketersediaan', 'keaslian', 'kenirsangkalan']);
+        // Urutkan sama seperti versi OPD: kritikalitas desc -> klasifikasi -> subklas -> nama aset
+        $asets = $asets->sort(function ($a, $b) {
+            $cmp = $b->nilai_akhir_aset <=> $a->nilai_akhir_aset;
+            if ($cmp !== 0) {
+                return $cmp;
+            }
 
-            $summary = $this->summarizeRangeCounts($asets, $ranges);
+            $klasA = $a->subklasifikasiaset->klasifikasi->klasifikasiaset ?? '';
+            $klasB = $b->subklasifikasiaset->klasifikasi->klasifikasiaset ?? '';
+            $cmp = strcmp($klasA, $klasB);
+            if ($cmp !== 0) {
+                return $cmp;
+            }
 
-            $klasifikasi->jumlah_tinggi = $summary['tinggi'];
-            $klasifikasi->jumlah_sedang = $summary['sedang'];
-            $klasifikasi->jumlah_rendah = $summary['rendah'];
-        }
+            $subA = $a->subklasifikasiaset->subklasifikasiaset ?? '';
+            $subB = $b->subklasifikasiaset->subklasifikasiaset ?? '';
+            $cmp = strcmp($subA, $subB);
+            if ($cmp !== 0) {
+                return $cmp;
+            }
 
-        // Karena lintas OPD
-        $namaOpd = 'SEMUA OPD';
-        $ranges = RangeAset::select('nilai_akhir_aset', 'deskripsi')->orderBy('nilai_atas')->get();
-        $namaOpd = auth()->user()->opd->namaopd ?? '-';
+            return strcmp($a->nama_aset ?? '', $b->nama_aset ?? '');
+        })->values();
 
-        $pdf = PDF::loadView('bidang.aset.export_rekap_pdf', compact('klasifikasis', 'namaOpd', 'ranges'))
-            ->setPaper('A4', 'portrait');
+        // Re-apply untuk memastikan atribut range tersedia setelah sorting
+        $this->applyRangeAttributes($asets, $ranges);
 
-        // Use centralized footer
+        $badges = $asets->mapWithKeys(function ($aset) {
+            return [
+                $aset->id => [
+                    'c' => $this->badgeCIA($aset->kerahasiaan),
+                    'i' => $this->badgeCIA($aset->integritas),
+                    'a' => $this->badgeCIA($aset->ketersediaan),
+                ],
+            ];
+        });
+
+        $namaOpd = 'PEMERINTAH PROVINSI BALI';
+
+        $pdf = Pdf::loadView('bidang.aset.export_rekap_pdf', compact('asets', 'namaOpd', 'badges'))
+            ->setPaper('A4', 'landscape');
+
         PdfFooter::add_right_corner_footer($pdf);
-        return $pdf->download('asettikpemprovbali_' . date('Ymd_His') . '.pdf');
+
+        return $pdf->stream('rekapaset_' . date('YmdHis') . '.pdf');
     }
 
 
@@ -240,7 +261,7 @@ class BidangAsetController extends Controller
         // Ambil periode aktif
         $periodeAktifId = Periode::where('status', 'open')->value('id');
         if (!$periodeAktifId) {
-            abort(404, 'Periode aktif tidak ditemukan');
+            return back()->with('error', 'Tidak ada Periode dengan status OPEN.');
         }
 
         // Pastikan klasifikasi ada
@@ -260,6 +281,10 @@ class BidangAsetController extends Controller
                 'opd_id', // PENTING: tanpa ini relasi opd() tidak bisa dipetakan
                 'kode_aset',
                 'nama_aset',
+                'keterangan',
+                'spesifikasi_aset',
+                'lokasi',
+                'link_url',
                 'subklasifikasiaset_id',
                 'kerahasiaan',
                 'integritas',
@@ -274,14 +299,37 @@ class BidangAsetController extends Controller
         $this->applyRangeAttributes($asets, $ranges);
 
         // Karena semua OPD
-        $namaOpd = 'SEMUA OPD';
+        $namaOpd = 'PEMERINTAH PROVINSI BALI';
+
+        // Sortir kritikalitas tertinggi -> sub klasifikasi -> nama aset (sesuai versi OPD)
+        $asets = $asets->sort(function ($a, $b) {
+            $cmp = $b->nilai_akhir_aset <=> $a->nilai_akhir_aset;
+            if ($cmp !== 0) {
+                return $cmp;
+            }
+
+            return strcmp(
+                $a->subklasifikasiaset->subklasifikasiaset ?? '',
+                $b->subklasifikasiaset->subklasifikasiaset ?? ''
+            );
+        })->values();
+
+        $badges = $asets->mapWithKeys(function ($aset) {
+            return [
+                $aset->id => [
+                    'c' => $this->badgeCIA($aset->kerahasiaan),
+                    'i' => $this->badgeCIA($aset->integritas),
+                    'a' => $this->badgeCIA($aset->ketersediaan),
+                ],
+            ];
+        });
 
         // Buat PDF
-        $pdf = PDF::loadView('bidang.aset.export_rekap_klas_pdf', compact('klasifikasi', 'asets', 'namaOpd', 'subs'))
-            ->setPaper([0, 0, 595.28, 841.89], 'portrait'); // A4 dalam points
+        $pdf = Pdf::loadView('bidang.aset.export_rekap_klas_pdf', compact('klasifikasi', 'asets', 'namaOpd', 'subs', 'badges'))
+            ->setPaper('A4', 'landscape');
         PdfFooter::add_right_corner_footer($pdf);
 
-        return $pdf->download('asettikperklas_' . date('Ymd_His') . '.pdf');
+        return $pdf->stream('rekapasetklas_' . now()->format('YmdHis') . '.pdf');
     }
 
 
@@ -310,7 +358,7 @@ class BidangAsetController extends Controller
         $namaOpd = $aset->opd->namaopd ?? '—';
 
         // Buat PDF + footer (render → page_script)
-        $pdf = PDF::loadView('bidang.aset.pdf', compact('aset', 'namaOpd', 'klasifikasi', 'fieldList', 'subklasifikasis', 'ranges'))
+        $pdf = Pdf::loadView('bidang.aset.pdf', compact('aset', 'namaOpd', 'klasifikasi', 'fieldList', 'subklasifikasis', 'ranges'))
             ->setPaper([0, 0, 595.28, 841.89], 'portrait'); // A4 in points
 
         PdfFooter::add_right_corner_footer($pdf);

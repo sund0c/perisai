@@ -8,7 +8,7 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 12px;
+            font-size: 14px;
         }
 
         table th,
@@ -22,20 +22,11 @@
             background-color: #eeeeee;
         }
 
-        .font-dejavu {
-            font-family: 'DejaVu Sans', sans-serif;
-        }
-
-        .f12 {
-            font-size: 14px;
-        }
-
         h2,
         h3,
-        h4,
-        {
-        margin: 0;
-        padding: 0;
+        h4 {
+            margin: 0;
+            padding: 0;
         }
 
         h3 {
@@ -65,12 +56,12 @@
 
 
         @page {
-            margin: 170px 50px 70px 50px;
+            margin: 160px 50px 70px 50px;
         }
 
         .header {
             position: fixed;
-            top: -120px;
+            top: -130px;
             left: 0px;
             right: 0px;
             text-align: left;
@@ -88,33 +79,11 @@
             line-height: 1.2;
             font-size: 0.9em;
             margin-right: 0px;
-            /* ruang kosong supaya teks turun & tidak timpa gambar */
         }
 
         .header h2,
         .header h3 {
             margin: 6px 0;
-        }
-
-        .matik-list ul {
-            margin: 0;
-            padding-left: 1.2rem;
-            /* default untuk nested */
-        }
-
-        /* level pertama */
-        .matik-list>ul {
-            padding-left: 1em;
-            /* mepet kiri */
-            list-style-type: disc;
-            /* bullet bulat */
-        }
-
-        /* level kedua */
-        .matik-list>ul>li>ul {
-            padding-left: 1.5rem;
-            list-style-type: square;
-            font-size: 0.8em;
         }
     </style>
 </head>
@@ -123,21 +92,28 @@
     <div class="header">
         <table width="100%" style="border:none;">
             <tr>
-                <!-- KIRI: judul + subs (tetap) -->
                 <td style="vertical-align: top;border:none;">
-                    <h2 style="margin:0;">Daftar Aset Informasi per Klasifikasi :: Tahun {{ $tahunAktifGlobal ?? '-' }}
+                    <h2 style="margin:0;">ASET INFORMASI {{ strtoupper($klasifikasi->klasifikasiaset) }} :: Tahun
+                        {{ $tahunAktifGlobal ?? '-' }}
                     </h2>
-                    <h3>Pemerintah Provinsi Bali</h3>
-                    <h3 style="line-height:1; margin-bottom:0;">
-                        Klasifikasi Aset : [{{ $klasifikasi->kodeklas }}] {{ $klasifikasi->klasifikasiaset }}
-                    </h3>
+                    <h3 style="margin:0;">Pemilik Aset: {{ strtoupper($namaOpd) }}</h3>
+
+                    <div class="subs" style="margin-top:2px;">
+                        Pemilik Aset bertanggung jawab terhadap proses bisnis/layanannya, pengelolaan aset informasi,
+                        pengukuran nilai aset,
+                        klasifikasi aset, kategorisasi Sistem Elektronik, penilaian vitalitas, penilaian kepatuhan,
+                        pemetaan risiko, analisis risiko, serta penyusunan dan implementasi mitigasi risiko.<br>
+                        Kepala OPD/UPTD sebagai Pemilik Risiko bertanggung jawab untuk menyetujui rencana
+                        mitigasi risiko, menetapkan tingkat risiko yang
+                        dapat diterima (acceptable risk), menyetujui residual risk, serta memastikan dukungan sumber
+                        daya yang diperlukan.
+                    </div>
                 </td>
 
-                <!-- KANAN: dua logo sejajar -->
                 <td style="width: 100px; vertical-align: top; text-align: right; white-space: nowrap;border:none;">
                     <img src="{{ public_path('images/logobaliprovcsirt.png') }}" alt="Logo"
                         style="height:70px; vertical-align: top; margin-right:0px;">
-                    <img src="{{ public_path('images/tlp/tlp_teaser_amber.jpg') }}" alt="TLP:AMBER"
+                    <img src="{{ public_path('images/tlp/tlp_teaser_amber_strict.jpg') }}" alt="TLP:AMBER+STRICT"
                         style="height:70px; vertical-align: top;">
                 </td>
             </tr>
@@ -145,61 +121,66 @@
     </div>
 
 
+
     <table>
         <thead>
             <tr>
-                <th style="width: 15%;">KODE ASET</th>
-                <th style="width: 30%;">NAMA ASET</th>
+                <th style="width: 30px;">NO</th>
+                <th style="width: 90px;">KODE ASET</th>
+                <th style="width: auto;">NAMA ASET</th>
                 <th style="width: auto;">SUB KLASIFIKASI</th>
-                <th style="width: auto;">PEMILIK RISIKO</th>
+                <th style="width: 140px;">OPD</th>
+                <th style="width: auto;">LOKASI</th>
+                <th style="width: 30px;">C</th>
+                <th style="width: 30px;">I</th>
+                <th style="width: 30px;">A</th>
+                <th style="width: 100px;">KRITIKALITAS</th>
 
             </tr>
         </thead>
         <tbody>
+            @php $no=1;@endphp
             @foreach ($asets as $aset)
                 <tr>
+                    <td style="text-align: right">{{ $no++ }}</td>
                     <td>{{ $aset->kode_aset }}</td>
-                    <td>{{ $aset->nama_aset }}</td>
-                    <td>{{ $aset->subklasifikasiaset->subklasifikasiaset ?? '-' }}</td>
-                    <td>{{ $aset->opd->namaopd }}</td>
+                    <td>{{ $aset->nama_aset }}<br>
+                        <small>{{ $aset->keterangan }}</small>
+                    </td>
+                    <td>{{ optional($aset->subklasifikasiaset)->subklasifikasiaset ?? '-' }}<br>
+                        <small>{{ $aset->spesifikasi_aset }}</small>
+                    </td>
+                    <td>{{ optional($aset->opd)->namaopd ?? '-' }}</td>
+                    <td>{{ $aset->lokasi }}<br>
+                        <small>{{ $aset->link_url }}</small>
+                    </td>
+                    <td>{!! $badges[$aset->id]['c'] !!}</td>
+                    <td>{!! $badges[$aset->id]['i'] !!}</td>
+                    <td>{!! $badges[$aset->id]['a'] !!}</td>
+
+                    <td style="background-color: {{ $aset->warna_hexa }}; color: #fff; font-weight: bold;">
+                        {{ $aset->nilai_akhir_aset }}
+                    </td>
                 </tr>
             @endforeach
         </tbody>
     </table><BR>
-    <h4>A. KETERANGAN SUB KLASIFIKASI ASET</h4>
-    <div class="matik-list" style="font-size:0.9em">
-        @if (!empty($subs) && $subs->isNotEmpty())
-            <ul>
-                @foreach ($subs as $sub)
-                    <li><b>{{ $sub->subklasifikasiaset }} :</b> {{ $sub->penjelasan }}</li>
-                @endforeach
-            </ul>
-        @else
-            -
-        @endif
-    </div> <BR>
-    <h4>B. CATATAN LAIN</h4>
+
+    <h4>CATATAN</h4>
     <ol>
-        <li>Kode TLP (Traffic Light Protocol) dipakai untuk mengklasifikasikan sensitivitas informasi, supaya jelas
-            sejauh mana informasi boleh dibagikan.
-            TLP:AMBER = Pengungkapan terbatas, penerima hanya dapat menyebarkan ini berdasarkan kebutuhan untuk
-            mengetahuinya
-            dalam organisasi dan kliennya.Sumber dapat menggunakan TLP:AMBER ketika informasi memerlukan dukungan
-            untuk ditindaklanjuti secara
-            efektif, namun membawa risiko terhadap privasi, reputasi, atau operasi jika dibagikan di luar organisasi
-            yang terlibat. Penerima
-            dapat membagikan informasi TLP:AMBER dengan anggota organisasi mereka sendiri dan kliennya, tetapi hanya
-            berdasarkan kebutuhan untuk mengetahui guna melindungi organisasi mereka dan kliennya serta mencegah
-            kerugian lebih lanjut.
+        <li>Dokumen ini menggunakan Kode TLP:AMBER+STRICT mengindikasikan mengandung informasi yang cukup sensitif.
+            Informasi di dalam dokumen ini hanya boleh didistribusikan kepada Pemilik Aset dan Dinas Kominfos Prov Bali.
+            Tidak boleh diberikan secara langsung dan atau otomatis ke pihak lain.
         </li>
-        <li>PERISAI adalah sistem elektronik untuk melakukan <b>PE</b>ngelolaan <b>RIS</b>iko <b>A</b>set
-            <b>I</b>nformasi di lingkup Pemerintah Provinsi Bali. PERISAI dikelola oleh
-            Dinas Kominfos Provinsi Bali (Contact: Bidang Persandian)
+        <li>PERISAI adalah sistem elektronik untuk membantu pengelolaan risiko aset informasi di lingkup Pemprov Bali
+            agar menjadi lebih efektif dengan mengusung konsep RISE : Recognise.Identify.Secure.Enhanced. PERISAI
+            dikelola oleh Bidang Persandian Dinas Kominfos Provinsi Bali.
         </li>
-        <li>Semua informasi tentang aset ini dapat berubah sesuai dengan review dan pemutahiran data PERISAI yang
-            dilakukan minimal sekali setahun oleh Pemilik Aset. Pemutahiran akan dilakukan serempak, menunggu
-            jadwal dari Diskominfos Prov Bali. </li>
+        <li>Data Aset Informasi dimutahirkan setahun sekali</li>
+        <li>Data dalam dokumen ini disajikan dengan urutan Kritikal Tertinggi kemudian disusul pengurutannya berdasarkan
+            sub klasifikasi.</li>
     </ol>
+
 </body>
 
 </html>

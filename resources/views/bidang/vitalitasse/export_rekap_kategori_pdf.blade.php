@@ -8,7 +8,7 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 14px;
+            font-size: 12px;
         }
 
         table th,
@@ -22,9 +22,13 @@
             background-color: #eeeeee;
         }
 
+        .font-dejavu {
+            font-family: 'DejaVu Sans', sans-serif;
+        }
+
         body {
             font-family: sans-serif;
-            font-size: 12px;
+            font-size: 11px;
         }
 
         @page {
@@ -57,25 +61,45 @@
     <div class="header">
         <table width="100%" style="border:none;">
             <tr>
-                @php
-                    $kategoriLower = strtolower($kategori);
-                    $labelKategori = [
-                        'vital' => 'Vital',
-                        'novital' => 'Tidak Vital',
-                        'belum' => 'Belum Dinilai',
-                    ][$kategoriLower] ?? 'Tidak Diketahui';
-                @endphp
                 <td style="vertical-align: top;border:none;">
-                    <h2>Rekap Vitalitas SE ({{ $labelKategori }}) :: Tahun {{ $tahunAktifGlobal ?? '-' }}</h2>
-                    <h3>Pemerintah Provinsi Bali</h3>
+                    @php
+                        $k = [
+                            'novital' => 'Non Vital',
+                            'belum' => 'Belum Dinilai',
+                            'vital' => 'VITAL',
+                        ][$kategori] ?? 'Belum Dinilai';
+                    @endphp
+                    <h2 style="margin:0;">SE {{ $k }} :: Tahun
+                        {{ $tahunAktifGlobal ?? '-' }}
+                    </h2>
+                    <h3 style="margin:0;">Pemilik Aset: {{ strtoupper($namaOpd ?? 'SEMUA OPD') }}</h3>
+
+                     <div class="subs" style="margin-top:2px;">
+                        Pemilik Aset bertanggung jawab terhadap proses bisnis/layanannya, pengelolaan aset informasi,
+                        pengukuran nilai aset,
+                        klasifikasi aset, kategorisasi Sistem Elektronik, penilaian vitalitas, penilaian kepatuhan,
+                        pemetaan risiko, analisis risiko, serta penyusunan dan implementasi mitigasi risiko.</br>
+                        Kepala OPD/UPTD sebagai Pemilik Risiko bertanggung jawab untuk menyetujui rencana
+                        mitigasi risiko, menetapkan tingkat risiko yang
+                        dapat diterima (acceptable risk), menyetujui residual risk, serta memastikan dukungan sumber
+                        daya yang diperlukan.
+                    </div>
                 </td>
 
                 <!-- KANAN: dua logo sejajar -->
                 <td style="width: 100px; vertical-align: top; text-align: right; white-space: nowrap;border:none;">
                     <img src="{{ public_path('images/logobaliprovcsirt.png') }}" alt="Logo"
                         style="height:70px; vertical-align: top; margin-right:0px;">
-                    <img src="{{ public_path('images/tlp/tlp_teaser_green.jpg') }}" alt="TLP:GREEN"
-                        style="height:70px; vertical-align: top;">
+                    @if ($kategori === 'vital')
+                        <img src="{{ public_path('images/tlp/tlp_teaser_red.jpg') }}" alt="TLP:RED"
+                            style="height:70px; vertical-align: top;">
+                    @elseif ($kategori === 'novital')
+                        <img src="{{ public_path('images/tlp/tlp_teaser_amber_strict.jpg') }}" alt="TLP:AMBER+STRICT"
+                            style="height:70px; vertical-align: top;">
+                    @else
+                        <img src="{{ public_path('images/tlp/tlp_teaser_green.jpg') }}" alt="TLP:GREEN"
+                            style="height:70px; vertical-align: top;">
+                    @endif
                 </td>
             </tr>
         </table>
@@ -87,11 +111,11 @@
             <tr>
                 <th style="width: 30px;">NO</th>
                 <th style="width: 90px;">KODE ASET</th>
-                <th style="width: 160px;">NAMA ASET</th>
+                <th style="width: auto;">NAMA ASET</th>
                 <th style="width: 160px;">OPD</th>
-                <th style="width: 180px;">SUB KLASIFIKASI</th>
-                <th style="width: 160px;">LOKASI</th>
-                <th style="width: 110px;">VITALITAS</th>
+                <th style="width: 200px;">SUB KLASIFIKASI</th>
+                <th style="width: 200px;">LOKASI</th>
+                <th style="width: 100px;">VITALITAS</th>
             </tr>
         </thead>
         <tbody>
@@ -100,18 +124,20 @@
                 @php
                     $skor = $aset->vitalitasSe->skor_total ?? null;
 
-                    $label = 'BELUM DINILAI';
-                    $warna = '#6c757d'; // abu
-                    $warnaTeks = '#fff';
+                    $skor = $aset->vitalitasSe->skor_total ?? null;
 
-                    if (!is_null($skor)) {
-                        if ($skor >= 15) {
-                            $label = 'VITAL';
-                            $warna = '#dc3545'; // merah
-                        } else {
-                            $label = 'Tidak Vital';
-                            $warna = '#28a745'; // hijau
-                        }
+                    if (is_null($skor)) {
+                        $label = '(belum dinilai)';
+                        $warna = '#6c757d'; // abu
+                        $warnaTeks = '#fff';
+                    } elseif ($skor >= 15) {
+                        $label = 'VITAL';
+                        $warna = '#dc3545'; // merah
+                        $warnaTeks = '#fff';
+                    } else {
+                        $label = 'Non Vital';
+                        $warna = '#28a745'; // hijau
+                        $warnaTeks = '#fff';
                     }
                 @endphp
                 <tr>
@@ -129,9 +155,6 @@
                     </td>
                     <td style="background-color: {{ $warna }}; color: {{ $warnaTeks }}; font-weight: bold;">
                         {{ $label }}
-                        @if (!is_null($skor))
-                            <br><small>Skor: {{ $skor }}</small>
-                        @endif
                     </td>
                 </tr>
             @endforeach

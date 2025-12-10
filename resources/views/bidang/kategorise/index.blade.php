@@ -1,15 +1,30 @@
 @extends('adminlte::page')
 
-@section('title', 'Rekap Kategori SE')
+@section('title', 'Kategorisasi SE')
 
+<style>
+    .matik-list ul {
+        margin: 0;
+        padding-left: 1.2rem;
+    }
+
+    .matik-list>ul {
+        padding-left: 1em;
+        list-style-type: disc;
+    }
+
+    .matik-list>ul>li>ul {
+        padding-left: 1.5rem;
+        list-style-type: square;
+        font-size: 0.8em;
+    }
+</style>
 @section('content_header')
-    <h1>Kategorisasi Sistem Elektronik (SE) di Pemprov Bali</h1>
-    <p class="text-muted small mb-0">
-        SE adalah sistem elektronik yaitu dalam PERISAI adalah <strong>aset dengan klasifikasi [PL] Perangkat
-            Lunak.</strong> Contoh SE adalah
-        website, aplikasi
-        berbasis web, mobile, sistem operasi dan utility.
-    </p>
+    <h1>Kategorisasi SE</h1>
+    <div style="line-height:1.2; font-size: 0.9em">
+        Sistem Elektronik (SE) dalam PERISAI adalah ASET INFORMASI dengan klasifikasi [PL] Perangkat
+        Lunak khusus Aplikasi berbasis Website, Mobile dan Desktop.
+    </div>
 @endsection
 
 @section('content_top_nav_left')
@@ -18,34 +33,34 @@
             Tahun Aktif: {{ $tahunAktifGlobal ?? '-' }}
             @if (($kunci ?? 'locked') === 'locked')
                 <i class="fas fa-lock text-danger ml-1" title="Terkunci"></i>
-            @else
-                <i class="fas fa-lock-open text-success ml-1" title="Terbuka"></i>
             @endif
+            :: {{ strtoupper($namaOpd) }}
         </span>
     </li>
 @endsection
 
 @section('content')
     <div class="row">
-        <div class="col-md-4">
+        <div class="col-md-7">
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex mb-3" style="gap: 10px;">
-                        <a href="{{ route('bidang.kategorise.export_rekap') }}" class="btn btn-danger btn-sm">
-                            <i class="fas fa-file-pdf"></i> Export PDF
+                        <a href="{{ route('bidang.kategorise.export_rekap') }}" class="btn btn-danger btn-sm" target="_blank">
+                            <i class="fas fa-file-pdf"></i> Export PDF Lengkap
                         </a>
                     </div>
                     <table class="table table-bordered text-center" style="width:100%">
                         <thead class="font-weight-bold">
                             <tr>
-                                <th style="width:200px">KATEGORI SE</th>
-                                <th>JUMLAH ASET</th>
+                                <th style="width:60%">Kategori Aset</th>
+                                <th>Jumlah Aset</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr class="bg-danger text-white" style="text-align: left">
-                                <td style="text-align: left">STRATEGIS</td>
-                                <td>
+                                <td style="text-align: left"><b>STRATEGIS</b>
+                                </td>
+                                <td style="vertical-align: middle; text-align: center;">
                                     <a class="btn btn-light btn-sm px-4"
                                         href="{{ route('bidang.kategorise.show', ['kategori' => 'strategis']) }}">
                                         {{ $strategis }}
@@ -53,8 +68,9 @@
                                 </td>
                             </tr>
                             <tr class="bg-warning text-white" style="text-align: left">
-                                <td style="text-align: left">TINGGI</td>
-                                <td>
+                                <td style="text-align: left"><b>TINGGI</b>
+                                </td>
+                                <td style="vertical-align: middle; text-align: center;">
                                     <a class="btn btn-light btn-sm px-4"
                                         href="{{ route('bidang.kategorise.show', ['kategori' => 'tinggi']) }}">
                                         {{ $tinggi }}
@@ -62,8 +78,9 @@
                                 </td>
                             </tr>
                             <tr class="bg-success text-white" style="text-align: left">
-                                <td style="text-align: left">RENDAH</td>
-                                <td>
+                                <td style="text-align: left"><b>RENDAH</b>
+                                </td>
+                                <td style="vertical-align: middle; text-align: center;">
                                     <a class="btn btn-light btn-sm px-4"
                                         href="{{ route('bidang.kategorise.show', ['kategori' => 'rendah']) }}">
                                         {{ $rendah }}
@@ -71,8 +88,9 @@
                                 </td>
                             </tr>
                             <tr class="bg-secondary text-white" style="text-align: left">
-                                <td style="text-align: left">Belum Dinilai</td>
-                                <td>
+                                <td style="text-align: left"><b>Belum Dinilai</b>
+                                </td>
+                                <td style="vertical-align: middle; text-align: center;">
                                     <a class="btn btn-light btn-sm px-4"
                                         href="{{ route('bidang.kategorise.show', ['kategori' => 'belum']) }}">
                                         {{ $belum }}
@@ -80,23 +98,32 @@
                                 </td>
                             </tr>
                             <tr class="font-weight-bold">
-                                <td>Total</td>
+                                <td>Total Jumlah Aset</td>
                                 <td>{{ $total }}</td>
                             </tr>
                         </tbody>
                     </table>
+                    <br>
+                    <b>Keterangan</b>
+                    <div class="matik-list">
+                        <ul>
+                            <li><b>STRATEGIS: </b>{{ data_get($kategoriMeta, 'STRATEGIS.deskripsi', '-') }}</li>
+                            <li><b>TINGGI: </b>{{ data_get($kategoriMeta, 'TINGGI.deskripsi', '-') }}</li>
+                            <li><b>RENDAH: </b>{{ data_get($kategoriMeta, 'RENDAH.deskripsi', '-') }}</li>
+                            <li><b>BELUM: </b>{{ data_get($kategoriMeta, 'BELUM.deskripsi', '-') }}</li>
+                        </ul>
+                    </div>
+
                 </div>
             </div>
         </div>
-        <div class="col-md-8">
+        <div class="col-md-5">
             <div class="card">
                 <div class="card-body text-center">
-                    <div style="width: 50%;margin: auto;">
+                    <div style="width: 100%;margin: auto;">
                         <canvas id="pieChart1"></canvas>
-                    </div>
+                    </div><br>
                 </div>
-
-
             </div>
         </div>
 
@@ -120,7 +147,7 @@
         };
         const pieOptions = {
             responsive: true,
-            maintainAspectRatio: true, // biarkan Chart.js atur proporsional
+            maintainAspectRatio: true,
 
             plugins: {
                 legend: {
@@ -138,9 +165,8 @@
                     },
                     formatter: (value, context) => {
                         const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                        const label = context.chart.data.labels[context.dataIndex];
                         const percentage = total ? Math.round((value / total) * 100) : 0;
-                        return `${label}\n${value} (${percentage}%)`;
+                        return `${percentage}%`;
                     }
 
                 }
